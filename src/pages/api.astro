@@ -1,0 +1,41 @@
+---
+import Layout from '~/layouts/PageLayout.astro';
+
+const req = await fetch('https://fbpaf6pavow34cldqyown6spfi0tqrkf.lambda-url.us-east-2.on.aws/');
+const data = await req.text();
+console.log(data);
+
+const autoresUnicos = Array.from(
+  new Map(
+    JSON.parse(data)
+      .Items.filter((item) => item.autor && item.id) 
+      .map((item) => [item.autor, item])
+  ).values()
+);
+---
+
+<Layout>
+  <div>
+    <h1>Autores</h1>
+    <table style="border-collapse: collapse; width: 100%;">
+      <thead>
+        <tr style="border-bottom: 2px solid #ccc;">
+          <th style="padding: 10px; text-align: left;">ID</th>
+          <th style="padding: 10px; text-align: left;">Autor</th>
+          <th style="padding: 10px; text-align: left;">Sort</th>
+          <th style="padding: 10px; text-align: left;">Data de Inclusão</th>
+        </tr>
+      </thead>
+      <tbody>
+        {autoresUnicos.map((item) => (
+          <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 10px;">{item.id}</td>
+            <td style="padding: 10px;">{item.autor}</td>
+            <td style="padding: 10px;">{item.sort}</td>
+            <td style="padding: 10px;">{item['data-inclusao'] || '-'}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</Layout>
