@@ -93,29 +93,30 @@ const autoresUnicos = Array.from(
         "data-inclusao": hoje
       };
 
-      try {
-      // MUDANÇA AQUI: Agora chamamos a nossa própria API interna do Astro
-      const response = await fetch('/enviar', { 
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+    //   try {
+    //   // MUDANÇA AQUI: Agora chamamos a nossa própria API interna do Astro
+    //   const response = await fetch('/enviar', { 
+    //     method: 'POST',
+    //     headers: { 'Content-Type': 'application/json' },
+    //     body: JSON.stringify(payload)
+    //   });
 
-      if (response.ok) {
-        alert('✅ Enviado com sucesso via Proxy!');
-        (form as HTMLFormElement).reset();
-        window.location.reload();
-      } else {
-        alert('❌ Erro no servidor.');
-      }
-    } catch (error) {
-      alert('❌ Erro de conexão.');
-    }
+    //   if (response.ok) {
+    //     alert('✅ Enviado com sucesso via Proxy!');
+    //     (form as HTMLFormElement).reset();
+    //     window.location.reload();
+    //   } else {
+    //     alert('❌ Erro no servidor.');
+    //   }
+    // } catch (error) {
+    //   alert('❌ Erro de conexão.');
+    // }
 
     //   try {
     //     // Atenção: Se der erro de CORS aqui, você precisará usar o Proxy do Astro (solução anterior)
     //     const response = await fetch('https://nl47cekplgwzoaw4lh4zgcu6se0cozer.lambda-url.us-east-2.on.aws/frases', {
     //       method: 'POST',
+    //     //   mode: 'no-cors', // IMPORTANTE: Sem isso, o navegador bloqueia a requisição por CORS. O downside é que não teremos feedback do status da resposta.
     //       headers: {
     //         'Content-Type': 'application/json'
     //       },
@@ -137,6 +138,24 @@ const autoresUnicos = Array.from(
     //     btn.innerText = originalText;
     //     btn.disabled = false;
     //   }
+    try {
+        // Chamada para a Netlify Function
+        const response = await fetch('/.netlify/functions/enviar', { 
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          alert('✅ Enviado com sucesso via Netlify Function!');
+          form.reset();
+          window.location.reload();
+        } else {
+          alert('❌ Erro na função.');
+        }
+      } catch (error) {
+        alert('❌ Erro de conexão.');
+      }
     });
   }
 </script>
