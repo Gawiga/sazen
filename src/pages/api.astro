@@ -16,9 +16,18 @@ import Layout from '~/layouts/PageLayout.astro';
     .new-row-highlight {
       animation: highlight 3s ease-out;
     }
+    /* Efeito de hover na lixeira */
+    .btn-delete {
+      color: #9ca3af;
+      transition: all 0.2s;
+    }
+    .btn-delete:hover {
+      color: #ef4444;
+      transform: scale(1.1);
+    }
   </style>
 
-  <div class="max-w-4xl mx-auto p-4">
+  <div class="max-w-5xl mx-auto p-4">
     <h1 class="text-2xl font-bold mb-6">Gerenciador de Autores</h1>
 
     <div class="mb-4">
@@ -38,11 +47,12 @@ import Layout from '~/layouts/PageLayout.astro';
           <th class="p-2.5 text-left">Autor</th>
           <th class="p-2.5 text-left">Sort</th>
           <th class="p-2.5 text-left">Data de Inclusão</th>
+          <th class="p-2.5 text-center">Ações</th>
         </tr>
       </thead>
       <tbody id="tabela-autores">
         <tr>
-          <td colspan="4" class="p-4 text-center text-gray-500 italic">Carregando autores...</td>
+          <td colspan="5" class="p-4 text-center text-gray-500 italic">Carregando autores...</td>
         </tr>
       </tbody>
     </table>
@@ -101,16 +111,14 @@ import Layout from '~/layouts/PageLayout.astro';
   const tabelaCorpo = document.getElementById('tabela-autores');
   const inputFiltro = document.getElementById('filtro-autor') as HTMLInputElement;
 
-  let dadosOriginais: any[] = []; // Cache para o filtro funcionar sem nova requisição
+  let dadosOriginais: any[] = [];
 
   // --- GET: Buscar e Renderizar ---
   async function carregarAutores(highlightId = '') {
     try {
-      // Chamamos a nossa function via GET
-      const res = await fetch('/.netlify/functions/enviar');
+      const res = await fetch('/.netlify/functions/lambda');
       const rawData = await res.json();
 
-      // Armazena no cache e remove duplicatas por autor
       dadosOriginais = Array.from(
         new Map(rawData.filter((item: any) => item.autor && item.id).map((item: any) => [item.autor, item])).values()
       );
@@ -119,7 +127,7 @@ import Layout from '~/layouts/PageLayout.astro';
     } catch (error) {
       if (tabelaCorpo)
         tabelaCorpo.innerHTML =
-          '<tr><td colspan="4" class="p-4 text-center text-red-500">Erro ao carregar dados.</td></tr>';
+          '<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao carregar dados.</td></tr>';
     }
   }
 
@@ -127,7 +135,8 @@ import Layout from '~/layouts/PageLayout.astro';
     if (!tabelaCorpo) return;
 
     if (dados.length === 0) {
-      tabelaCorpo.innerHTML = '<tr><td colspan="4" class="p-4 text-center">Nenhum resultado encontrado.</td></tr>';
+      tabelaCorpo.innerHTML =
+        '<tr><td colspan="5" class="p-4 text-center text-gray-500">Nenhum resultado encontrado.</td></tr>';
       return;
     }
 
@@ -140,11 +149,44 @@ import Layout from '~/layouts/PageLayout.astro';
           <td class="p-2.5 font-semibold text-gray-800">${item.autor}</td>
           <td class="p-2.5 text-gray-700">${item.sort}</td>
           <td class="p-2.5 text-sm text-gray-500">${item['data-inclusao'] || '-'}</td>
+          <td class="p-2.5 text-center">
+            <button class="btn-delete p-1" onclick="window.deletarFrase('${item.id}', '${item.sort}')" title="Excluir">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </td>
         </tr>
       `;
       })
       .join('');
   }
+
+  (window as any).deletarFrase = async (id: string, sort: string) => {
+    if (!confirm(`Deseja excluir a frase "${sort}"?`)) return;
+
+    try {
+      const response = await fetch('/.netlify/functions/lambda', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        // Enviamos ID e SORT juntos
+        body: JSON.stringify({
+          id: id,
+          sort: sort,
+        }),
+      });
+
+      if (response.ok) {
+        alert('🗑️ Excluído com sucesso!');
+        await carregarAutores();
+      } else {
+        const errorText = await response.text();
+        alert('❌ Erro na AWS: ' + errorText);
+      }
+    } catch (error) {
+      alert('❌ Erro de conexão.');
+    }
+  };
 
   // --- Lógica do Filtro ---
   inputFiltro?.addEventListener('input', (e) => {
@@ -172,7 +214,7 @@ import Layout from '~/layouts/PageLayout.astro';
     };
 
     try {
-      const response = await fetch('/.netlify/functions/enviar', {
+      const response = await fetch('/.netlify/functions/lambda', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -181,15 +223,14 @@ import Layout from '~/layouts/PageLayout.astro';
       if (response.ok) {
         form.reset();
         btn.innerText = '✅ Sucesso! Atualizando...';
-        btn.style.backgroundColor = '#16a34a'; // Verde
+        btn.style.backgroundColor = '#16a34a';
 
-        // Atraso de 2 segundos para o banco atualizar antes do refresh
         setTimeout(async () => {
           await carregarAutores(currentId);
           btn.innerText = originalText;
           btn.style.backgroundColor = '';
           btn.disabled = false;
-          inputFiltro.value = ''; // Limpa o filtro para mostrar a nova linha
+          inputFiltro.value = '';
         }, 2000);
       } else {
         alert('Erro ao salvar frase.');
@@ -203,6 +244,5 @@ import Layout from '~/layouts/PageLayout.astro';
     }
   });
 
-  // Carga inicial
   carregarAutores();
 </script>
