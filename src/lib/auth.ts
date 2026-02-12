@@ -22,15 +22,18 @@ export class AuthService {
   async loginWithPassword(email: string, password: string) {
     try {
       const authData = await this.pb.collection(this.collectionName).authWithPassword(email, password);
-      
+
       // Store auth data in localStorage for persistence
       if (typeof window !== 'undefined') {
-        localStorage.setItem('pb_auth', JSON.stringify({
-          token: this.pb.authStore.token,
-          record: this.pb.authStore.record,
-        }));
+        localStorage.setItem(
+          'pb_auth',
+          JSON.stringify({
+            token: this.pb.authStore.token,
+            record: this.pb.authStore.record,
+          })
+        );
       }
-      
+
       return {
         success: true,
         data: authData,
@@ -51,11 +54,11 @@ export class AuthService {
   logout() {
     try {
       this.pb.authStore.clear();
-      
+
       if (typeof window !== 'undefined') {
         localStorage.removeItem('pb_auth');
       }
-      
+
       return {
         success: true,
         message: 'Logged out successfully',

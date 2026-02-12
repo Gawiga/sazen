@@ -3,27 +3,32 @@
 ## ⚡ Setup em 5 Minutos
 
 ### 1. Copiar Arquivo de Configuração
+
 ```bash
 cp .env.example .env.local
 ```
 
 ### 2. Editar `.env.local`
+
 ```env
 PUBLIC_POCKETBASE_URL=https://gawiga-server.bonito-dace.ts.net/
 PUBLIC_POCKETBASE_COLLECTION=pacientes
 ```
 
 ### 3. Instalar Dependências (já feito)
+
 ```bash
 npm install pocketbase
 ```
 
 ### 4. Testar Localmente
+
 ```bash
 npm run dev
 ```
 
 Acesse:
+
 - 🔑 Login: http://localhost:4322/login
 - 📝 Signup: http://localhost:4322/signup
 - 📊 Dashboard: http://localhost:4322/dashboard
@@ -66,6 +71,7 @@ EXAMPLES.md               # Exemplos de uso
 ## 🚀 Fluxo de Autenticação
 
 ### Email + Senha
+
 ```
 1. Usuário acessa /login
 2. Preenche email e senha
@@ -78,21 +84,22 @@ EXAMPLES.md               # Exemplos de uso
 
 ## 📋 Rotas Disponíveis
 
-| Rota | Tipo | Autenticação | Descrição |
-|------|------|--------------|-----------|
-| `/login` | GET | Não | Página de login |
-| `/signup` | GET | Não | Página de signup |
-| `/dashboard` | GET | ✅ Requerida | Painel do usuário |
-| `/api/auth/login` | POST | Não | Autentica com email/senha |
-| `/api/auth/signup` | POST | Não | Cria nova conta |
-| `/api/auth/logout` | POST | ✅ Requerida | Faz logout |
-| `/api/auth/user` | GET | ✅ Requerida | Obtém dados do usuário |
-| `/api/auth/oauth/[provider]` | GET | Não | Inicia OAuth2 |
-| `/api/auth/oauth-callback` | GET | Não | Callback OAuth2 |
+| Rota                         | Tipo | Autenticação | Descrição                 |
+| ---------------------------- | ---- | ------------ | ------------------------- |
+| `/login`                     | GET  | Não          | Página de login           |
+| `/signup`                    | GET  | Não          | Página de signup          |
+| `/dashboard`                 | GET  | ✅ Requerida | Painel do usuário         |
+| `/api/auth/login`            | POST | Não          | Autentica com email/senha |
+| `/api/auth/signup`           | POST | Não          | Cria nova conta           |
+| `/api/auth/logout`           | POST | ✅ Requerida | Faz logout                |
+| `/api/auth/user`             | GET  | ✅ Requerida | Obtém dados do usuário    |
+| `/api/auth/oauth/[provider]` | GET  | Não          | Inicia OAuth2             |
+| `/api/auth/oauth-callback`   | GET  | Não          | Callback OAuth2           |
 
 ## 🔒 Proteção de Rotas
 
 Rotas protegidas por middleware (redirecionam para `/login` se não autenticado):
+
 - `/dashboard`
 - `/api/user`
 
@@ -101,20 +108,25 @@ Para adicionar novas rotas, edite `src/middleware.ts`.
 ## 🛠️ Troubleshooting
 
 ### Erro: "Cannot find pocketbase"
+
 ```bash
 npm install pocketbase
 ```
 
 ### Erro: "Public_POCKETBASE_URL not defined"
+
 Certifique-se que `.env.local` tem:
+
 ```env
 PUBLIC_POCKETBASE_URL=https://gawiga-server.bonito-dace.ts.net/
 ```
 
 ### Erro: "Collection not found"
+
 Verifique se a coleção `pacientes` existe no PocketBase com Auth habilitado.
 
 ### Erros CORS
+
 Configure CORS no seu servidor PocketBase para aceitar requisições do seu domínio.
 
 ## ✅ Checklist Pré-Deploy
@@ -142,9 +154,11 @@ Veja [AUTHENTICATION.md](./AUTHENTICATION.md) para documentação detalhada.
 ## 🤝 Suporte
 
 Para dúvidas sobre PocketBase:
+
 - [Documentação PocketBase](https://pocketbase.io/docs/)
 - [Exemplos PocketBase](https://pocketbase.io/docs/api-records/#auth-operations)
 
 Para dúvidas sobre Astro:
+
 - [Documentação Astro](https://docs.astro.build/)
 - [Middleware Astro](https://docs.astro.build/en/guides/middleware/)

@@ -36,6 +36,7 @@ src/middleware.ts                       # Proteção de rotas
 ## ⚡ Começo Rápido (2 minutos)
 
 ### 1. Configurar variáveis
+
 ```bash
 # .env.local já está preenchido com:
 PUBLIC_POCKETBASE_URL=https://gawiga-server.bonito-dace.ts.net/
@@ -43,12 +44,14 @@ PUBLIC_POCKETBASE_COLLECTION=pacientes
 ```
 
 ### 2. Que tal testar?
+
 ```bash
 npm run dev
 # Acesse: http://localhost:4322/login
 ```
 
 ### 3. Credenciais de Teste
+
 Use qualquer email/senha válidos cadastrados no seu PocketBase
 
 ---
@@ -56,6 +59,7 @@ Use qualquer email/senha válidos cadastrados no seu PocketBase
 ## 🚀 Fluxo Simples
 
 ### Login
+
 ```typescript
 // Usuário vai em /login
 // Preenche email e senha
@@ -67,11 +71,13 @@ Use qualquer email/senha válidos cadastrados no seu PocketBase
 ```
 
 ### Criar Conta
+
 ```
 /signup → Preenche dados → POST /api/auth/signup → Auto-login → /dashboard
 ```
 
 ### Logout
+
 ```
 Botão Sair → POST /api/auth/logout → Google da sessão → /
 ```
@@ -81,6 +87,7 @@ Botão Sair → POST /api/auth/logout → Google da sessão → /
 ## 📝 Código de Exemplo
 
 ### Usar em Componentes
+
 ```astro
 ---
 import LoginForm from '~/components/auth/LoginForm.astro';
@@ -90,6 +97,7 @@ import LoginForm from '~/components/auth/LoginForm.astro';
 ```
 
 ### Mostrar Menu de Usuário
+
 ```astro
 ---
 import UserMenu from '~/components/auth/UserMenu.astro';
@@ -105,6 +113,7 @@ if (auth) {
 ```
 
 ### Proteger uma Página
+
 ```astro
 ---
 // Verificar autenticação

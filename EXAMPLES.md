@@ -3,6 +3,7 @@
 ## Login Simples
 
 ### HTML Form (Recomendado)
+
 ```astro
 ---
 import LoginForm from '~/components/auth/LoginForm.astro';
@@ -12,6 +13,7 @@ import LoginForm from '~/components/auth/LoginForm.astro';
 ```
 
 ### JavaScript/TypeScript
+
 ```typescript
 async function login(email: string, password: string) {
   const response = await fetch('/api/auth/login', {
@@ -23,14 +25,17 @@ async function login(email: string, password: string) {
   });
 
   const data = await response.json();
-  
+
   if (data.success) {
     // Salvar no localStorage para disponibilidade no cliente
-    localStorage.setItem('pb_auth', JSON.stringify({
-      token: data.token,
-      record: data.record,
-    }));
-    
+    localStorage.setItem(
+      'pb_auth',
+      JSON.stringify({
+        token: data.token,
+        record: data.record,
+      })
+    );
+
     // Redirecionar para dashboard
     window.location.href = '/dashboard';
   } else {
@@ -55,21 +60,21 @@ import type { SignupPayload } from '~/types/auth';
 
 <script>
   const form = document.getElementById('signup-form');
-  
+
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     const formData = new FormData(form);
     const payload = Object.fromEntries(formData);
-    
+
     const response = await fetch('/api/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    
+
     const data = await response.json();
-    
+
     if (data.success) {
       window.location.href = '/dashboard';
     } else {
@@ -86,15 +91,13 @@ import type { SignupPayload } from '~/types/auth';
 import OAuthLogin from '~/components/auth/OAuthLogin.astro';
 ---
 
-<button onclick="loginWithGoogle()">
-  Login com Google
-</button>
+<button onclick="loginWithGoogle()"> Login com Google </button>
 
 <script>
   async function loginWithGoogle() {
     const response = await fetch('/api/auth/oauth/google');
     const data = await response.json();
-    
+
     if (data.redirectUrl) {
       window.location.href = data.redirectUrl;
     }
@@ -113,10 +116,7 @@ const pb = new PocketBase('https://gawiga-server.bonito-dace.ts.net/');
 const authService = createAuthService(pb);
 
 // Email e Senha
-const loginResult = await authService.loginWithPassword(
-  'user@example.com',
-  'password123'
-);
+const loginResult = await authService.loginWithPassword('user@example.com', 'password123');
 
 if (loginResult.success) {
   console.log('Usuário logado:', loginResult.user);
@@ -161,11 +161,7 @@ if (auth) {
 }
 ---
 
-{userEmail ? (
-  <p>Bem-vindo, {userEmail}!</p>
-) : (
-  <a href="/login">Fazer login</a>
-)}
+{userEmail ? <p>Bem-vindo, {userEmail}!</p> : <a href="/login">Fazer login</a>}
 ```
 
 ## Logout
@@ -220,7 +216,7 @@ const token = auth.token;
 
 const response = await fetch('/api/dados', {
   headers: {
-    'Authorization': `Bearer ${token}`,
+    Authorization: `Bearer ${token}`,
   },
 });
 ```
@@ -235,17 +231,11 @@ export const GET: APIRoute = async ({ cookies }) => {
   const authCookie = cookies.get('pb_auth');
 
   if (!authCookie) {
-    return new Response(
-      JSON.stringify({ error: 'Unauthorized' }),
-      { status: 401 }
-    );
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
 
   // Usuário autenticado
-  return new Response(
-    JSON.stringify({ message: 'Dados protegidos' }),
-    { status: 200 }
-  );
+  return new Response(JSON.stringify({ message: 'Dados protegidos' }), { status: 200 });
 };
 ```
 
@@ -280,11 +270,7 @@ const authService = createAuthService();
 const resetRequest = await authService.requestPasswordReset('user@example.com');
 
 // Confirmar reset (após usuário clicar no link no email)
-const resetConfirm = await authService.confirmPasswordReset(
-  'token_do_email',
-  'nova_senha',
-  'nova_senha_confirmacao'
-);
+const resetConfirm = await authService.confirmPasswordReset('token_do_email', 'nova_senha', 'nova_senha_confirmacao');
 ```
 
 ## Proteger uma Rota Customizada

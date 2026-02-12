@@ -170,7 +170,10 @@ import Layout from '~/layouts/PageLayout.astro';
       .join('');
   }
 
-  (window as unknown as { deletarFrase?: (id: string, sort: string) => Promise<void> }).deletarFrase = async (id: string, sort: string) => {
+  (window as unknown as { deletarFrase?: (id: string, sort: string) => Promise<void> }).deletarFrase = async (
+    id: string,
+    sort: string
+  ) => {
     if (!confirm(`Deseja excluir a frase "${sort}"?`)) return;
 
     try {
@@ -199,7 +202,11 @@ import Layout from '~/layouts/PageLayout.astro';
   // --- Lógica do Filtro ---
   inputFiltro?.addEventListener('input', (e) => {
     const termo = (e.target as HTMLInputElement).value.toLowerCase();
-    const filtrados = dadosOriginais.filter((item) => String(item['autor'] ?? '').toLowerCase().includes(termo));
+    const filtrados = dadosOriginais.filter((item) =>
+      String(item['autor'] ?? '')
+        .toLowerCase()
+        .includes(termo)
+    );
     renderizarTabela(filtrados);
   });
 

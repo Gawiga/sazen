@@ -3,6 +3,7 @@
 ## Visão Geral
 
 Este projeto implementa autenticação com **PocketBase** no Astro, suportando:
+
 - ✅ Autenticação com email e senha
 - ✅ Autenticação com OAuth2 (Google, GitHub, etc.)
 - ✅ Gerenciamento de sessão com cookies HTTP-only
@@ -46,6 +47,7 @@ Você precisa configurar seu PocketBase com:
 ### Componentes
 
 #### LoginForm
+
 Formulário de login com email e senha:
 
 ```astro
@@ -57,6 +59,7 @@ import LoginForm from '~/components/auth/LoginForm.astro';
 ```
 
 #### OAuthLogin
+
 Botões de login com OAuth2:
 
 ```astro
@@ -68,6 +71,7 @@ import OAuthLogin from '~/components/auth/OAuthLogin.astro';
 ```
 
 #### UserMenu
+
 Menu de usuário com informações e botão de logout:
 
 ```astro
@@ -113,9 +117,11 @@ authService.logout();
 ### Endpoints de API
 
 #### POST `/api/auth/login`
+
 Realiza login com email e senha.
 
 **Request:**
+
 ```json
 {
   "email": "user@example.com",
@@ -124,6 +130,7 @@ Realiza login com email e senha.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -137,12 +144,15 @@ Realiza login com email e senha.
 ```
 
 #### POST `/api/auth/logout`
+
 Realiza logout e limpa o cookie de autenticação.
 
 #### POST `/api/auth/signup`
+
 Cria uma nova conta.
 
 **Request:**
+
 ```json
 {
   "email": "newuser@example.com",
@@ -152,12 +162,15 @@ Cria uma nova conta.
 ```
 
 #### GET `/api/auth/oauth/[provider]`
+
 Inicia o fluxo de autenticação OAuth2.
 
 **Parâmetros:**
+
 - `provider`: Google, GitHub, ou qualquer outro provedor configurado no PocketBase
 
 **Response:**
+
 ```json
 {
   "redirectUrl": "https://accounts.google.com/o/oauth2/v2/auth?..."
@@ -165,9 +178,11 @@ Inicia o fluxo de autenticação OAuth2.
 ```
 
 #### GET `/api/auth/oauth-callback`
+
 Callback do OAuth2. Processa o código de autorização e estabelece a sessão.
 
 #### GET `/api/auth/user`
+
 Retorna informações do usuário autenticado.
 
 ## Proteção de Rotas
@@ -192,7 +207,9 @@ const protectedRoutes = [
 ## Armazenamento de Dados
 
 ### Client-side
+
 O token é armazenado em `localStorage` como:
+
 ```json
 {
   "pb_auth": {
@@ -203,7 +220,9 @@ O token é armazenado em `localStorage` como:
 ```
 
 ### Server-side
+
 O token é armazenado em um cookie HTTP-only seguro:
+
 - `pb_auth`: Token JWT (HTTP-only, Secure, SameSite=Lax)
 
 ## Fluxos de Autenticação
@@ -247,12 +266,15 @@ O token é armazenado em um cookie HTTP-only seguro:
 ## Troubleshooting
 
 ### "OAuth2 provider not configured"
+
 Certifique-se de que você configurou o provedor no Admin UI do PocketBase.
 
 ### Token inválido
+
 O cookie de autenticação pode ter expirado. O usuário será redirecionado para `/login`.
 
 ### CORS errors
+
 Certifique-se de que o POCKETBASE_URL está acessível e permite CORS para seu domínio.
 
 ## Segurança

@@ -27,6 +27,7 @@
 ## 🔧 Fase 2: Configuração do PocketBase (↓ 10-15 minutos)
 
 ### Seu servidor PocketBase:
+
 **URL:** `https://gawiga-server.bonito-dace.ts.net/`
 
 ### Tarefas:
@@ -43,7 +44,7 @@
   - [ ] Test: Criar usuário de teste no admin
 
 - [ ] **Configurar OAuth2 (Opcional)**
-  
+
   **Google:**
   - [ ] Obter Client ID e Secret de [Google Cloud Console](https://console.cloud.google.com)
   - [ ] Em PocketBase Admin → Settings → OAuth2 providers → Add provider
@@ -52,7 +53,7 @@
   - [ ] Client Secret: [seu secret]
   - [ ] Scopes: `email profile`
   - [ ] Salvar
-  
+
   **GitHub (Similar):**
   - [ ] Obter OAuth app em [GitHub Settings](https://github.com/settings/developers)
   - [ ] Adicionar provider em PocketBase
@@ -69,6 +70,7 @@
 ## 📝 Fase 3: Configuração Local (↓ 5 minutos)
 
 - [x] **`.env.local` criado**
+
   ```env
   PUBLIC_POCKETBASE_URL=https://gawiga-server.bonito-dace.ts.net/
   PUBLIC_POCKETBASE_COLLECTION=pacientes
@@ -89,6 +91,7 @@
 ## 🧪 Fase 4: Testes Locais (↓ 15-20 minutos)
 
 ### Iniciar servidor de desenvolvimento:
+
 ```bash
 npm run dev
 ```
@@ -139,6 +142,7 @@ npm run dev
 ## 🚀 Fase 5: Deploy (↓ 10-15 minutos)
 
 ### Pré-requisitos:
+
 ```bash
 # Verificar build final
 npm run build
@@ -151,13 +155,16 @@ npm run build
 ### Opções de Deploy:
 
 #### **Opção 1: Netlify via Git (Recomendado)**
+
 - [ ] Adicionar arquivos ao git
+
   ```bash
   git add .
   git commit -m "feat: add PocketBase authentication"
   ```
 
 - [ ] Push para repositório
+
   ```bash
   git push origin main
   ```
@@ -176,6 +183,7 @@ npm run build
   - [ ] Testa fluxos de autenticação
 
 #### **Opção 2: Deploy Manual**
+
 ```bash
 # Build
 npm run build
@@ -221,14 +229,14 @@ npm run build
 
 ## 🐛 Troubleshooting Rápido
 
-| Problema | Solução |
-|----------|---------|
-| Erro de módulo PocketBase | `npm install pocketbase` |
-| Build falha com adapter | Verificar `@astrojs/netlify` instalado |
-| Collection not found | Criar coleção `pacientes` no PocketBase Admin |
-| CORS errors | Configurar CORS no PocketBase para seu domínio |
-| OAuth não funciona | Verificar Redirect URL em OAuth2 settings |
-| Token expirado | Implementar refresh token (veja ADVANCED_EXAMPLES.md) |
+| Problema                  | Solução                                               |
+| ------------------------- | ----------------------------------------------------- |
+| Erro de módulo PocketBase | `npm install pocketbase`                              |
+| Build falha com adapter   | Verificar `@astrojs/netlify` instalado                |
+| Collection not found      | Criar coleção `pacientes` no PocketBase Admin         |
+| CORS errors               | Configurar CORS no PocketBase para seu domínio        |
+| OAuth não funciona        | Verificar Redirect URL em OAuth2 settings             |
+| Token expirado            | Implementar refresh token (veja ADVANCED_EXAMPLES.md) |
 
 ---
 
@@ -250,12 +258,15 @@ npm run build
 Você tem um **sistema de autenticação profissional** com PocketBase no Astro!
 
 ### Próximo Passo:
+
 **→ Vá para [Fase 2](#-fase-2-configuração-do-pocketbase--10-15-minutos) e configure seu PocketBase**
 
 ---
 
 ### 💬 Dúvidas?
+
 Consulte os documentos inclusos:
+
 1. Problema técnico → [AUTHENTICATION.md](./AUTHENTICATION.md)
 2. Exemplo de código → [EXAMPLES.md](./EXAMPLES.md)
 3. Caso avançado → [ADVANCED_EXAMPLES.md](./ADVANCED_EXAMPLES.md)

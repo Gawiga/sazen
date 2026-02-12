@@ -16,16 +16,19 @@ Sua implementação foi **simplificada para email/senha** apenas:
 ## 🚀 Comece Agora (2 minutos)
 
 ### 1. Testar
+
 ```bash
 npm run dev
 # Abra: http://localhost:4322/login
 ```
 
 ### 2. Use credenciais de teste
+
 - Email: qualquer do seu PocketBase
 - Senha: senha do usuário
 
 ### 3. Pronto!
+
 - Faça login → vai para /dashboard
 - Clique "Sair" → volta para home
 - Acesse /login sem estar logado → redireciona
@@ -34,12 +37,12 @@ npm run dev
 
 ## 📁 Arquivos Principais
 
-| Arquivo | O quê |
-|---------|-------|
-| `src/lib/auth.ts` | Serviço de autenticação |
-| `src/components/auth/LoginForm.astro` | Formulário |
-| `src/pages/login.astro` | Página de login |
-| `src/pages/api/auth/login.ts` | Endpoint de login |
+| Arquivo                               | O quê                   |
+| ------------------------------------- | ----------------------- |
+| `src/lib/auth.ts`                     | Serviço de autenticação |
+| `src/components/auth/LoginForm.astro` | Formulário              |
+| `src/pages/login.astro`               | Página de login         |
+| `src/pages/api/auth/login.ts`         | Endpoint de login       |
 
 ---
 

@@ -9,7 +9,7 @@ const authMiddleware = defineMiddleware((context, next: MiddlewareNext) => {
   const pathname = new URL(context.request.url).pathname;
 
   // Check if route requires authentication
-  if (protectedRoutes.some(route => pathname.startsWith(route))) {
+  if (protectedRoutes.some((route) => pathname.startsWith(route))) {
     const authCookie = context.cookies.get('pb_auth');
 
     if (!authCookie) {

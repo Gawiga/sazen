@@ -75,6 +75,7 @@ npm create astro@latest -- --template arthelokyo/astrowind
 This project now includes **complete authentication** integration with **PocketBase**!
 
 ### Features
+
 - ✅ Email/Password authentication
 - ✅ OAuth2 support (Google, GitHub, etc.)
 - ✅ Session management with HTTP-only cookies
@@ -84,12 +85,14 @@ This project now includes **complete authentication** integration with **PocketB
 - ✅ Server-side rendering ready
 
 ### Quick Start
+
 1. Copy `.env.example` to `.env.local`
 2. Configure PocketBase URL
 3. Test with `npm run dev`
 4. Access `/login` or `/signup`
 
 ### Documentation
+
 - 📖 **[QUICKSTART.md](./QUICKSTART.md)** - Get started in 5 minutes
 - 📚 **[AUTHENTICATION.md](./AUTHENTICATION.md)** - Full technical documentation
 - 💡 **[EXAMPLES.md](./EXAMPLES.md)** - Code examples and snippets
@@ -97,11 +100,13 @@ This project now includes **complete authentication** integration with **PocketB
 - 🚀 **[INDEX.md](./INDEX.md)** - Complete documentation index
 
 ### New Pages & Components
+
 - Pages: `/login`, `/signup`, `/dashboard`
 - Components: `LoginForm`, `OAuthLogin`, `UserMenu`
 - API Endpoints: Password auth, OAuth2, user management
 
 ### Learn More
+
 See [INDEX.md](./INDEX.md) for complete documentation and architecture details.
 
 ---

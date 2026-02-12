@@ -1,7 +1,7 @@
 // Permalinks utilities removed from top-level — used in commented examples only
 
 export const headerData = {
-  links: [ ]
+  links: [],
   // links: [
   //   {
   //     text: 'Homes',
@@ -120,7 +120,7 @@ export const headerData = {
 };
 
 export const footerData = {
-  links: [ ],
+  links: [],
   // links: [
   //   {
   //     title: 'Product',

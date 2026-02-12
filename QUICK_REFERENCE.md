@@ -2,39 +2,43 @@
 
 ## 📍 Localização dos Arquivos
 
-| O quê | Onde | Arquivo |
-|------|------|---------|
-| Componente Login | src/components/auth/ | `LoginForm.astro` |
-| Componente OAuth2 | src/components/auth/ | `OAuthLogin.astro` |
-| Menu Usuário | src/components/auth/ | `UserMenu.astro` |
-| Serviço Auth | src/lib/ | `auth.ts` |
-| Cliente PocketBase | src/lib/ | `pocketbase.ts` |
-| Página Login | src/pages/ | `login.astro` |
-| Página Signup | src/pages/ | `signup.astro` |
-| Dashboard | src/pages/ | `dashboard.astro` |
-| Middleware | src/ | `middleware.ts` |
+| O quê              | Onde                 | Arquivo            |
+| ------------------ | -------------------- | ------------------ |
+| Componente Login   | src/components/auth/ | `LoginForm.astro`  |
+| Componente OAuth2  | src/components/auth/ | `OAuthLogin.astro` |
+| Menu Usuário       | src/components/auth/ | `UserMenu.astro`   |
+| Serviço Auth       | src/lib/             | `auth.ts`          |
+| Cliente PocketBase | src/lib/             | `pocketbase.ts`    |
+| Página Login       | src/pages/           | `login.astro`      |
+| Página Signup      | src/pages/           | `signup.astro`     |
+| Dashboard          | src/pages/           | `dashboard.astro`  |
+| Middleware         | src/                 | `middleware.ts`    |
 
 ---
 
 ## 🔄 Fluxos Rápidos
 
 ### Login com Email/Senha
+
 ```
 login.astro → LoginForm.astro → /api/auth/login → PocketBase
 ```
 
 ### Login com OAuth2
+
 ```
 OAuthLogin.astro → /api/auth/oauth/[provider] → Google/Github
 → /api/auth/oauth-callback → Dashboard
 ```
 
 ### Logout
+
 ```
 UserMenu.astro → /api/auth/logout → localStorage.removeItem()
 ```
 
 ### Proteger Rota
+
 ```
 middleware.ts → Verificar cookie → Redirecionar se inválido
 ```
@@ -75,35 +79,38 @@ Arquivo: `.env.local`
 
 ## 🛣️ Rotas Disponíveis
 
-| Rota | Método | Auth | Descrição |
-|------|--------|------|-----------|
-| `/login` | GET | ❌ | Página de login |
-| `/signup` | GET | ❌ | Página de signup |
-| `/dashboard` | GET | ✅ | Painel do usuário |
-| `/api/auth/login` | POST | ❌ | Autentica |
-| `/api/auth/signup` | POST | ❌ | Cria conta |
-| `/api/auth/logout` | POST | ✅ | Faz logout |
-| `/api/auth/user` | GET | ✅ | Dados do usuário |
-| `/api/auth/oauth/google` | GET | ❌ | OAuth2 Google |
-| `/api/auth/oauth-callback` | GET | ❌ | OAuth2 callback |
+| Rota                       | Método | Auth | Descrição         |
+| -------------------------- | ------ | ---- | ----------------- |
+| `/login`                   | GET    | ❌   | Página de login   |
+| `/signup`                  | GET    | ❌   | Página de signup  |
+| `/dashboard`               | GET    | ✅   | Painel do usuário |
+| `/api/auth/login`          | POST   | ❌   | Autentica         |
+| `/api/auth/signup`         | POST   | ❌   | Cria conta        |
+| `/api/auth/logout`         | POST   | ✅   | Faz logout        |
+| `/api/auth/user`           | GET    | ✅   | Dados do usuário  |
+| `/api/auth/oauth/google`   | GET    | ❌   | OAuth2 Google     |
+| `/api/auth/oauth-callback` | GET    | ❌   | OAuth2 callback   |
 
 ---
 
 ## 📦 Componentes & Props
 
 ### LoginForm
+
 ```astro
 <LoginForm />
 <LoginForm collectionName="usuarios" />
 ```
 
 ### OAuthLogin
+
 ```astro
 <OAuthLogin />
 <OAuthLogin collectionName="usuarios" />
 ```
 
 ### UserMenu
+
 ```astro
 <UserMenu user={userData} />
 ```
@@ -160,10 +167,12 @@ Em `LoginForm.astro` ou `OAuthLogin.astro`:
 <!-- Mudar cores Tailwind -->
 <button class="bg-blue-600 hover:bg-blue-700">
   <!-- Mudar para -->
-  <button class="bg-green-600 hover:bg-green-700">
+  <button class="bg-green-600 hover:bg-green-700"></button></button
+>
 ```
 
 **Classes úteis:**
+
 - Primária: `bg-blue-600`
 - Perigo: `bg-red-600`
 - Sucesso: `bg-green-600`
@@ -172,14 +181,14 @@ Em `LoginForm.astro` ou `OAuthLogin.astro`:
 
 ## 🐛 Troubleshooting Rápido
 
-| Erro | Solução |
-|------|---------|
-| Module not found | `npm install pocketbase` |
-| Can't find .env | Copiar `.env.example` para `.env.local` |
-| Build fails | Verificar `astro.config.ts` tem adapter |
-| CORS error | Configurar CORS no PocketBase |
-| Login inválido | Verificar credenciais no PocketBase |
-| Redirect loop | Verificar middleware.ts |
+| Erro             | Solução                                 |
+| ---------------- | --------------------------------------- |
+| Module not found | `npm install pocketbase`                |
+| Can't find .env  | Copiar `.env.example` para `.env.local` |
+| Build fails      | Verificar `astro.config.ts` tem adapter |
+| CORS error       | Configurar CORS no PocketBase           |
+| Login inválido   | Verificar credenciais no PocketBase     |
+| Redirect loop    | Verificar middleware.ts                 |
 
 ---
 
@@ -257,19 +266,17 @@ localStorage.removeItem('pb_auth');
 ## 🎯 Padrões Comuns
 
 ### Mostrar/Esconder por Autenticação
+
 ```astro
 ---
 const user = Astro.cookies.get('pb_auth')?.value;
 ---
 
-{user ? (
-  <div>Conteúdo para logado</div>
-) : (
-  <div>Conteúdo para não-logado</div>
-)}
+{user ? <div>Conteúdo para logado</div> : <div>Conteúdo para não-logado</div>}
 ```
 
 ### Redirecionar se Logado
+
 ```javascript
 if (localStorage.getItem('pb_auth')) {
   window.location.href = '/dashboard';
@@ -277,12 +284,13 @@ if (localStorage.getItem('pb_auth')) {
 ```
 
 ### Fetch com Token
+
 ```javascript
-const auth = JSON.parse(localStorage.getItem('pb_auth')||'{}');
+const auth = JSON.parse(localStorage.getItem('pb_auth') || '{}');
 fetch(url, {
   headers: {
-    'Authorization': `Bearer ${auth.token}`
-  }
+    Authorization: `Bearer ${auth.token}`,
+  },
 });
 ```
 
@@ -290,11 +298,11 @@ fetch(url, {
 
 ## 📚 Documentação Rápida
 
-| Doc | Tempo | Tipo |
-|-----|-------|------|
-| [QUICKSTART](./QUICKSTART.md) | 5 min | Início |
-| [EXAMPLES](./EXAMPLES.md) | 10 min | Código |
-| [CHECKLIST](./CHECKLIST.md) | 20 min | Guia |
+| Doc                                   | Tempo  | Tipo    |
+| ------------------------------------- | ------ | ------- |
+| [QUICKSTART](./QUICKSTART.md)         | 5 min  | Início  |
+| [EXAMPLES](./EXAMPLES.md)             | 10 min | Código  |
+| [CHECKLIST](./CHECKLIST.md)           | 20 min | Guia    |
 | [AUTHENTICATION](./AUTHENTICATION.md) | 15 min | Técnico |
 
 ---

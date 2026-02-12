@@ -13,17 +13,13 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const { email, password, passwordConfirm } = await request.json();
 
     if (!email || !password || !passwordConfirm) {
-      return new Response(
-        JSON.stringify({ error: 'Email, password, and password confirmation are required' }),
-        { status: 400 }
-      );
+      return new Response(JSON.stringify({ error: 'Email, password, and password confirmation are required' }), {
+        status: 400,
+      });
     }
 
     if (password !== passwordConfirm) {
-      return new Response(
-        JSON.stringify({ error: 'Passwords do not match' }),
-        { status: 400 }
-      );
+      return new Response(JSON.stringify({ error: 'Passwords do not match' }), { status: 400 });
     }
 
     const pb = new PocketBase(POCKETBASE_URL);

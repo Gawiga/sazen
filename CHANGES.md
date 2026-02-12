@@ -3,6 +3,7 @@
 ## ❌ O Que Foi Removido
 
 ### Endpoints de OAuth
+
 ```
 ✂️ Removido: src/pages/api/auth/oauth/[provider].ts
 ✂️ Removido: src/pages/api/auth/oauth-callback.ts
@@ -10,11 +11,13 @@
 ```
 
 ### Componentes OAuth
+
 ```
 ✂️ Removido: src/components/auth/OAuthLogin.astro
 ```
 
 ### Métodos de OAuth no Auth Service
+
 ```typescript
 // ✂️ REMOVIDO:
 loginWithOAuth2(provider: string)
@@ -27,6 +30,7 @@ confirmPasswordReset(resetToken, password, passwordConfirm)
 ## ✅ O Que Foi Mantido
 
 ### Serviços
+
 ```
 ✓ src/lib/auth.ts - Serviço com:
   - loginWithPassword()
@@ -40,12 +44,14 @@ confirmPasswordReset(resetToken, password, passwordConfirm)
 ```
 
 ### Componentes
+
 ```
 ✓ src/components/auth/LoginForm.astro - Formulário email/senha
 ✓ src/components/auth/UserMenu.astro - Menu de usuário + logout
 ```
 
 ### Páginas
+
 ```
 ✓ src/pages/login.astro - Página de login
 ✓ src/pages/signup.astro - Página de signup
@@ -53,6 +59,7 @@ confirmPasswordReset(resetToken, password, passwordConfirm)
 ```
 
 ### Endpoints
+
 ```
 ✓ src/pages/api/auth/login.ts - POST login
 ✓ src/pages/api/auth/signup.ts - POST signup
@@ -61,6 +68,7 @@ confirmPasswordReset(resetToken, password, passwordConfirm)
 ```
 
 ### Proteção
+
 ```
 ✓ src/middleware.ts - Proteção de rotas
 ✓ src/types/auth.d.ts - Tipos TypeScript
@@ -71,15 +79,19 @@ confirmPasswordReset(resetToken, password, passwordConfirm)
 ## 📝 Arquivos Atualizados
 
 ### Pages
+
 - ✏️ **login.astro** - Removido import OAuthLogin, removido div com <OAuthLogin />
 
 ### Serviços
+
 - ✏️ **auth.ts** - Removidos métodos OAuth, mantido apenas email/senha
 
 ### Documentação
+
 - ✏️ **QUICKSTART.md** - Removidas referências a OAuth
 
 ### Novo
+
 - ✨ **SETUP_SIMPLE.md** - Guia simplificado focado em email/senha
 
 ---
@@ -87,12 +99,14 @@ confirmPasswordReset(resetToken, password, passwordConfirm)
 ## 🔄 O Resultado
 
 **ANTES:**
+
 - Suporte a email/senha + OAuth2
 - 30+ arquivos
 - Complexidade média
 - 6 endpoints de auth
 
 **DEPOIS:**
+
 - ✅ Apenas email/senha (simples!)
 - ~25 arquivos
 - Menos complexidade
@@ -102,12 +116,12 @@ confirmPasswordReset(resetToken, password, passwordConfirm)
 
 ## 🎯 Arquivos Criados Agora
 
-| Arquivo | Tipo | Status |
-|---------|------|--------|
-| src/lib/auth.ts | Serviço | ✓ Simplificado |
-| src/components/auth/LoginForm.astro | Componente | ✓ Email/senha |
-| src/pages/login.astro | Página | ✓ Atualizada |
-| SETUP_SIMPLE.md | Documentação | ✨ Novo |
+| Arquivo                             | Tipo         | Status         |
+| ----------------------------------- | ------------ | -------------- |
+| src/lib/auth.ts                     | Serviço      | ✓ Simplificado |
+| src/components/auth/LoginForm.astro | Componente   | ✓ Email/senha  |
+| src/pages/login.astro               | Página       | ✓ Atualizada   |
+| SETUP_SIMPLE.md                     | Documentação | ✨ Novo        |
 
 ---
 

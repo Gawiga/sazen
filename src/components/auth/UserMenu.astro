@@ -8,26 +8,22 @@ interface Props {
 const { user } = Astro.props;
 ---
 
-{user && (
-  <div class="flex items-center space-x-4">
-    <div class="text-right">
-      <p class="text-sm font-medium text-gray-900 dark:text-white">
-        {user.email}
-      </p>
-      {user.username && (
-        <p class="text-xs text-gray-500 dark:text-gray-400">
-          @{user.username}
-        </p>
-      )}
+{
+  user && (
+    <div class="flex items-center space-x-4">
+      <div class="text-right">
+        <p class="text-sm font-medium text-gray-900 dark:text-white">{user.email}</p>
+        {user.username && <p class="text-xs text-gray-500 dark:text-gray-400">@{user.username}</p>}
+      </div>
+      <button
+        id="logout-btn"
+        class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+      >
+        Sair
+      </button>
     </div>
-    <button
-      id="logout-btn"
-      class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-    >
-      Sair
-    </button>
-  </div>
-)}
+  )
+}
 
 <script>
   const logoutBtn = document.getElementById('logout-btn');

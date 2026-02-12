@@ -14,7 +14,7 @@ export const POST = async ({ request }) => {
 
     return new Response(JSON.stringify({ message: data }), {
       status: response.ok ? 200 : 400,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message }), { status: 500 });

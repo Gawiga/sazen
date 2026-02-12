@@ -20,7 +20,7 @@ if (authCookie) {
 }
 ---
 
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <title>Meu Site</title>
@@ -28,18 +28,20 @@ if (authCookie) {
   <body>
     <header>
       <nav>
-        {user ? (
-          <div class="flex gap-4">
-            <span>Bem-vindo, {user.email}</span>
-            <a href="/dashboard">Dashboard</a>
-            <button onclick="logout()">Sair</button>
-          </div>
-        ) : (
-          <div class="flex gap-4">
-            <a href="/login">Login</a>
-            <a href="/signup">Signup</a>
-          </div>
-        )}
+        {
+          user ? (
+            <div class="flex gap-4">
+              <span>Bem-vindo, {user.email}</span>
+              <a href="/dashboard">Dashboard</a>
+              <button onclick="logout()">Sair</button>
+            </div>
+          ) : (
+            <div class="flex gap-4">
+              <a href="/login">Login</a>
+              <a href="/signup">Signup</a>
+            </div>
+          )
+        }
       </nav>
     </header>
 
@@ -69,42 +71,17 @@ interface Props {
 const { isOpen } = Astro.props;
 ---
 
-<div 
-  id="login-modal" 
-  class={`fixed inset-0 bg-black/50 flex items-center justify-center ${
-    isOpen ? '' : 'hidden'
-  }`}
->
+<div id="login-modal" class={`fixed inset-0 bg-black/50 flex items-center justify-center ${isOpen ? '' : 'hidden'}`}>
   <div class="bg-white rounded-lg p-8 max-w-md w-full">
     <h2 class="text-2xl font-bold mb-4">Login</h2>
-    
+
     <form id="login-form" class="space-y-4">
-      <input
-        type="email"
-        placeholder="Email"
-        required
-        class="w-full px-4 py-2 border rounded"
-      />
-      <input
-        type="password"
-        placeholder="Senha"
-        required
-        class="w-full px-4 py-2 border rounded"
-      />
-      <button
-        type="submit"
-        class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-      >
-        Entrar
-      </button>
+      <input type="email" placeholder="Email" required class="w-full px-4 py-2 border rounded" />
+      <input type="password" placeholder="Senha" required class="w-full px-4 py-2 border rounded" />
+      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"> Entrar </button>
     </form>
 
-    <button
-      onclick="closeModal()"
-      class="mt-4 text-gray-500 hover:text-gray-700"
-    >
-      Fechar
-    </button>
+    <button onclick="closeModal()" class="mt-4 text-gray-500 hover:text-gray-700"> Fechar </button>
   </div>
 </div>
 
@@ -222,13 +199,7 @@ const { user } = Astro.props;
 <form id="profile-form" class="space-y-4">
   <div>
     <label>Email</label>
-    <input
-      type="email"
-      name="email"
-      value={user.email}
-      disabled
-      class="w-full px-4 py-2 border rounded bg-gray-100"
-    />
+    <input type="email" name="email" value={user.email} disabled class="w-full px-4 py-2 border rounded bg-gray-100" />
   </div>
 
   <div>
@@ -242,12 +213,7 @@ const { user } = Astro.props;
     />
   </div>
 
-  <button
-    type="submit"
-    class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-  >
-    Salvar Alterações
-  </button>
+  <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"> Salvar Alterações </button>
 </form>
 
 <script>
@@ -266,9 +232,7 @@ const { user } = Astro.props;
     const updates = Object.fromEntries(formData);
 
     try {
-      const updated = await pb
-        .collection('users')
-        .update(auth.record.id, updates);
+      const updated = await pb.collection('users').update(auth.record.id, updates);
 
       // Atualizar localStorage
       localStorage.setItem(
@@ -304,9 +268,7 @@ const { user } = Astro.props;
     const text = document.getElementById('notification-text');
 
     container?.classList.remove('hidden', 'bg-green-500', 'bg-red-500');
-    container?.classList.add(
-      type === 'success' ? 'bg-green-500' : 'bg-red-500'
-    );
+    container?.classList.add(type === 'success' ? 'bg-green-500' : 'bg-red-500');
 
     if (text) {
       text.textContent = message;
@@ -362,10 +324,7 @@ export const GET: APIRoute = async ({ cookies }) => {
 
     return new Response(JSON.stringify({ user, records }), { status: 200 });
   } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500 }
-    );
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 };
 ```
@@ -433,6 +392,7 @@ const isAuthenticated = !!authCookie;
 ```
 
 ## Exemplo de Uso:
+
 ```astro
 ---
 import ProtectedContent from '~/components/ProtectedContent.astro';

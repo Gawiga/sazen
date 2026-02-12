@@ -7,20 +7,24 @@ Sua aplicação Astro agora possui um sistema de autenticação completo com Poc
 ### 📚 Estrutura de Arquivos
 
 #### Serviços de Autenticação
+
 - **`src/lib/pocketbase.ts`** - Cliente PocketBase configurado e reutilizável
 - **`src/lib/auth.ts`** - Serviço de autenticação com métodos para login, signup, OAuth2, logout, etc.
 
 #### Componentes
+
 - **`src/components/auth/LoginForm.astro`** - Formulário de login com email/senha
 - **`src/components/auth/OAuthLogin.astro`** - Botões de login com OAuth2 (Google, GitHub, etc.)
 - **`src/components/auth/UserMenu.astro`** - Menu de usuário com informações e logout
 
 #### Páginas
+
 - **`src/pages/login.astro`** - Página de login visual
 - **`src/pages/signup.astro`** - Página de criação de conta
 - **`src/pages/dashboard.astro`** - Dashboard protegido (exemplo)
 
 #### Endpoints de API
+
 - **`src/pages/api/auth/login.ts`** - POST - Autentica com email/senha
 - **`src/pages/api/auth/signup.ts`** - POST - Cria nova conta
 - **`src/pages/api/auth/logout.ts`** - POST - Faz logout
@@ -29,61 +33,73 @@ Sua aplicação Astro agora possui um sistema de autenticação completo com Poc
 - **`src/pages/api/auth/oauth-callback.ts`** - GET - Callback OAuth2
 
 #### Middleware e Tipos
+
 - **`src/middleware.ts`** - Proteção de rotas autenticadas
 - **`src/types/auth.d.ts`** - Tipos TypeScript para autenticação
 
 #### Documentação
+
 - **`AUTHENTICATION.md`** - Documentação técnica completa
 - **`EXAMPLES.md`** - Exemplos de código práticos
 - **`QUICKSTART.md`** - Guia de início rápido
 - **`.env.example`** - Template de variáveis de ambiente
 
 #### Configuração
+
 - **`.env.local`** - Variáveis de ambiente pré-preenchidas
 - **`astro.config.ts`** - Atualizado com adapter Netlify para SSR
 
 ### 🚀 Funcionalidades Implementadas
 
 ✅ **Autenticação com Email/Senha**
+
 - Formulário seguro de login
 - Validação de credenciais com PocketBase
 - Armazenamento de token em cookie HTTP-only
 
 ✅ **Autenticação OAuth2**
+
 - Suporte para Google, GitHub e outros provedores
 - Fluxo de autorização automático
 - Criação de conta automática no primeiro login
 
 ✅ **Gerenciamento de Sessão**
+
 - Cookies HTTP-only seguros
 - Tokens JWT com expiração
 - Restauração automática de sessão
 
 ✅ **Criação de Conta**
+
 - Formulário de signup
 - Validação de senhas
 - Auto-login após criar conta
 
 ✅ **Proteção de Rotas**
+
 - Middleware redirecionando usuários não autenticados
 - Rotas privadas protegidas
 
 ✅ **Logout**
+
 - Limpeza de cookies e localStorage
 - Redirecionamento para home
 
 ✅ **TypeScript**
+
 - Tipos completos para autenticação
 - IntelliSense total em seu editor
 
 ### 🔧 Configuração Necessária
 
 1. **Copiar arquivo de ambiente:**
+
    ```bash
    cp .env.example .env.local
    ```
 
 2. **Editar `.env.local`:**
+
    ```env
    PUBLIC_POCKETBASE_URL=https://gawiga-server.bonito-dace.ts.net/
    PUBLIC_POCKETBASE_COLLECTION=pacientes
@@ -105,6 +121,7 @@ npm run dev
 ```
 
 Acesse:
+
 - Login: http://localhost:3000/login
 - Signup: http://localhost:3000/signup
 - Dashboard: http://localhost:3000/dashboard
@@ -112,6 +129,7 @@ Acesse:
 ### 📋 Fluxos de Autenticação
 
 #### Email/Senha
+
 ```
 1. Usuário acessa /login
 2. Preenche email e senha
@@ -123,6 +141,7 @@ Acesse:
 ```
 
 #### OAuth2 (Google/GitHub)
+
 ```
 1. Usuário clica "Login com Google"
 2. GET /api/auth/oauth/google
@@ -138,6 +157,7 @@ Acesse:
 ### 🔒 Rotas Protegidas
 
 As seguintes rotas requerem autenticação:
+
 - `/dashboard` - Redireciona para `/login` se deslogado
 - `/api/user` - Retorna 401 se deslogado
 
@@ -175,19 +195,23 @@ Para adicionar mais rotas, edite `src/middleware.ts`.
 ### 🐛 Troubleshooting
 
 **Erro: Cannot find pocketbase**
+
 ```bash
 npm install pocketbase
 ```
 
 **Erro: Collection not found**
+
 - Certifique-se que a coleção `pacientes` existe no PocketBase
 - Ative autenticação na coleção
 
 **Erro: Public_POCKETBASE_URL not defined**
+
 - Verifique se `.env.local` tem a URL correta
 - Restart o servidor de desenvolvimento
 
 **CORS errors**
+
 - Configure CORS no seu servidor PocketBase
 - Adicione seu domínio aos allowed origins
 
@@ -209,6 +233,7 @@ npm install pocketbase
 Como você já está usando Netlify como hosting, aqui está como fazer deploy:
 
 1. **Push para um repositório Git:**
+
    ```bash
    git add .
    git commit -m "Add PocketBase authentication"
@@ -261,9 +286,10 @@ Como você já está usando Netlify como hosting, aqui está como fazer deploy:
 
 ## 🎯 Resumo
 
-Você agora tem um **sistema de autenticação profissional** integrado ao seu projeto Astro! 
+Você agora tem um **sistema de autenticação profissional** integrado ao seu projeto Astro!
 
 O sistema é:
+
 - 🔐 **Seguro** - Cookies HTTP-only, tokens JWT
 - 📱 **Moderno** - OAuth2 integrado
 - 🚀 **Rápido** - Implementado e pronto para usar
@@ -271,6 +297,7 @@ O sistema é:
 - ✨ **Customizável** - Fácil de adaptar às suas necessidades
 
 **Comece agora:**
+
 1. Configure seu `.env.local`
 2. Teste localmente com `npm run dev`
 3. Deploy no Netlify quando estiver pronto!

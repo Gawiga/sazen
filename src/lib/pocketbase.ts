@@ -8,7 +8,7 @@ const POCKETBASE_URL = import.meta.env.PUBLIC_POCKETBASE_URL || 'https://gawiga-
  */
 export function getPocketBaseClient(): PocketBase {
   const pb = new PocketBase(POCKETBASE_URL);
-  
+
   // Restore auth state from stored token if available
   if (typeof window !== 'undefined') {
     const storedAuth = localStorage.getItem('pb_auth');
@@ -20,7 +20,7 @@ export function getPocketBaseClient(): PocketBase {
       }
     }
   }
-  
+
   return pb;
 }
 

@@ -17,9 +17,11 @@ src/components/auth/
 Formulário de login com email e senha.
 
 ### Props
+
 Nenhum prop obrigatório. Aceita `collectionName` opcional.
 
 ### Uso
+
 ```astro
 ---
 import LoginForm from '~/components/auth/LoginForm.astro';
@@ -29,6 +31,7 @@ import LoginForm from '~/components/auth/LoginForm.astro';
 ```
 
 ### Funcionalidades
+
 - ✓ Validação de email
 - ✓ Requisição segura via HTTPS
 - ✓ Mensagens de erro
@@ -36,6 +39,7 @@ import LoginForm from '~/components/auth/LoginForm.astro';
 - ✓ Dark mode support
 
 ### Fluxo
+
 1. Usuário preenche email e senha
 2. Clica "Entrar"
 3. Requisição POST para `/api/auth/login`
@@ -49,9 +53,11 @@ import LoginForm from '~/components/auth/LoginForm.astro';
 Botões de login com OAuth2 (Google, GitHub e outros).
 
 ### Props
+
 Nenhum prop obrigatório. Aceita `collectionName` opcional.
 
 ### Uso
+
 ```astro
 ---
 import OAuthLogin from '~/components/auth/OAuthLogin.astro';
@@ -61,6 +67,7 @@ import OAuthLogin from '~/components/auth/OAuthLogin.astro';
 ```
 
 ### Funcionalidades
+
 - ✓ Google OAuth2
 - ✓ GitHub OAuth2
 - ✓ Fácil adicionar mais provedores
@@ -68,17 +75,20 @@ import OAuthLogin from '~/components/auth/OAuthLogin.astro';
 - ✓ Dark mode support
 
 ### Provedores Disponíveis
+
 - Google (padrão)
 - GitHub (padrão)
 - Qualquer outro configurado no PocketBase
 
 ### Como Adicionar Novo Provedor
+
 1. Edite `OAuthLogin.astro`
 2. Adicione novo elemento `<button>`
 3. Copie o padrão para Google/GitHub
 4. Configure em PocketBase Admin
 
 ### Fluxo
+
 1. Usuário clica "Login com Google"
 2. Requisição para `/api/auth/oauth/google`
 3. Redirecionado para Google
@@ -94,13 +104,15 @@ import OAuthLogin from '~/components/auth/OAuthLogin.astro';
 Menu de usuário mostrando email e botão de logout.
 
 ### Props
+
 ```typescript
 interface Props {
-  user?: any;  // Objeto do usuário com email, username, etc
+  user?: any; // Objeto do usuário com email, username, etc
 }
 ```
 
 ### Uso
+
 ```astro
 ---
 import UserMenu from '~/components/auth/UserMenu.astro';
@@ -120,6 +132,7 @@ if (authCookie) {
 ```
 
 ### Funcionalidades
+
 - ✓ Exibe email do usuário
 - ✓ Exibe username (se disponível)
 - ✓ Botão de logout
@@ -127,6 +140,7 @@ if (authCookie) {
 - ✓ Redirecionamento após logout
 
 ### Exemplo Integrado em Layout
+
 ```astro
 ---
 // layouts/MainLayout.astro
@@ -147,14 +161,16 @@ if (authCookie) {
 
 <header>
   <nav>
-    {user ? (
-      <UserMenu user={user} />
-    ) : (
-      <div>
-        <a href="/login">Login</a>
-        <a href="/signup">Signup</a>
-      </div>
-    )}
+    {
+      user ? (
+        <UserMenu user={user} />
+      ) : (
+        <div>
+          <a href="/login">Login</a>
+          <a href="/signup">Signup</a>
+        </div>
+      )
+    }
   </nav>
 </header>
 
@@ -170,6 +186,7 @@ if (authCookie) {
 Todos os componentes usam **Tailwind CSS**. Para customizar:
 
 **LoginForm.astro** - Procure por classes como:
+
 - `bg-blue-600` - Botão primário
 - `border-gray-300` - Bordas
 - `text-gray-700` - Texto
@@ -179,13 +196,13 @@ Todos os componentes usam **Tailwind CSS**. Para customizar:
 **UserMenu.astro** - Espaçamento e cores
 
 ### Exemplo de Customização
-```astro
-<!-- Mudar cor do botão de login -->
-<!-- Antes: -->
-<button class="w-full bg-blue-600 hover:bg-blue-700 ...">
 
-<!-- Depois: -->
-<button class="w-full bg-green-600 hover:bg-green-700 ...">
+```astro
+<!-- Mudar cor do botão de login --><!-- Antes: -->
+<button class="w-full bg-blue-600 hover:bg-blue-700 ...">
+  <!-- Depois: -->
+  <button class="w-full bg-green-600 hover:bg-green-700 ..."></button></button
+>
 ```
 
 ---
@@ -193,6 +210,7 @@ Todos os componentes usam **Tailwind CSS**. Para customizar:
 ## 🔧 Integração Avançada
 
 ### Proteger Componente Atrás de Autenticação
+
 ```astro
 ---
 const authCookie = Astro.cookies.get('pb_auth');
@@ -205,6 +223,7 @@ if (!authCookie) {
 ```
 
 ### Componente Condicional
+
 ```astro
 ---
 import LoginForm from '~/components/auth/LoginForm.astro';
@@ -213,14 +232,11 @@ import UserMenu from '~/components/auth/UserMenu.astro';
 const user = Astro.cookies.get('pb_auth')?.value;
 ---
 
-{user ? (
-  <UserMenu user={JSON.parse(user).record} />
-) : (
-  <LoginForm />
-)}
+{user ? <UserMenu user={JSON.parse(user).record} /> : <LoginForm />}
 ```
 
 ### Passar Dados Customizados
+
 ```astro
 <!-- Antes -->
 <LoginForm />
@@ -237,11 +253,9 @@ Todos os componentes incluem suporte a dark mode usando `dark:` prefixo Tailwind
 
 ```astro
 <input
-  class="
-    bg-white dark:bg-gray-700
+  class="bg-white dark:bg-gray-700
     text-gray-900 dark:text-white
-    border-gray-300 dark:border-gray-600
-  "
+    border-gray-300 dark:border-gray-600"
 />
 ```
 
@@ -252,6 +266,7 @@ O tema é alternado automaticamente com a preferência do sistema.
 ## ♿ Acessibilidade
 
 ### Implemented Features
+
 - ✓ Labels semânticos para inputs
 - ✓ `required` attribute
 - ✓ IDs conectados a labels
@@ -260,6 +275,7 @@ O tema é alternado automaticamente com a preferência do sistema.
 - ✓ Button type="submit"
 
 ### Como Melhorar
+
 - [ ] Adicionar ARIA labels se necessário
 - [ ] Testar com screen readers
 - [ ] Adicionar validação visual
@@ -269,6 +285,7 @@ O tema é alternado automaticamente com a preferência do sistema.
 ## 🧪 Testes
 
 ### Testar LoginForm Localmente
+
 1. Para em `/login`
 2. Preenche email: `test@example.com`
 3. Preenche senha: `password123`
@@ -277,12 +294,14 @@ O tema é alternado automaticamente com a preferência do sistema.
 6. Verifica se redirecionou para `/dashboard`
 
 ### Testar OAuthLogin
+
 1. Para em `/login`
 2. Clica "Login com Google"
 3. Observa se redireciona corretamente
 4. Verifica cookies após autorização
 
 ### Testar UserMenu
+
 1. Para em `/dashboard` (após login)
 2. Verifica se email aparece
 3. Clica "Sair"
@@ -293,13 +312,13 @@ O tema é alternado automaticamente com a preferência do sistema.
 
 ## 🐛 Troubleshooting
 
-| Problema | Causa | Solução |
-|----------|-------|---------|
-| Botão não funciona | Script não carregado | Verificar console para erros JS |
-| Erro 401 no login | Credenciais inválidas | Verificar PocketBase |
-| OAuth não funciona | Redirect URL incorreta | Verificar em PocketBase OAuth2 settings |
-| Estilo quebrado | Tailwind não processando | Rodar `npm run dev` novamente |
-| User não aparece | Cookie expirado | Fazer login novamente |
+| Problema           | Causa                    | Solução                                 |
+| ------------------ | ------------------------ | --------------------------------------- |
+| Botão não funciona | Script não carregado     | Verificar console para erros JS         |
+| Erro 401 no login  | Credenciais inválidas    | Verificar PocketBase                    |
+| OAuth não funciona | Redirect URL incorreta   | Verificar em PocketBase OAuth2 settings |
+| Estilo quebrado    | Tailwind não processando | Rodar `npm run dev` novamente           |
+| User não aparece   | Cookie expirado          | Fazer login novamente                   |
 
 ---
 
@@ -331,4 +350,5 @@ O tema é alternado automaticamente com a preferência do sistema.
 4. Deploy!
 
 ## Dúvidas?
+
 Veja [CHECKLIST.md](../CHECKLIST.md) para um guia passo a passo!
