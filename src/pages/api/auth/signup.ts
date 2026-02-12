@@ -30,14 +30,14 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     try {
       // Create new user
-      const record = await pb.collection(POCKETBASE_COLLECTION).create({
+      await pb.collection(POCKETBASE_COLLECTION).create({
         email,
         password,
         passwordConfirm,
       });
 
       // Authenticate the newly created user
-      const authData = await pb.collection(POCKETBASE_COLLECTION).authWithPassword(email, password);
+      await pb.collection(POCKETBASE_COLLECTION).authWithPassword(email, password);
 
       // Store token in HTTP-only cookie. Use secure cookies only in production.
       cookies.set('pb_auth', pb.authStore.token, {

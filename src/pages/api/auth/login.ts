@@ -22,7 +22,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const pb = new PocketBase(POCKETBASE_URL);
 
     // Authenticate with PocketBase
-    const authData = await pb.collection(POCKETBASE_COLLECTION).authWithPassword(email, password);
+    await pb.collection(POCKETBASE_COLLECTION).authWithPassword(email, password);
 
     // Store token in HTTP-only cookie. Use secure cookies only in production (localhost won't accept secure cookies).
     cookies.set('pb_auth', pb.authStore.token, {

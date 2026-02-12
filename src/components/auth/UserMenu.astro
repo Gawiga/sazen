@@ -2,7 +2,7 @@
 // Componente para mostrar usuário logado e botão de logout
 
 interface Props {
-  user?: any;
+  user?: Record<string, unknown> | null;
 }
 
 const { user } = Astro.props;

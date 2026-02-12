@@ -100,15 +100,15 @@ export class AuthService {
   /**
    * Create new user account
    */
-  async signup(email: string, password: string, passwordConfirm: string, data?: Record<string, any>) {
+  async signup(email: string, password: string, passwordConfirm: string, data?: Record<string, unknown>) {
     try {
-      const record = await this.pb.collection(this.collectionName).create({
+      await this.pb.collection(this.collectionName).create({
         email,
         password,
         passwordConfirm,
-        ...data,
+        ...(data as Record<string, unknown> | undefined),
       });
-      
+
       // Automatically login after signup
       return this.loginWithPassword(email, password);
     } catch (error) {

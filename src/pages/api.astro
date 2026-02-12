@@ -107,31 +107,39 @@ import Layout from '~/layouts/PageLayout.astro';
 </Layout>
 
 <script>
-  const form = document.getElementById('form-frase') as HTMLFormElement;
+  const form = document.getElementById('form-frase') as HTMLFormElement | null;
   const tabelaCorpo = document.getElementById('tabela-autores');
-  const inputFiltro = document.getElementById('filtro-autor') as HTMLInputElement;
+  const inputFiltro = document.getElementById('filtro-autor') as HTMLInputElement | null;
 
-  let dadosOriginais: any[] = [];
+  let dadosOriginais: Array<Record<string, unknown>> = [];
 
   // --- GET: Buscar e Renderizar ---
   async function carregarAutores(highlightId = '') {
     try {
-      const res = await fetch('/.netlify/functions/lambda');
+      const res = await fetch('/api/lambda');
       const rawData = await res.json();
 
-      dadosOriginais = Array.from(
-        new Map(rawData.filter((item: any) => item.autor && item.id).map((item: any) => [item.autor, item])).values()
-      );
+      const arrayData = Array.isArray(rawData) ? rawData : [];
+      const filtered = arrayData.filter((item: unknown) => {
+        if (item && typeof item === 'object') {
+          const record = item as Record<string, unknown>;
+          return Boolean(record['autor'] && record['id']);
+        }
+        return false;
+      }) as Array<Record<string, unknown>>;
+
+      const uniqueByAutor = Array.from(new Map(filtered.map((item) => [String(item['autor'] || ''), item])).values());
+      dadosOriginais = uniqueByAutor;
 
       renderizarTabela(dadosOriginais, highlightId);
-    } catch (error) {
+    } catch {
       if (tabelaCorpo)
         tabelaCorpo.innerHTML =
           '<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao carregar dados.</td></tr>';
     }
   }
 
-  function renderizarTabela(dados: any[], highlightId = '') {
+  function renderizarTabela(dados: Array<Record<string, unknown>>, highlightId = '') {
     if (!tabelaCorpo) return;
 
     if (dados.length === 0) {
@@ -142,15 +150,15 @@ import Layout from '~/layouts/PageLayout.astro';
 
     tabelaCorpo.innerHTML = dados
       .map((item) => {
-        const isNew = String(item.id) === String(highlightId);
+        const isNew = String(item['id']) === String(highlightId);
         return `
         <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors ${isNew ? 'new-row-highlight' : ''}">
-          <td class="p-2.5 text-gray-600">${item.id}</td>
-          <td class="p-2.5 font-semibold text-gray-800">${item.autor}</td>
-          <td class="p-2.5 text-gray-700">${item.sort}</td>
-          <td class="p-2.5 text-sm text-gray-500">${item['data-inclusao'] || '-'}</td>
+          <td class="p-2.5 text-gray-600">${String(item['id'] ?? '')}</td>
+          <td class="p-2.5 font-semibold text-gray-800">${String(item['autor'] ?? '')}</td>
+          <td class="p-2.5 text-gray-700">${String(item['sort'] ?? '')}</td>
+          <td class="p-2.5 text-sm text-gray-500">${String(item['data-inclusao'] ?? '-')}</td>
           <td class="p-2.5 text-center">
-            <button class="btn-delete p-1" onclick="window.deletarFrase('${item.id}', '${item.sort}')" title="Excluir">
+            <button class="btn-delete p-1" onclick="window.deletarFrase('${String(item['id'] ?? '')}', '${String(item['sort'] ?? '')}')" title="Excluir">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
@@ -162,11 +170,11 @@ import Layout from '~/layouts/PageLayout.astro';
       .join('');
   }
 
-  (window as any).deletarFrase = async (id: string, sort: string) => {
+  (window as unknown as { deletarFrase?: (id: string, sort: string) => Promise<void> }).deletarFrase = async (id: string, sort: string) => {
     if (!confirm(`Deseja excluir a frase "${sort}"?`)) return;
 
     try {
-      const response = await fetch('/.netlify/functions/lambda', {
+      const response = await fetch('/api/lambda', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         // Enviamos ID e SORT juntos
@@ -183,7 +191,7 @@ import Layout from '~/layouts/PageLayout.astro';
         const errorText = await response.text();
         alert('❌ Erro na AWS: ' + errorText);
       }
-    } catch (error) {
+    } catch {
       alert('❌ Erro de conexão.');
     }
   };
@@ -191,7 +199,7 @@ import Layout from '~/layouts/PageLayout.astro';
   // --- Lógica do Filtro ---
   inputFiltro?.addEventListener('input', (e) => {
     const termo = (e.target as HTMLInputElement).value.toLowerCase();
-    const filtrados = dadosOriginais.filter((item) => item.autor.toLowerCase().includes(termo));
+    const filtrados = dadosOriginais.filter((item) => String(item['autor'] ?? '').toLowerCase().includes(termo));
     renderizarTabela(filtrados);
   });
 
@@ -204,8 +212,8 @@ import Layout from '~/layouts/PageLayout.astro';
     btn.innerText = 'Processando...';
     btn.disabled = true;
 
-    const formData = new FormData(form);
-    const currentId = formData.get('id') as string;
+    const formData = new FormData(form!);
+    const currentId = String(formData.get('id') ?? '');
     const payload = {
       id: currentId,
       sort: formData.get('sort'),
@@ -214,14 +222,14 @@ import Layout from '~/layouts/PageLayout.astro';
     };
 
     try {
-      const response = await fetch('/.netlify/functions/lambda', {
+      const response = await fetch('/api/lambda', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
       if (response.ok) {
-        form.reset();
+        (form as HTMLFormElement).reset();
         btn.innerText = '✅ Sucesso! Atualizando...';
         btn.style.backgroundColor = '#16a34a';
 
@@ -230,14 +238,14 @@ import Layout from '~/layouts/PageLayout.astro';
           btn.innerText = originalText;
           btn.style.backgroundColor = '';
           btn.disabled = false;
-          inputFiltro.value = '';
+          if (inputFiltro) inputFiltro.value = '';
         }, 2000);
       } else {
         alert('Erro ao salvar frase.');
         btn.disabled = false;
         btn.innerText = originalText;
       }
-    } catch (error) {
+    } catch {
       alert('Erro de conexão.');
       btn.disabled = false;
       btn.innerText = originalText;

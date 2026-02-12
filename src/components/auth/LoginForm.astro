@@ -1,11 +1,7 @@
 ---
 // Componente de formulário de login por email/senha
 
-interface Props {
-  collectionName?: string;
-}
-
-const { collectionName = 'users' } = Astro.props;
+// Removed unused Props and collectionName since they aren't used
 ---
 
 <form id="login-form" class="space-y-4">
@@ -49,8 +45,6 @@ const { collectionName = 'users' } = Astro.props;
 </form>
 
 <script>
-  import { AuthService } from '~/lib/auth';
-
   const form = document.getElementById('login-form') as HTMLFormElement;
   const errorDiv = document.getElementById('error-message') as HTMLDivElement;
   const loadingDiv = document.getElementById('loading') as HTMLDivElement;

@@ -17,7 +17,7 @@ export interface PBUser {
   emailVisibility?: boolean;
   created?: string;
   updated?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface LoginPayload {
@@ -29,7 +29,7 @@ export interface SignupPayload {
   email: string;
   password: string;
   passwordConfirm: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface OAuth2Payload {

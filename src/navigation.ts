@@ -1,4 +1,4 @@
-import { getPermalink, getBlogPermalink, getAsset } from './utils/permalinks';
+// Permalinks utilities removed from top-level — used in commented examples only
 
 export const headerData = {
   links: [ ]
