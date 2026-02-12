@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 import PocketBase from 'pocketbase';
 
 const POCKETBASE_URL = import.meta.env.PUBLIC_POCKETBASE_URL || 'https://gawiga-server.bonito-dace.ts.net/';
-const POCKETBASE_COLLECTION = import.meta.env.PUBLIC_POCKETBASE_COLLECTION || 'pacientes';
+const POCKETBASE_COLLECTION = import.meta.env.PUBLIC_POCKETBASE_COLLECTION || 'users';
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   if (request.method !== 'POST') {

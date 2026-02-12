@@ -2,7 +2,7 @@ import PocketBase from 'pocketbase';
 import type { AuthModel } from 'pocketbase';
 
 const POCKETBASE_URL = import.meta.env.PUBLIC_POCKETBASE_URL || 'https://gawiga-server.bonito-dace.ts.net/';
-const POCKETBASE_COLLECTION = import.meta.env.PUBLIC_POCKETBASE_COLLECTION || 'pacientes';
+const POCKETBASE_COLLECTION = import.meta.env.PUBLIC_POCKETBASE_COLLECTION || 'users';
 
 /**
  * Authentication service for PocketBase

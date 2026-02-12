@@ -61,7 +61,7 @@ Use qualquer email/senha válidos cadastrados no seu PocketBase
 // Preenche email e senha
 // Clica "Entrar"
 // POST /api/auth/login
-// PocketBase valida com: pb.collection('pacientes').authWithPassword(email, password)
+// PocketBase valida com: pb.collection('users').authWithPassword(email, password)
 // Token guardado em cookie HTTP-only
 // Redirecionado para /dashboard
 ```

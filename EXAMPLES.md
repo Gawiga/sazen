@@ -261,7 +261,7 @@ const auth = JSON.parse(localStorage.getItem('pb_auth') || '{}');
 pb.authStore.save(auth.token, auth.record);
 
 // Atualizar usuário
-const updated = await pb.collection('pacientes').update(auth.record.id, {
+const updated = await pb.collection('users').update(auth.record.id, {
   username: 'novo_username',
   // outros campos
 });

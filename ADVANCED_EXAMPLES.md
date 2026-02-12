@@ -267,7 +267,7 @@ const { user } = Astro.props;
 
     try {
       const updated = await pb
-        .collection('pacientes')
+        .collection('users')
         .update(auth.record.id, updates);
 
       // Atualizar localStorage
