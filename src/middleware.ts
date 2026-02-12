@@ -16,8 +16,8 @@ const authMiddleware = defineMiddleware((context, next: MiddlewareNext) => {
   // protected API routes when not authenticated. This prevents HTML redirects
   // that break JSON clients (Unexpected token '<').
   if (pathname.startsWith('/api/')) {
-    const publicApi = ['/api/auth/login', '/api/auth/signup', '/api/auth/logout'];
-    if (publicApi.some(p => pathname.startsWith(p))) {
+    const publicApi = ['/api/auth/login', '/api/auth/signup', '/api/auth/logout', '/api/lambda'];
+    if (publicApi.some((p) => pathname.startsWith(p))) {
       return next();
     }
 
@@ -32,7 +32,7 @@ const authMiddleware = defineMiddleware((context, next: MiddlewareNext) => {
     return next();
   }
 
-  if (protectedRoutes.some(route => pathname.startsWith(route))) {
+  if (protectedRoutes.some((route) => pathname.startsWith(route))) {
     const authCookie = context.cookies.get('pb_auth');
 
     if (!authCookie) {
