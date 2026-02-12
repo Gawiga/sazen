@@ -6,13 +6,15 @@ const POCKETBASE_URL = import.meta.env.PUBLIC_POCKETBASE_URL || 'https://gawiga-
 
 function getPb(token?: string) {
   const pb = new PocketBase(POCKETBASE_URL);
-  if (token) pb.authStore.save(token, {});
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (token) pb.authStore.save(token, {} as any);
   return pb;
 }
 
 export const GET: APIRoute = async ({ params, request, cookies }) => {
   try {
-    const id = params.id;
+    const id = params.id as string;
+    if (!id) return new Response(JSON.stringify({ success: false, error: 'Invalid ID' }), { status: 400 });
     const token = getTokenFromRequest(request, cookies);
     if (!token) return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), { status: 401 });
     const pb = getPb(token);
@@ -26,7 +28,8 @@ export const GET: APIRoute = async ({ params, request, cookies }) => {
 
 export const PUT: APIRoute = async ({ params, request, cookies }) => {
   try {
-    const id = params.id;
+    const id = params.id as string;
+    if (!id) return new Response(JSON.stringify({ success: false, error: 'Invalid ID' }), { status: 400 });
     const payload = await request.json();
     const token = getTokenFromRequest(request, cookies);
     if (!token) return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), { status: 401 });
@@ -41,7 +44,8 @@ export const PUT: APIRoute = async ({ params, request, cookies }) => {
 
 export const DELETE: APIRoute = async ({ params, request, cookies }) => {
   try {
-    const id = params.id;
+    const id = params.id as string;
+    if (!id) return new Response(JSON.stringify({ success: false, error: 'Invalid ID' }), { status: 400 });
     const token = getTokenFromRequest(request, cookies);
     if (!token) return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), { status: 401 });
     const pb = getPb(token);

@@ -6,7 +6,8 @@ const POCKETBASE_URL = import.meta.env.PUBLIC_POCKETBASE_URL || 'https://gawiga-
 
 function getPb(token?: string) {
   const pb = new PocketBase(POCKETBASE_URL);
-  if (token) pb.authStore.save(token, {});
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (token) pb.authStore.save(token, {} as any);
   return pb;
 }
 

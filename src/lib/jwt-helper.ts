@@ -20,7 +20,11 @@ export function decodeJwt(token: string): { payload: Record<string, unknown>; va
   }
 }
 
-export function getTokenFromRequest(request?: Request, cookies?: Record<string, unknown>): string | null {
+export function getTokenFromRequest(
+  request?: Request,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  cookies?: any
+): string | null {
   // Try Authorization header first
   if (request) {
     const auth = request.headers.get('Authorization');
