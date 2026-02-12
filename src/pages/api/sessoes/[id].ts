@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import PocketBase from 'pocketbase';
+import { getTokenFromRequest } from '../../../lib/jwt-helper';
 
 const POCKETBASE_URL = import.meta.env.PUBLIC_POCKETBASE_URL || 'https://gawiga-server.bonito-dace.ts.net/';
 
@@ -9,10 +10,11 @@ function getPb(token?: string) {
   return pb;
 }
 
-export const GET: APIRoute = async ({ params, cookies }) => {
+export const GET: APIRoute = async ({ params, request, cookies }) => {
   try {
     const id = params.id;
-    const token = cookies.get('pb_auth')?.value;
+    const token = getTokenFromRequest(request, cookies);
+    if (!token) return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), { status: 401 });
     const pb = getPb(token);
     const record = await pb.collection('sessao').getOne(id);
     return new Response(JSON.stringify({ success: true, record }), { status: 200 });
@@ -26,7 +28,8 @@ export const PUT: APIRoute = async ({ params, request, cookies }) => {
   try {
     const id = params.id;
     const payload = await request.json();
-    const token = cookies.get('pb_auth')?.value;
+    const token = getTokenFromRequest(request, cookies);
+    if (!token) return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), { status: 401 });
     const pb = getPb(token);
     const record = await pb.collection('sessao').update(id, payload);
     return new Response(JSON.stringify({ success: true, record }), { status: 200 });
@@ -36,10 +39,11 @@ export const PUT: APIRoute = async ({ params, request, cookies }) => {
   }
 };
 
-export const DELETE: APIRoute = async ({ params, cookies }) => {
+export const DELETE: APIRoute = async ({ params, request, cookies }) => {
   try {
     const id = params.id;
-    const token = cookies.get('pb_auth')?.value;
+    const token = getTokenFromRequest(request, cookies);
+    if (!token) return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), { status: 401 });
     const pb = getPb(token);
     await pb.collection('sessao').delete(id);
     return new Response(JSON.stringify({ success: true }), { status: 200 });

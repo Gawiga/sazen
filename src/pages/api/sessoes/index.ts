@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import PocketBase from 'pocketbase';
+import { getTokenFromRequest } from '../../../lib/jwt-helper';
 
 const POCKETBASE_URL = import.meta.env.PUBLIC_POCKETBASE_URL || 'https://gawiga-server.bonito-dace.ts.net/';
 
@@ -9,9 +10,10 @@ function getPb(token?: string) {
   return pb;
 }
 
-export const GET: APIRoute = async ({ cookies }) => {
+export const GET: APIRoute = async ({ request, cookies }) => {
   try {
-    const token = cookies.get('pb_auth')?.value;
+    const token = getTokenFromRequest(request, cookies);
+    if (!token) return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), { status: 401 });
     const pb = getPb(token);
     const list = await pb.collection('sessao').getFullList({ sort: '-data' });
     return new Response(JSON.stringify({ success: true, items: list }), { status: 200 });
@@ -23,7 +25,8 @@ export const GET: APIRoute = async ({ cookies }) => {
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {
-    const token = cookies.get('pb_auth')?.value;
+    const token = getTokenFromRequest(request, cookies);
+    if (!token) return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), { status: 401 });
     const pb = getPb(token);
     const payload = await request.json();
     const record = await pb.collection('sessao').create(payload);

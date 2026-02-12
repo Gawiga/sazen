@@ -9,6 +9,9 @@ const metadata = {
 
 <PageLayout metadata={metadata}>
   <section class="mx-auto max-w-4xl py-12">
+    <a href="/dashboard" class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:underline mb-3"
+      >← Voltar ao Dashboard</a
+    >
     <div class="mb-6 flex items-center justify-between">
       <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Sessões</h1>
       <button id="new-btn" class="px-4 py-2 bg-green-600 text-white rounded">Nova sessão</button>
@@ -67,9 +70,20 @@ const metadata = {
   <script type="module">
     const collectionBase = '/api/sessoes';
 
+    // Helper function to fetch with token
+    function fetchWithAuth(url, options = {}) {
+      const token = localStorage.getItem('pb_auth');
+      const auth = token ? JSON.parse(token).token : null;
+      const headers = { ...options.headers };
+      if (auth) {
+        headers.Authorization = `Bearer ${auth}`;
+      }
+      return fetch(url, { ...options, headers });
+    }
+
     window.addEventListener('DOMContentLoaded', async () => {
       try {
-        const u = await fetch('/api/auth/user');
+        const u = await fetchWithAuth('/api/auth/user');
         const ud = await u.json();
         if (!ud.user) {
           window.location.href = '/login';
@@ -92,12 +106,14 @@ const metadata = {
       // load patients for select and mapping
       async function loadPatientsForSelect() {
         try {
-          const res = await fetch('/api/pacientes');
+          const res = await fetchWithAuth('/api/pacientes');
           const data = await res.json();
           const items = data?.items || [];
           patientMap = new Map(items.map((p) => [p.id, p.nome || p.email || p.id]));
           if (patientSelect) {
-            patientSelect.innerHTML = '<option value="">— selecione —</option>' + items.map(p => `<option value="${p.id}">${p.nome || p.email || p.id}</option>`).join('');
+            patientSelect.innerHTML =
+              '<option value="">— selecione —</option>' +
+              items.map((p) => `<option value="${p.id}">${p.nome || p.email || p.id}</option>`).join('');
           }
         } catch (err) {
           console.error('failed to load patients for select', err);
@@ -122,13 +138,15 @@ const metadata = {
 
       async function loadSessions() {
         try {
-          const res = await fetch(collectionBase);
+          const res = await fetchWithAuth(collectionBase);
           const data = await res.json();
           if (data?.items) render(data.items);
           else render([]);
         } catch (err) {
           console.error(err);
-          if (body) body.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-sm text-red-500">Erro ao carregar</td></tr>';
+          if (body)
+            body.innerHTML =
+              '<tr><td colspan="5" class="p-4 text-center text-sm text-red-500">Erro ao carregar</td></tr>';
         }
       }
 
@@ -140,7 +158,8 @@ const metadata = {
         }
 
         body.innerHTML = items
-          .map((it) => `
+          .map(
+            (it) => `
             <tr class="border-t">
               <td class="p-2">${patientMap.get(it.id_paciente) || it.id_paciente || ''}</td>
               <td class="p-2">${it.data || ''}</td>
@@ -151,13 +170,14 @@ const metadata = {
                 <button data-id="${it.id}" class="del-btn px-2 py-1 bg-red-500 text-white rounded">Excluir</button>
               </td>
             </tr>
-          `)
+          `
+          )
           .join('');
 
         document.querySelectorAll('.edit-btn').forEach((b) =>
           b.addEventListener('click', async (e) => {
             const id = e.currentTarget.getAttribute('data-id');
-            const recRes = await fetch(`${collectionBase}/${id}`);
+            const recRes = await fetchWithAuth(`${collectionBase}/${id}`);
             const recData = await recRes.json();
             const record = recData.record;
             const idField = document.getElementById('session-id');
@@ -167,7 +187,7 @@ const metadata = {
             const valor = document.getElementById('valor');
             const pago = document.getElementById('pago');
             if (paciente) paciente.value = record?.id_paciente || '';
-            if (dataEl) dataEl.value = record?.data ? new Date(record.data).toISOString().slice(0,16) : '';
+            if (dataEl) dataEl.value = record?.data ? new Date(record.data).toISOString().slice(0, 16) : '';
             if (valor) valor.value = record?.valor || '';
             if (pago) pago.checked = !!record?.pago;
             toggleForm(true);
@@ -178,7 +198,7 @@ const metadata = {
           b.addEventListener('click', async (e) => {
             const id = e.currentTarget.getAttribute('data-id');
             if (!confirm('Excluir sessão?')) return;
-            await fetch(`${collectionBase}/${id}`, { method: 'DELETE' });
+            await fetchWithAuth(`${collectionBase}/${id}`, { method: 'DELETE' });
             loadSessions();
           })
         );
@@ -187,19 +207,27 @@ const metadata = {
       if (form) {
         form.addEventListener('submit', async (ev) => {
           ev.preventDefault();
-          const id = (document.getElementById('session-id')).value;
+          const id = document.getElementById('session-id').value;
           const payload = {
-            id_paciente: (document.getElementById('id_paciente')).value,
-            data: (document.getElementById('data')).value,
-            valor: Number((document.getElementById('valor')).value) || 0,
-            pago: (document.getElementById('pago')).checked,
+            id_paciente: document.getElementById('id_paciente').value,
+            data: document.getElementById('data').value,
+            valor: Number(document.getElementById('valor').value) || 0,
+            pago: document.getElementById('pago').checked,
           };
 
           try {
             if (id) {
-              await fetch(`${collectionBase}/${id}`, { method: 'PUT', body: JSON.stringify(payload), headers: { 'Content-Type': 'application/json' } });
+              await fetchWithAuth(`${collectionBase}/${id}`, {
+                method: 'PUT',
+                body: JSON.stringify(payload),
+                headers: { 'Content-Type': 'application/json' },
+              });
             } else {
-              await fetch(collectionBase, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'application/json' } });
+              await fetchWithAuth(collectionBase, {
+                method: 'POST',
+                body: JSON.stringify(payload),
+                headers: { 'Content-Type': 'application/json' },
+              });
             }
             toggleForm(false);
             loadSessions();
