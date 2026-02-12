@@ -9,6 +9,16 @@
   </head>
   <body>
     <!-- Include the script that builds the page and powers Decap CMS -->
+    <script>
+      // Prevent automatic loading so we can provide an absolute config path
+      window.CMS_MANUAL_INIT = true;
+    </script>
     <script src="https://unpkg.com/decap-cms@^3.1.2/dist/decap-cms.js"></script>
+    <script>
+      // Initialize Decap (Netlify) CMS with explicit config path to avoid 404s
+      if (window.CMS && typeof window.CMS.init === 'function') {
+        window.CMS.init({ config: '/decapcms/config.yml' });
+      }
+    </script>
   </body>
 </html>
