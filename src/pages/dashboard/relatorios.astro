@@ -1,0 +1,67 @@
+---
+import PageLayout from '~/layouts/PageLayout.astro';
+
+const metadata = {
+  title: 'Relatórios',
+  description: 'Visualização de relatórios',
+};
+---
+
+<PageLayout metadata={metadata}>
+  <section class="mx-auto max-w-4xl py-12">
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Relatórios</h1>
+      <p class="text-sm text-gray-600 dark:text-gray-400">Visualize faturamento e valores a receber</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="bg-white dark:bg-gray-900 rounded shadow p-4">
+        <h2 class="font-semibold mb-2">Faturamento Mensal</h2>
+        <pre id="faturamento" class="text-sm text-gray-700 dark:text-gray-300 overflow-auto max-h-72"></pre>
+      </div>
+
+      <div class="bg-white dark:bg-gray-900 rounded shadow p-4">
+        <h2 class="font-semibold mb-2">Valores a Receber</h2>
+        <pre id="receber" class="text-sm text-gray-700 dark:text-gray-300 overflow-auto max-h-72"></pre>
+      </div>
+    </div>
+  </section>
+
+  <script type="module">
+    const endpoint = '/api/reports';
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const u = await fetch('/api/auth/user');
+        const ud = await u.json();
+        if (!ud.user) {
+          window.location.href = '/login';
+          return;
+        }
+      } catch (err) {
+        console.error('auth check failed', err);
+        window.location.href = '/login';
+        return;
+      }
+
+      async function loadReports() {
+        try {
+          const res = await fetch(endpoint);
+          const data = await res.json();
+          const fEl = document.getElementById('faturamento');
+          const rEl = document.getElementById('receber');
+          if (fEl) fEl.textContent = JSON.stringify((data.fatur || []).map(r => ({ id: r.id, mes_ano: r.mes_ano, total: r.total })), null, 2);
+          if (rEl) rEl.textContent = JSON.stringify((data.receber || []).map(r => ({ id: r.id, nome: r.nome, total: r.total })), null, 2);
+        } catch (err) {
+          console.error(err);
+          const fEl = document.getElementById('faturamento');
+          const rEl = document.getElementById('receber');
+          if (fEl) fEl.textContent = 'Erro ao carregar';
+          if (rEl) rEl.textContent = 'Erro ao carregar';
+        }
+      }
+
+      loadReports();
+    });
+  </script>
+</PageLayout>
