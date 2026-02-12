@@ -348,7 +348,3 @@ O tema é alternado automaticamente com a preferência do sistema.
 2. Customizar estilos
 3. Testar fluxos
 4. Deploy!
-
-## Dúvidas?
-
-Veja [CHECKLIST.md](../CHECKLIST.md) para um guia passo a passo!
