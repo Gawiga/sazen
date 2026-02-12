@@ -10,7 +10,14 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   }
 
   try {
-    const { email, password, passwordConfirm } = await request.json();
+    const payload = await request.json();
+    const { email, password, passwordConfirm, name, emailVisibility } = payload as {
+      email?: string;
+      password?: string;
+      passwordConfirm?: string;
+      name?: string;
+      emailVisibility?: boolean;
+    };
 
     if (!email || !password || !passwordConfirm) {
       return new Response(JSON.stringify({ error: 'Email, password, and password confirmation are required' }), {
@@ -25,15 +32,28 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const pb = new PocketBase(POCKETBASE_URL);
 
     try {
-      // Create new user
-      await pb.collection(POCKETBASE_COLLECTION).create({
+      // Build create payload according to PocketBase auth requirements
+      const createData: Record<string, unknown> = {
         email,
         password,
         passwordConfirm,
-      });
+      };
+
+      if (typeof name === 'string' && name.length > 0) createData.name = name;
+      if (typeof emailVisibility === 'boolean') createData.emailVisibility = emailVisibility;
+
+      // Create new user (auth record)
+      const record = await pb.collection(POCKETBASE_COLLECTION).create(createData);
+
+      // (optional) request email verification — ignore errors from this call
+      try {
+        if (email) await pb.collection(POCKETBASE_COLLECTION).requestVerification(email);
+      } catch (err) {
+        console.warn('Verification request failed (non-fatal):', err);
+      }
 
       // Authenticate the newly created user
-      await pb.collection(POCKETBASE_COLLECTION).authWithPassword(email, password);
+      await pb.collection(POCKETBASE_COLLECTION).authWithPassword(email!, password!);
 
       // Store token in HTTP-only cookie. Use secure cookies only in production.
       cookies.set('pb_auth', pb.authStore.token, {
@@ -48,7 +68,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         JSON.stringify({
           success: true,
           token: pb.authStore.token,
-          record: pb.authStore.record,
+          record: record,
         }),
         { status: 201 }
       );

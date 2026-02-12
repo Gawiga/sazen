@@ -1,0 +1,245 @@
+---
+import PageLayout from '~/layouts/PageLayout.astro';
+
+const metadata = {
+  title: 'Sessões',
+  description: 'Cadastro e gerenciamento de sessões',
+};
+---
+
+<PageLayout metadata={metadata}>
+  <section class="mx-auto max-w-4xl py-12">
+    <a href="/dashboard" class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:underline mb-3"
+      >← Voltar ao Dashboard</a
+    >
+    <div class="mb-6 flex items-center justify-between">
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Sessões</h1>
+      <button id="new-btn" class="px-4 py-2 bg-green-600 text-white rounded">Nova sessão</button>
+    </div>
+
+    <div id="form-container" class="mb-6 hidden bg-white dark:bg-gray-900 p-6 rounded shadow">
+      <form id="session-form" class="space-y-4">
+        <input type="hidden" id="session-id" />
+        <div>
+          <label class="block text-sm text-gray-700 dark:text-gray-300">Paciente</label>
+          <select id="id_paciente" class="mt-1 w-full rounded border p-2 bg-white dark:bg-gray-800">
+            <option value="">— selecione —</option>
+          </select>
+        </div>
+        <div class="flex space-x-2">
+          <div class="flex-1">
+            <label class="block text-sm text-gray-700 dark:text-gray-300">Data</label>
+            <input id="data" type="datetime-local" class="mt-1 w-full rounded border p-2 bg-white dark:bg-gray-800" />
+          </div>
+          <div class="w-40">
+            <label class="block text-sm text-gray-700 dark:text-gray-300">Valor</label>
+            <input id="valor" type="number" class="mt-1 w-full rounded border p-2 bg-white dark:bg-gray-800" />
+          </div>
+        </div>
+        <div>
+          <label class="inline-flex items-center">
+            <input id="pago" type="checkbox" class="mr-2" />
+            <span class="text-sm text-gray-700 dark:text-gray-300">Pago</span>
+          </label>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">Salvar</button>
+          <button id="cancel-btn" type="button" class="px-4 py-2 bg-gray-300 dark:bg-gray-700 rounded">Cancelar</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded shadow p-4">
+      <table class="w-full text-left table-auto">
+        <thead>
+          <tr class="text-sm text-gray-600 dark:text-gray-400">
+            <th class="p-2">Paciente</th>
+            <th class="p-2">Data</th>
+            <th class="p-2">Valor</th>
+            <th class="p-2">Pago</th>
+            <th class="p-2">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="sessions-body" class="align-top">
+          <tr><td colspan="5" class="p-4 text-center text-sm text-gray-500">Carregando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <script type="module">
+    const collectionBase = '/api/sessoes';
+
+    // Helper function to fetch with token
+    function fetchWithAuth(url, options = {}) {
+      const token = localStorage.getItem('pb_auth');
+      const auth = token ? JSON.parse(token).token : null;
+      const headers = { ...options.headers };
+      if (auth) {
+        headers.Authorization = `Bearer ${auth}`;
+      }
+      return fetch(url, { ...options, headers });
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const u = await fetchWithAuth('/api/auth/user');
+        const ud = await u.json();
+        if (!ud.user) {
+          window.location.href = '/login';
+          return;
+        }
+      } catch (err) {
+        console.error('auth check failed', err);
+        window.location.href = '/login';
+        return;
+      }
+
+      const newBtn = document.getElementById('new-btn');
+      const formContainer = document.getElementById('form-container');
+      const form = document.getElementById('session-form');
+      const cancelBtn = document.getElementById('cancel-btn');
+      const body = document.getElementById('sessions-body');
+      const patientSelect = document.getElementById('id_paciente');
+      let patientMap = new Map();
+
+      // load patients for select and mapping
+      async function loadPatientsForSelect() {
+        try {
+          const res = await fetchWithAuth('/api/pacientes');
+          const data = await res.json();
+          const items = data?.items || [];
+          patientMap = new Map(items.map((p) => [p.id, p.nome || p.email || p.id]));
+          if (patientSelect) {
+            patientSelect.innerHTML =
+              '<option value="">— selecione —</option>' +
+              items.map((p) => `<option value="${p.id}">${p.nome || p.email || p.id}</option>`).join('');
+          }
+        } catch (err) {
+          console.error('failed to load patients for select', err);
+        }
+      }
+
+      function toggleForm(show = false) {
+        if (!formContainer) return;
+        formContainer.classList.toggle('hidden', !show);
+      }
+
+      if (newBtn) {
+        newBtn.addEventListener('click', () => {
+          const idField = document.getElementById('session-id');
+          if (idField) idField.value = '';
+          if (form) form.reset();
+          toggleForm(true);
+        });
+      }
+
+      if (cancelBtn) cancelBtn.addEventListener('click', () => toggleForm(false));
+
+      async function loadSessions() {
+        try {
+          const res = await fetchWithAuth(collectionBase);
+          const data = await res.json();
+          if (data?.items) render(data.items);
+          else render([]);
+        } catch (err) {
+          console.error(err);
+          if (body)
+            body.innerHTML =
+              '<tr><td colspan="5" class="p-4 text-center text-sm text-red-500">Erro ao carregar</td></tr>';
+        }
+      }
+
+      function render(items) {
+        if (!body) return;
+        if (!items || items.length === 0) {
+          body.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-sm text-gray-500">Nenhuma sessão</td></tr>';
+          return;
+        }
+
+        body.innerHTML = items
+          .map(
+            (it) => `
+            <tr class="border-t">
+              <td class="p-2">${patientMap.get(it.id_paciente) || it.id_paciente || ''}</td>
+              <td class="p-2">${it.data || ''}</td>
+              <td class="p-2">${it.valor || ''}</td>
+              <td class="p-2">${it.pago ? 'Sim' : 'Não'}</td>
+              <td class="p-2">
+                <button data-id="${it.id}" class="edit-btn px-2 py-1 bg-yellow-400 rounded mr-2">Editar</button>
+                <button data-id="${it.id}" class="del-btn px-2 py-1 bg-red-500 text-white rounded">Excluir</button>
+              </td>
+            </tr>
+          `
+          )
+          .join('');
+
+        document.querySelectorAll('.edit-btn').forEach((b) =>
+          b.addEventListener('click', async (e) => {
+            const id = e.currentTarget.getAttribute('data-id');
+            const recRes = await fetchWithAuth(`${collectionBase}/${id}`);
+            const recData = await recRes.json();
+            const record = recData.record;
+            const idField = document.getElementById('session-id');
+            if (idField) idField.value = record.id;
+            const paciente = document.getElementById('id_paciente');
+            const dataEl = document.getElementById('data');
+            const valor = document.getElementById('valor');
+            const pago = document.getElementById('pago');
+            if (paciente) paciente.value = record?.id_paciente || '';
+            if (dataEl) dataEl.value = record?.data ? new Date(record.data).toISOString().slice(0, 16) : '';
+            if (valor) valor.value = record?.valor || '';
+            if (pago) pago.checked = !!record?.pago;
+            toggleForm(true);
+          })
+        );
+
+        document.querySelectorAll('.del-btn').forEach((b) =>
+          b.addEventListener('click', async (e) => {
+            const id = e.currentTarget.getAttribute('data-id');
+            if (!confirm('Excluir sessão?')) return;
+            await fetchWithAuth(`${collectionBase}/${id}`, { method: 'DELETE' });
+            loadSessions();
+          })
+        );
+      }
+
+      if (form) {
+        form.addEventListener('submit', async (ev) => {
+          ev.preventDefault();
+          const id = document.getElementById('session-id').value;
+          const payload = {
+            id_paciente: document.getElementById('id_paciente').value,
+            data: document.getElementById('data').value,
+            valor: Number(document.getElementById('valor').value) || 0,
+            pago: document.getElementById('pago').checked,
+          };
+
+          try {
+            if (id) {
+              await fetchWithAuth(`${collectionBase}/${id}`, {
+                method: 'PUT',
+                body: JSON.stringify(payload),
+                headers: { 'Content-Type': 'application/json' },
+              });
+            } else {
+              await fetchWithAuth(collectionBase, {
+                method: 'POST',
+                body: JSON.stringify(payload),
+                headers: { 'Content-Type': 'application/json' },
+              });
+            }
+            toggleForm(false);
+            loadSessions();
+          } catch (err) {
+            console.error(err);
+            alert('Erro ao salvar');
+          }
+        });
+      }
+
+      await loadPatientsForSelect();
+      loadSessions();
+    });
+  </script>
+</PageLayout>

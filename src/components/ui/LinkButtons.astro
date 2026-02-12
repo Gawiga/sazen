@@ -1,0 +1,18 @@
+---
+import Button from './Button.astro';
+
+const { actions = [], direction = 'row' } = Astro.props;
+---
+
+<div class={`flex ${direction === 'column' ? 'flex-col' : 'flex-row'} gap-4 items-center justify-center w-full`}>
+  {
+    Array.isArray(actions) &&
+      actions.map((a) => (
+        <div class="w-full sm:w-auto">
+          <Button variant={a.variant || 'secondary'} href={a.href} class="w-full text-center">
+            {a.text}
+          </Button>
+        </div>
+      ))
+  }
+</div>

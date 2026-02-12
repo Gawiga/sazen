@@ -1,7 +1,6 @@
 ---
 import Layout from '~/layouts/PageLayout.astro';
-
-import Hero from '~/components/widgets/Hero.astro';
+import LinkButtons from '~/components/ui/LinkButtons.astro';
 
 const metadata = {
   title: 'Sazen',
@@ -10,15 +9,11 @@ const metadata = {
 ---
 
 <Layout metadata={metadata}>
-  <Hero
+  <LinkButtons
     actions={[
-      {
-        variant: 'primary',
-        text: 'Ola',
-      },
+      { href: '/login', text: 'Login', variant: 'primary' },
+      { href: '/api', text: 'API', variant: 'primary' },
     ]}
-  >
-    <Fragment slot="title"> Sazen </Fragment>
-  </Hero>
-  <!-- <Note title="Philosophy:" description="Simplicity, Best Practices and High Performance" /> -->
+    direction="row"
+  />
 </Layout>
