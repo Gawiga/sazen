@@ -9,59 +9,85 @@ const metadata = {
 
 <PageLayout metadata={metadata}>
   <section class="mx-auto max-w-4xl py-12">
-    <a href="/dashboard" class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:underline mb-3"
-      >← Voltar ao Dashboard</a
-    >
+    <a href="/dashboard" class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:underline mb-3">
+      ← Voltar ao Dashboard
+    </a>
     <div class="mb-6 flex items-center justify-between">
       <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Sessões</h1>
-      <button id="new-btn" class="px-4 py-2 bg-green-600 text-white rounded">Nova sessão</button>
+      <button id="new-btn" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+        >Nova sessão</button
+      >
     </div>
 
-    <div id="form-container" class="mb-6 hidden bg-white dark:bg-gray-900 p-6 rounded shadow">
+    <div
+      id="form-container"
+      class="mb-6 hidden bg-white dark:bg-gray-900 p-6 rounded shadow border dark:border-gray-800"
+    >
       <form id="session-form" class="space-y-4">
         <input type="hidden" id="session-id" />
         <div>
           <label class="block text-sm text-gray-700 dark:text-gray-300">Paciente</label>
-          <select id="id_paciente" class="mt-1 w-full rounded border p-2 bg-white dark:bg-gray-800">
+          <select
+            id="id_paciente"
+            class="mt-1 w-full rounded border p-2 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-green-500"
+            required
+          >
             <option value="">— selecione —</option>
           </select>
         </div>
         <div class="flex space-x-2">
           <div class="flex-1">
-            <label class="block text-sm text-gray-700 dark:text-gray-300">Data</label>
-            <input id="data" type="datetime-local" class="mt-1 w-full rounded border p-2 bg-white dark:bg-gray-800" />
+            <label class="block text-sm text-gray-700 dark:text-gray-300">Data e Hora</label>
+            <input
+              id="data"
+              type="datetime-local"
+              class="mt-1 w-full rounded border p-2 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-green-500"
+              required
+            />
           </div>
           <div class="w-40">
-            <label class="block text-sm text-gray-700 dark:text-gray-300">Valor</label>
-            <input id="valor" type="number" class="mt-1 w-full rounded border p-2 bg-white dark:bg-gray-800" />
+            <label class="block text-sm text-gray-700 dark:text-gray-300">Valor (R$)</label>
+            <input
+              id="valor"
+              type="number"
+              step="0.01"
+              class="mt-1 w-full rounded border p-2 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-green-500"
+            />
           </div>
         </div>
         <div>
-          <label class="inline-flex items-center">
-            <input id="pago" type="checkbox" class="mr-2" />
+          <label class="inline-flex items-center cursor-pointer">
+            <input id="pago" type="checkbox" class="mr-2 w-4 h-4 text-green-600 rounded" />
             <span class="text-sm text-gray-700 dark:text-gray-300">Pago</span>
           </label>
         </div>
-        <div class="flex items-center space-x-2">
-          <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">Salvar</button>
-          <button id="cancel-btn" type="button" class="px-4 py-2 bg-gray-300 dark:bg-gray-700 rounded">Cancelar</button>
+        <div class="flex items-center space-x-2 pt-2">
+          <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+            >Salvar</button
+          >
+          <button
+            id="cancel-btn"
+            type="button"
+            class="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-white rounded hover:bg-gray-400 dark:hover:bg-gray-600 transition"
+            >Cancelar</button
+          >
         </div>
       </form>
     </div>
 
-    <div class="bg-white dark:bg-gray-900 rounded shadow p-4">
+    <div class="bg-white dark:bg-gray-900 rounded shadow p-4 border dark:border-gray-800 overflow-x-auto">
       <table class="w-full text-left table-auto">
         <thead>
-          <tr class="text-sm text-gray-600 dark:text-gray-400">
-            <th class="p-2">Paciente</th>
-            <th class="p-2">Data</th>
-            <th class="p-2">Valor</th>
-            <th class="p-2">Pago</th>
-            <th class="p-2">Ações</th>
+          <tr class="text-sm text-gray-600 dark:text-gray-400 border-b dark:border-gray-700">
+            <th class="p-3">Paciente</th>
+            <th class="p-3">Data</th>
+            <th class="p-3">Valor</th>
+            <th class="p-3 text-center">Status</th>
+            <th class="p-3 text-right">Ações</th>
           </tr>
         </thead>
-        <tbody id="sessions-body" class="align-top">
-          <tr><td colspan="5" class="p-4 text-center text-sm text-gray-500">Carregando...</td></tr>
+        <tbody id="sessions-body" class="align-top text-sm">
+          <tr><td colspan="5" class="p-4 text-center text-gray-500">Carregando sessões...</td></tr>
         </tbody>
       </table>
     </div>
@@ -69,177 +95,252 @@ const metadata = {
 
   <script type="module">
     const collectionBase = '/api/sessoes';
+    let patientMap = new Map();
 
-    // Helper function to fetch with token
+    // --- FUNÇÕES AUXILIARES ---
+
     function fetchWithAuth(url, options = {}) {
-      const token = localStorage.getItem('pb_auth');
-      const auth = token ? JSON.parse(token).token : null;
-      const headers = { ...options.headers };
+      const tokenStr = localStorage.getItem('pb_auth');
+      const auth = tokenStr ? JSON.parse(tokenStr).token : null;
+
+      const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      };
+
       if (auth) {
         headers.Authorization = `Bearer ${auth}`;
       }
+
       return fetch(url, { ...options, headers });
     }
 
-    window.addEventListener('DOMContentLoaded', async () => {
+    // Formata Data ISO para Input Local (YYYY-MM-DDTHH:mm)
+    function isoToInputDate(isoString) {
+      if (!isoString) return '';
+      const date = new Date(isoString);
+      // Ajusta o fuso horário para exibir corretamente no input local
+      date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+      return date.toISOString().slice(0, 16);
+    }
+
+    // Formata Data para Exibição na Tabela (PT-BR)
+    function formatDateDisplay(isoString) {
+      if (!isoString) return '-';
+      return new Date(isoString).toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    }
+
+    // --- LÓGICA PRINCIPAL ---
+
+    async function init() {
+      // 1. Verificar Auth
       try {
         const u = await fetchWithAuth('/api/auth/user');
+        if (!u.ok) throw new Error('Unauthorized');
         const ud = await u.json();
-        if (!ud.user) {
-          window.location.href = '/login';
-          return;
-        }
+        if (!ud.user) throw new Error('No user');
       } catch (err) {
-        console.error('auth check failed', err);
+        console.error('Auth check failed:', err);
         window.location.href = '/login';
         return;
       }
 
-      const newBtn = document.getElementById('new-btn');
-      const formContainer = document.getElementById('form-container');
+      // 2. Elementos do DOM
+      //   const formContainer = document.getElementById('form-container');
       const form = document.getElementById('session-form');
-      const cancelBtn = document.getElementById('cancel-btn');
-      const body = document.getElementById('sessions-body');
-      const patientSelect = document.getElementById('id_paciente');
-      let patientMap = new Map();
+      //   const sessionsBody = document.getElementById('sessions-body');
 
-      // load patients for select and mapping
-      async function loadPatientsForSelect() {
+      // 3. Carregar Pacientes
+      await loadPatientsForSelect();
+
+      // 4. Carregar Sessões
+      loadSessions();
+
+      // --- EVENT LISTENERS ---
+
+      // Novo
+      document.getElementById('new-btn')?.addEventListener('click', () => {
+        document.getElementById('session-id').value = '';
+        form.reset();
+        // Define data atual como padrão
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('data').value = now.toISOString().slice(0, 16);
+
+        toggleForm(true);
+      });
+
+      // Cancelar
+      document.getElementById('cancel-btn')?.addEventListener('click', () => toggleForm(false));
+
+      // Salvar (Submit)
+      form?.addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const id = document.getElementById('session-id').value;
+        const rawDate = document.getElementById('data').value;
+
+        // CORREÇÃO DATA: Converte valor do input local para UTC ISO String
+        const utcDate = rawDate ? new Date(rawDate).toISOString() : '';
+
+        const payload = {
+          id_paciente: document.getElementById('id_paciente').value,
+          data: utcDate, // Envia no formato 2026-02-17T12:00:00.000Z
+          valor: Number(document.getElementById('valor').value) || 0,
+          pago: document.getElementById('pago').checked,
+        };
+
         try {
-          const res = await fetchWithAuth('/api/pacientes');
-          const data = await res.json();
-          const items = data?.items || [];
-          patientMap = new Map(items.map((p) => [p.id, p.nome || p.email || p.id]));
-          if (patientSelect) {
-            patientSelect.innerHTML =
-              '<option value="">— selecione —</option>' +
-              items.map((p) => `<option value="${p.id}">${p.nome || p.email || p.id}</option>`).join('');
-          }
-        } catch (err) {
-          console.error('failed to load patients for select', err);
-        }
-      }
+          const url = id ? `${collectionBase}/${id}` : collectionBase;
+          const method = id ? 'PUT' : 'POST'; // PocketBase geralmente usa PATCH para update parcial, mas PUT funciona se enviar tudo
 
-      function toggleForm(show = false) {
-        if (!formContainer) return;
-        formContainer.classList.toggle('hidden', !show);
-      }
+          const res = await fetchWithAuth(url, {
+            method: method,
+            body: JSON.stringify(payload),
+          });
 
-      if (newBtn) {
-        newBtn.addEventListener('click', () => {
-          const idField = document.getElementById('session-id');
-          if (idField) idField.value = '';
-          if (form) form.reset();
-          toggleForm(true);
-        });
-      }
+          if (!res.ok) throw new Error('Erro na requisição');
 
-      if (cancelBtn) cancelBtn.addEventListener('click', () => toggleForm(false));
-
-      async function loadSessions() {
-        try {
-          const res = await fetchWithAuth(collectionBase);
-          const data = await res.json();
-          if (data?.items) render(data.items);
-          else render([]);
+          toggleForm(false);
+          loadSessions(); // Recarrega a tabela
         } catch (err) {
           console.error(err);
-          if (body)
-            body.innerHTML =
-              '<tr><td colspan="5" class="p-4 text-center text-sm text-red-500">Erro ao carregar</td></tr>';
+          alert('Erro ao salvar. Verifique o console.');
         }
+      });
+    }
+
+    // --- FUNÇÕES DE DADOS E RENDERIZAÇÃO ---
+
+    function toggleForm(show) {
+      document.getElementById('form-container').classList.toggle('hidden', !show);
+    }
+
+    async function loadPatientsForSelect() {
+      try {
+        const res = await fetchWithAuth('/api/pacientes'); // Assumindo paginação padrão ou endpoint 'all'
+        const data = await res.json();
+        const items = data?.items || [];
+
+        patientMap = new Map(items.map((p) => [p.id, p.nome || p.email || 'Sem nome']));
+
+        const select = document.getElementById('id_paciente');
+        if (select) {
+          select.innerHTML =
+            '<option value="">— selecione —</option>' +
+            items.map((p) => `<option value="${p.id}">${p.nome || p.email}</option>`).join('');
+        }
+      } catch (err) {
+        console.error('Erro ao carregar pacientes', err);
+      }
+    }
+
+    async function loadSessions() {
+      const body = document.getElementById('sessions-body');
+      try {
+        // Ordenando por data decrescente (exemplo de parâmetro do PocketBase: ?sort=-data)
+        const res = await fetchWithAuth(`${collectionBase}?sort=-data`);
+        const data = await res.json();
+        renderTable(data?.items || []);
+      } catch (err) {
+        console.error(err);
+        body.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao carregar dados.</td></tr>';
+      }
+    }
+
+    function renderTable(items) {
+      const body = document.getElementById('sessions-body');
+      if (!items.length) {
+        body.innerHTML =
+          '<tr><td colspan="5" class="p-4 text-center text-gray-500">Nenhuma sessão registrada.</td></tr>';
+        return;
       }
 
-      function render(items) {
-        if (!body) return;
-        if (!items || items.length === 0) {
-          body.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-sm text-gray-500">Nenhuma sessão</td></tr>';
-          return;
-        }
+      body.innerHTML = items
+        .map(
+          (it) => `
+        <tr class="border-b dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+          <td class="p-3 font-medium text-gray-900 dark:text-gray-200">${patientMap.get(it.id_paciente) || 'Desconhecido'}</td>
+          <td class="p-3 text-gray-600 dark:text-gray-400">${formatDateDisplay(it.data)}</td>
+          <td class="p-3 text-gray-600 dark:text-gray-400">R$ ${Number(it.valor).toFixed(2)}</td>
+          <td class="p-3 text-center">
+            <button 
+              onclick="togglePaymentStatus('${it.id}', ${it.pago})"
+              class="px-3 py-1 rounded-full text-xs font-semibold border ${
+                it.pago
+                  ? 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:text-green-300'
+                  : 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:text-red-300'
+              } hover:opacity-80 transition"
+              title="Clique para alterar status"
+            >
+              ${it.pago ? 'PAGO' : 'PENDENTE'}
+            </button>
+          </td>
+          <td class="p-3 text-right space-x-2">
+            <button class="edit-btn text-blue-600 hover:text-blue-800 text-sm font-medium" data-id="${it.id}">Editar</button>
+            <button class="del-btn text-red-600 hover:text-red-800 text-sm font-medium" data-id="${it.id}">Excluir</button>
+          </td>
+        </tr>
+      `
+        )
+        .join('');
 
-        body.innerHTML = items
-          .map(
-            (it) => `
-            <tr class="border-t">
-              <td class="p-2">${patientMap.get(it.id_paciente) || it.id_paciente || ''}</td>
-              <td class="p-2">${it.data || ''}</td>
-              <td class="p-2">${it.valor || ''}</td>
-              <td class="p-2">${it.pago ? 'Sim' : 'Não'}</td>
-              <td class="p-2">
-                <button data-id="${it.id}" class="edit-btn px-2 py-1 bg-yellow-400 rounded mr-2">Editar</button>
-                <button data-id="${it.id}" class="del-btn px-2 py-1 bg-red-500 text-white rounded">Excluir</button>
-              </td>
-            </tr>
-          `
-          )
-          .join('');
+      // Re-attach Edit/Delete listeners
+      attachRowListeners(items);
+    }
 
-        document.querySelectorAll('.edit-btn').forEach((b) =>
-          b.addEventListener('click', async (e) => {
-            const id = e.currentTarget.getAttribute('data-id');
-            const recRes = await fetchWithAuth(`${collectionBase}/${id}`);
-            const recData = await recRes.json();
-            const record = recData.record;
-            const idField = document.getElementById('session-id');
-            if (idField) idField.value = record.id;
-            const paciente = document.getElementById('id_paciente');
-            const dataEl = document.getElementById('data');
-            const valor = document.getElementById('valor');
-            const pago = document.getElementById('pago');
-            if (paciente) paciente.value = record?.id_paciente || '';
-            if (dataEl) dataEl.value = record?.data ? new Date(record.data).toISOString().slice(0, 16) : '';
-            if (valor) valor.value = record?.valor || '';
-            if (pago) pago.checked = !!record?.pago;
-            toggleForm(true);
-          })
-        );
+    // Tornar a função global para ser acessada pelo onclick inline do HTML
+    window.togglePaymentStatus = async (id, currentStatus) => {
+      try {
+        await fetchWithAuth(`${collectionBase}/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ pago: !currentStatus }),
+        });
+        loadSessions(); // Atualiza apenas a tabela
+      } catch (err) {
+        alert('Erro ao atualizar pagamento', err);
+      }
+    };
 
-        document.querySelectorAll('.del-btn').forEach((b) =>
-          b.addEventListener('click', async (e) => {
-            const id = e.currentTarget.getAttribute('data-id');
-            if (!confirm('Excluir sessão?')) return;
+    function attachRowListeners(items) {
+      // Editar
+      document.querySelectorAll('.edit-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-id');
+          const record = items.find((i) => i.id === id);
+          if (!record) return;
+
+          document.getElementById('session-id').value = record.id;
+          document.getElementById('id_paciente').value = record.id_paciente;
+          document.getElementById('data').value = isoToInputDate(record.data); // Converte UTC -> Input Local
+          document.getElementById('valor').value = record.valor;
+          document.getElementById('pago').checked = record.pago;
+
+          toggleForm(true);
+        });
+      });
+
+      // Excluir
+      document.querySelectorAll('.del-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('Tem certeza que deseja excluir esta sessão?')) return;
+          const id = btn.getAttribute('data-id');
+          try {
             await fetchWithAuth(`${collectionBase}/${id}`, { method: 'DELETE' });
             loadSessions();
-          })
-        );
-      }
-
-      if (form) {
-        form.addEventListener('submit', async (ev) => {
-          ev.preventDefault();
-          const id = document.getElementById('session-id').value;
-          const payload = {
-            id_paciente: document.getElementById('id_paciente').value,
-            data: document.getElementById('data').value,
-            valor: Number(document.getElementById('valor').value) || 0,
-            pago: document.getElementById('pago').checked,
-          };
-
-          try {
-            if (id) {
-              await fetchWithAuth(`${collectionBase}/${id}`, {
-                method: 'PUT',
-                body: JSON.stringify(payload),
-                headers: { 'Content-Type': 'application/json' },
-              });
-            } else {
-              await fetchWithAuth(collectionBase, {
-                method: 'POST',
-                body: JSON.stringify(payload),
-                headers: { 'Content-Type': 'application/json' },
-              });
-            }
-            toggleForm(false);
-            loadSessions();
           } catch (err) {
-            console.error(err);
-            alert('Erro ao salvar');
+            alert('Erro ao excluir sessão:', err);
           }
         });
-      }
+      });
+    }
 
-      await loadPatientsForSelect();
-      loadSessions();
-    });
+    // Inicializa o script
+    init();
   </script>
 </PageLayout>
