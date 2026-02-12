@@ -9,6 +9,7 @@ import mdx from '@astrojs/mdx';
 import partytown from '@astrojs/partytown';
 import icon from 'astro-icon';
 import compress from 'astro-compress';
+import netlify from '@astrojs/netlify';
 import type { AstroIntegration } from 'astro';
 
 import astrowind from './vendor/integration';
@@ -22,7 +23,8 @@ const whenExternalScripts = (items: (() => AstroIntegration) | (() => AstroInteg
   hasExternalScripts ? (Array.isArray(items) ? items.map((item) => item()) : [items()]) : [];
 
 export default defineConfig({
-  output: 'static', //netlify so permite static
+  output: 'server', // Server mode allows dynamic routes for authentication
+  adapter: netlify(),
   integrations: [
     tailwind({
       applyBaseStyles: false,

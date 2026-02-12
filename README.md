@@ -70,6 +70,47 @@ We're embarking on an exciting journey with **AstroWind 2.0**, and we want you t
 npm create astro@latest -- --template arthelokyo/astrowind
 ```
 
+## 🔐 Authentication with PocketBase
+
+This project now includes **complete authentication** integration with **PocketBase**!
+
+### Features
+
+- ✅ Email/Password authentication
+- ✅ OAuth2 support (Google, GitHub, etc.)
+- ✅ Session management with HTTP-only cookies
+- ✅ Protected routes with middleware
+- ✅ User signup and profile management
+- ✅ TypeScript support
+- ✅ Server-side rendering ready
+
+### Quick Start
+
+1. Copy `.env.example` to `.env.local`
+2. Configure PocketBase URL
+3. Test with `npm run dev`
+4. Access `/login` or `/signup`
+
+### Documentation
+
+- 📖 **[QUICKSTART.md](./QUICKSTART.md)** - Get started in 5 minutes
+- 📚 **[AUTHENTICATION.md](./AUTHENTICATION.md)** - Full technical documentation
+- 💡 **[EXAMPLES.md](./EXAMPLES.md)** - Code examples and snippets
+- 🎯 **[CHECKLIST.md](./CHECKLIST.md)** - Step-by-step implementation guide
+- 🚀 **[INDEX.md](./INDEX.md)** - Complete documentation index
+
+### New Pages & Components
+
+- Pages: `/login`, `/signup`, `/dashboard`
+- Components: `LoginForm`, `OAuthLogin`, `UserMenu`
+- API Endpoints: Password auth, OAuth2, user management
+
+### Learn More
+
+See [INDEX.md](./INDEX.md) for complete documentation and architecture details.
+
+---
+
 ## Getting started
 
 **AstroWind** tries to give you quick access to creating a website using [Astro 5.0](https://astro.build/) + [Tailwind CSS](https://tailwindcss.com/). It's a free theme which focuses on simplicity, good practices and high performance.

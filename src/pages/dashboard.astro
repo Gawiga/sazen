@@ -1,0 +1,110 @@
+---
+import Layout from '~/layouts/Layout.astro';
+
+const metadata = {
+  title: 'Dashboard',
+  description: 'Seu painel de controle',
+};
+
+// In a real app, you'd check authentication here
+// This is a simple example - in production use middleware
+---
+
+<Layout metadata={metadata}>
+  <section class="mx-auto max-w-4xl py-12">
+    <div class="mb-8 flex items-center justify-between">
+      <h1 class="text-4xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+      <div id="user-menu-container"></div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="bg-white dark:bg-gray-900 rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-gray-600 dark:text-gray-400 text-sm">Pacientes</p>
+            <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">0</p>
+          </div>
+          <div class="text-4xl text-blue-500">👥</div>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-900 rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-gray-600 dark:text-gray-400 text-sm">Agendamentos</p>
+            <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">0</p>
+          </div>
+          <div class="text-4xl">📅</div>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-900 rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-gray-600 dark:text-gray-400 text-sm">Relatórios</p>
+            <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">0</p>
+          </div>
+          <div class="text-4xl">📊</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  // Load user info and populate menu
+  async function loadUserInfo() {
+    try {
+      const response = await fetch('/api/auth/user');
+      const data = await response.json();
+
+      if (data.user) {
+        const container = document.getElementById('user-menu-container');
+        if (container) {
+          container.innerHTML = `
+            <div class="flex items-center space-x-4">
+              <div class="text-right">
+                <p class="text-sm font-medium text-gray-900 dark:text-white">
+                  ${data.user.email}
+                </p>
+              </div>
+              <button
+                id="logout-btn"
+                class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+              >
+                Sair
+              </button>
+            </div>
+          `;
+
+          const logoutBtn = document.getElementById('logout-btn');
+          if (logoutBtn) {
+            logoutBtn.addEventListener('click', handleLogout);
+          }
+        }
+      } else {
+        window.location.href = '/login';
+      }
+    } catch (error) {
+      console.error('Error loading user info:', error);
+      window.location.href = '/login';
+    }
+  }
+
+  async function handleLogout() {
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        localStorage.removeItem('pb_auth');
+        window.location.href = '/';
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  }
+
+  loadUserInfo();
+</script>
