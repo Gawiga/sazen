@@ -19,46 +19,14 @@ const metadata = {
 
     <nav class="mb-8">
       <div class="flex space-x-3">
-        <a href="/dashboard/pacientes" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >Pacientes</a
-        >
+        <a href="/dashboard/pacientes" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Pacientes</a>
         <a href="/dashboard/sessoes" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Sessões</a>
-        <a href="/dashboard/relatorios" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-          >Relatórios</a
-        >
+        <a href="/dashboard/relatorios" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Relatórios</a>
       </div>
     </nav>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="bg-white dark:bg-gray-900 rounded-lg shadow-md p-6">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-gray-600 dark:text-gray-400 text-sm">Pacientes</p>
-            <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">0</p>
-          </div>
-          <div class="text-4xl text-blue-500">👥</div>
-        </div>
-      </div>
-
-      <div class="bg-white dark:bg-gray-900 rounded-lg shadow-md p-6">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-gray-600 dark:text-gray-400 text-sm">Agendamentos</p>
-            <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">0</p>
-          </div>
-          <div class="text-4xl">📅</div>
-        </div>
-      </div>
-
-      <div class="bg-white dark:bg-gray-900 rounded-lg shadow-md p-6">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-gray-600 dark:text-gray-400 text-sm">Relatórios</p>
-            <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">0</p>
-          </div>
-          <div class="text-4xl">📊</div>
-        </div>
-      </div>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4">Bem-vindo ao seu dashboard!</h2>
+      <p class="text-gray-600 dark:text-gray-400">Aqui você pode gerenciar seus pacientes, sessões e relatórios.</p>
     </div>
   </section>
 </PageLayout>
@@ -70,14 +38,33 @@ const metadata = {
       const response = await fetch('/api/auth/user');
       const data = await response.json();
 
-      if (data.user) {
+      // O PocketBase geralmente coloca os dados em data.user.record
+      // ou data.user. Se a API falhar em trazer o record, tentamos o localStorage
+      let user = data.user?.record || data.user;
+
+      // Se a API retornar apenas o token (como vimos no log anterior), 
+      // pegamos os dados completos (como o nome Raquel) do localStorage
+      if (!user?.name) {
+        const pbAuth = localStorage.getItem('pb_auth');
+        if (pbAuth) {
+          const authData = JSON.parse(pbAuth);
+          user = authData.model || authData.record;
+        }
+      }
+
+      if (user) {
         const container = document.getElementById('user-menu-container');
         if (container) {
           container.innerHTML = `
             <div class="flex items-center space-x-4">
+              <div>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  ${user.email || ''}
+                </p>
+              </div>
               <div class="text-right">
                 <p class="text-sm font-medium text-gray-900 dark:text-white">
-                  ${data.user.email}
+                  Olá ${user.name || 'Usuário'}
                 </p>
               </div>
               <button

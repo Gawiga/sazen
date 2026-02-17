@@ -107,7 +107,7 @@ Menu de usuário mostrando email e botão de logout.
 
 ```typescript
 interface Props {
-  user?: any; // Objeto do usuário com email, username, etc
+  user?: any; // Objeto do usuário com email, user, etc
 }
 ```
 
@@ -134,7 +134,7 @@ if (authCookie) {
 ### Funcionalidades
 
 - ✓ Exibe email do usuário
-- ✓ Exibe username (se disponível)
+- ✓ Exibe name
 - ✓ Botão de logout
 - ✓ Limpeza de sessão
 - ✓ Redirecionamento após logout

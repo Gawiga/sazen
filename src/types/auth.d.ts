@@ -12,7 +12,7 @@ export interface PBAuthResponse {
 export interface PBUser {
   id: string;
   email: string;
-  username?: string;
+  name?: string;
   verified?: boolean;
   emailVisibility?: boolean;
   created?: string;
