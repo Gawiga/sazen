@@ -24,13 +24,11 @@ describe("Dashboard Pages - fetchWithAuth Helper", () => {
     it("should inject Authorization header with token from localStorage", async () => {
       localStorage["pb_auth"] = "test_token_123";
 
-      const mockFetch = vi
-        .fn()
-        .mockResolvedValue(
-          new Response(JSON.stringify({ id: "1", name: "Test" }), {
-            status: 200,
-          }),
-        );
+      const mockFetch = vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ id: "1", name: "Test" }), {
+          status: 200,
+        }),
+      );
       vi.stubGlobal("fetch", mockFetch);
 
       // Simulate fetchWithAuth function
@@ -161,13 +159,11 @@ describe("Dashboard Pages - fetchWithAuth Helper", () => {
     it("should handle API error responses", async () => {
       localStorage["pb_auth"] = "token_401";
 
-      const mockFetch = vi
-        .fn()
-        .mockResolvedValue(
-          new Response(JSON.stringify({ error: "Unauthorized" }), {
-            status: 401,
-          }),
-        );
+      const mockFetch = vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+        }),
+      );
       vi.stubGlobal("fetch", mockFetch);
 
       const token = localStorage["pb_auth"];
