@@ -1,8 +1,11 @@
-import PocketBase from 'pocketbase';
-import type { AuthModel } from 'pocketbase';
+import PocketBase from "pocketbase";
+import type { AuthModel } from "pocketbase";
 
-const POCKETBASE_URL = import.meta.env.PUBLIC_POCKETBASE_URL || 'https://gawiga-server.bonito-dace.ts.net/';
-const POCKETBASE_COLLECTION = import.meta.env.PUBLIC_POCKETBASE_COLLECTION || 'users';
+const POCKETBASE_URL =
+  import.meta.env.PUBLIC_POCKETBASE_URL ||
+  "https://gawiga-server.bonito-dace.ts.net/";
+const POCKETBASE_COLLECTION =
+  import.meta.env.PUBLIC_POCKETBASE_COLLECTION || "users";
 
 /**
  * Authentication service for PocketBase
@@ -21,16 +24,18 @@ export class AuthService {
    */
   async loginWithPassword(email: string, password: string) {
     try {
-      const authData = await this.pb.collection(this.collectionName).authWithPassword(email, password);
+      const authData = await this.pb
+        .collection(this.collectionName)
+        .authWithPassword(email, password);
 
       // Store auth data in localStorage for persistence
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         localStorage.setItem(
-          'pb_auth',
+          "pb_auth",
           JSON.stringify({
             token: this.pb.authStore.token,
             record: this.pb.authStore.record,
-          })
+          }),
         );
       }
 
@@ -40,10 +45,10 @@ export class AuthService {
         user: this.pb.authStore.record,
       };
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Login failed',
+        error: error instanceof Error ? error.message : "Login failed",
       };
     }
   }
@@ -55,19 +60,19 @@ export class AuthService {
     try {
       this.pb.authStore.clear();
 
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('pb_auth');
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("pb_auth");
       }
 
       return {
         success: true,
-        message: 'Logged out successfully',
+        message: "Logged out successfully",
       };
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Logout failed',
+        error: error instanceof Error ? error.message : "Logout failed",
       };
     }
   }
@@ -103,7 +108,12 @@ export class AuthService {
   /**
    * Create new user account
    */
-  async signup(email: string, password: string, passwordConfirm: string, data?: Record<string, unknown>) {
+  async signup(
+    email: string,
+    password: string,
+    passwordConfirm: string,
+    data?: Record<string, unknown>,
+  ) {
     try {
       await this.pb.collection(this.collectionName).create({
         email,
@@ -115,10 +125,10 @@ export class AuthService {
       // Automatically login after signup
       return this.loginWithPassword(email, password);
     } catch (error) {
-      console.error('Signup error:', error);
+      console.error("Signup error:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Signup failed',
+        error: error instanceof Error ? error.message : "Signup failed",
       };
     }
   }
@@ -131,13 +141,16 @@ export class AuthService {
       await this.pb.collection(this.collectionName).requestPasswordReset(email);
       return {
         success: true,
-        message: 'Password reset email sent',
+        message: "Password reset email sent",
       };
     } catch (error) {
-      console.error('Password reset request error:', error);
+      console.error("Password reset request error:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Password reset request failed',
+        error:
+          error instanceof Error
+            ? error.message
+            : "Password reset request failed",
       };
     }
   }

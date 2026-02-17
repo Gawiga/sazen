@@ -255,6 +255,7 @@ const metadata = {
             });
             if (res.ok) loadPatients();
           } catch (err) {
+            console.error(err);
             alert("Erro ao excluir paciente.");
           }
         });

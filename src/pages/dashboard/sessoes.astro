@@ -262,6 +262,7 @@ const metadata = {
         const data = await res.json();
         renderTable(data?.items || []);
       } catch (err) {
+        console.error(err);
         body.innerHTML =
           '<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao carregar dados.</td></tr>';
       }
