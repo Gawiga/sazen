@@ -116,6 +116,8 @@ const metadata = {
   <script type="module">
     const collectionBase = "/api/sessoes";
     let patientMap = new Map();
+    // 1. Novo Map para guardar os detalhes (incluindo o valor)
+    let patientDetails = new Map();
 
     // --- FUNÇÕES AUXILIARES ---
     function fetchWithAuth(url, options = {}) {
@@ -157,6 +159,10 @@ const metadata = {
       const form = document.getElementById("session-form");
       if (!form) return; // Garante que não quebra se o elemento sumir
 
+      //carregando dados do paciente
+      const patientSelect = document.getElementById("id_paciente");
+      const valorInput = document.getElementById("valor");
+
       // 3. Carregar dados em paralelo (Melhora a performance)
       try {
         await Promise.all([loadPatientsForSelect(), loadSessions()]);
@@ -165,6 +171,19 @@ const metadata = {
       }
 
       // --- EVENT LISTENERS ---
+
+      // 2. Listener para preencher o valor automaticamente ao selecionar paciente
+      patientSelect?.addEventListener("change", (e) => {
+        const patientId = e.target.value;
+        const sessionId = document.getElementById("session-id").value;
+        
+        // Só preenche automaticamente se for uma NOVA sessão (ID vazio)
+        // Isso evita sobrescrever valores de sessões antigas que tiveram preço diferenciado
+        if (!sessionId && patientId && patientDetails.has(patientId)) {
+          valorInput.value = patientDetails.get(patientId).valor_sessao || 0;
+        }
+      });
+
       // Usamos delegação ou verificação de existência para evitar erros de 'null'
       document.getElementById("new-btn")?.addEventListener("click", () => {
         document.getElementById("session-id").value = "";
@@ -206,7 +225,7 @@ const metadata = {
         toggleForm(false);
         loadSessions();
       } catch (err) {
-        alert("Erro ao salvar sessão.");
+        alert("Erro ao salvar sessão.", err);
       }
     }
 
@@ -223,6 +242,7 @@ const metadata = {
       patientMap = new Map(
         items.map((p) => [p.id, p.nome || p.email || "Sem nome"]),
       );
+      patientDetails = new Map(items.map((p) => [p.id, p]));
 
       const select = document.getElementById("id_paciente");
       if (select) {
