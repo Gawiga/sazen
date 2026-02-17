@@ -8,3 +8,5 @@ npm run check
 npm run fix
 
 # link do design
+
+npx prettier --write .

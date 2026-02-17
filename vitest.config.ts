@@ -1,12 +1,12 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
     globals: true,
-    environment: 'node',
+    environment: "node",
     coverage: {
-      reporter: ['text', 'lcov'],
+      reporter: ["text", "lcov"],
     },
-    include: ['tests/unit/**/*.test.*'],
+    include: ["tests/unit/**/*.test.*"],
   },
 });

@@ -1,43 +1,49 @@
 ---
-import PageLayout from '~/layouts/PageLayout.astro';
+import PageLayout from "~/layouts/PageLayout.astro";
 
 const metadata = {
-  title: 'Sessões',
-  description: 'Cadastro e gerenciamento de sessões',
+  title: "Sessões",
+  description: "Cadastro e gerenciamento de sessões",
 };
 ---
 
 <PageLayout metadata={metadata}>
   <section class="mx-auto max-w-4xl py-12">
-    <a href="/dashboard" class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:underline mb-3">
+    <a
+      href="/dashboard"
+      class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:underline mb-3">
       ← Voltar ao Dashboard
     </a>
     <div class="mb-6 flex items-center justify-between">
       <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Sessões</h1>
-      <button id="new-btn" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+      <button
+        id="new-btn"
+        class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
         >Nova sessão</button
       >
     </div>
 
     <div
       id="form-container"
-      class="mb-6 hidden bg-white dark:bg-gray-900 p-6 rounded shadow border dark:border-gray-800"
-    >
+      class="mb-6 hidden bg-white dark:bg-gray-900 p-6 rounded shadow border dark:border-gray-800">
       <form id="session-form" class="space-y-4">
         <input type="hidden" id="session-id" />
         <div>
-          <label class="block text-sm text-gray-700 dark:text-gray-300">Paciente</label>
+          <label class="block text-sm text-gray-700 dark:text-gray-300"
+            >Paciente</label
+          >
           <select
             id="id_paciente"
             class="mt-1 w-full rounded border p-2 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-green-500"
-            required
-          >
+            required>
             <option value="">— selecione —</option>
           </select>
         </div>
         <div class="flex space-x-2">
           <div class="flex-1">
-            <label class="block text-sm text-gray-700 dark:text-gray-300">Data e Hora</label>
+            <label class="block text-sm text-gray-700 dark:text-gray-300"
+              >Data e Hora</label
+            >
             <input
               id="data"
               type="datetime-local"
@@ -46,7 +52,9 @@ const metadata = {
             />
           </div>
           <div class="w-40">
-            <label class="block text-sm text-gray-700 dark:text-gray-300">Valor (R$)</label>
+            <label class="block text-sm text-gray-700 dark:text-gray-300"
+              >Valor (R$)</label
+            >
             <input
               id="valor"
               type="number"
@@ -57,12 +65,18 @@ const metadata = {
         </div>
         <div>
           <label class="inline-flex items-center cursor-pointer">
-            <input id="pago" type="checkbox" class="mr-2 w-4 h-4 text-green-600 rounded" />
+            <input
+              id="pago"
+              type="checkbox"
+              class="mr-2 w-4 h-4 text-green-600 rounded"
+            />
             <span class="text-sm text-gray-700 dark:text-gray-300">Pago</span>
           </label>
         </div>
         <div class="flex items-center space-x-2 pt-2">
-          <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+          <button
+            type="submit"
+            class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
             >Salvar</button
           >
           <button
@@ -75,10 +89,12 @@ const metadata = {
       </form>
     </div>
 
-    <div class="bg-white dark:bg-gray-900 rounded shadow p-4 border dark:border-gray-800 overflow-x-auto">
+    <div
+      class="bg-white dark:bg-gray-900 rounded shadow p-4 border dark:border-gray-800 overflow-x-auto">
       <table class="w-full text-left table-auto">
         <thead>
-          <tr class="text-sm text-gray-600 dark:text-gray-400 border-b dark:border-gray-700">
+          <tr
+            class="text-sm text-gray-600 dark:text-gray-400 border-b dark:border-gray-700">
             <th class="p-3">Paciente</th>
             <th class="p-3">Data</th>
             <th class="p-3">Valor</th>
@@ -87,174 +103,173 @@ const metadata = {
           </tr>
         </thead>
         <tbody id="sessions-body" class="align-top text-sm">
-          <tr><td colspan="5" class="p-4 text-center text-gray-500">Carregando sessões...</td></tr>
+          <tr
+            ><td colspan="5" class="p-4 text-center text-gray-500"
+              >Carregando sessões...</td
+            ></tr
+          >
         </tbody>
       </table>
     </div>
   </section>
 
   <script type="module">
-    const collectionBase = '/api/sessoes';
+    const collectionBase = "/api/sessoes";
     let patientMap = new Map();
+    // 1. Novo Map para guardar os detalhes (incluindo o valor)
+    let patientDetails = new Map();
 
     // --- FUNÇÕES AUXILIARES ---
-
     function fetchWithAuth(url, options = {}) {
-      const tokenStr = localStorage.getItem('pb_auth');
+      const tokenStr = localStorage.getItem("pb_auth");
       const auth = tokenStr ? JSON.parse(tokenStr).token : null;
-
-      const headers = {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      };
-
-      if (auth) {
-        headers.Authorization = `Bearer ${auth}`;
-      }
-
-      return fetch(url, { ...options, headers });
+      const headers = {"Content-Type": "application/json", ...options.headers};
+      if (auth) headers.Authorization = `Bearer ${auth}`;
+      return fetch(url, {...options, headers});
     }
 
-    // Formata Data ISO para Input Local (YYYY-MM-DDTHH:mm)
     function isoToInputDate(isoString) {
-      if (!isoString) return '';
+      if (!isoString) return "";
       const date = new Date(isoString);
-      // Ajusta o fuso horário para exibir corretamente no input local
       date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
       return date.toISOString().slice(0, 16);
     }
 
-    // Formata Data para Exibição na Tabela (PT-BR)
     function formatDateDisplay(isoString) {
-      if (!isoString) return '-';
-      return new Date(isoString).toLocaleString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
+      if (!isoString) return "-";
+      return new Date(isoString).toLocaleString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       });
     }
 
-    // --- LÓGICA PRINCIPAL ---
-
+    // --- LÓGICA DE INICIALIZAÇÃO ---
     async function init() {
-      // 1. Verificar Auth
-      try {
-        const u = await fetchWithAuth('/api/auth/user');
-        if (!u.ok) throw new Error('Unauthorized');
-        const ud = await u.json();
-        if (!ud.user) throw new Error('No user');
-      } catch (err) {
-        console.error('Auth check failed:', err);
-        window.location.href = '/login';
+      // 1. Verificação Instantânea de Auth via LocalStorage
+      const pbAuth = localStorage.getItem("pb_auth");
+      if (!pbAuth) {
+        window.location.href = "/login";
         return;
       }
 
-      // 2. Elementos do DOM
-      //   const formContainer = document.getElementById('form-container');
-      const form = document.getElementById('session-form');
-      //   const sessionsBody = document.getElementById('sessions-body');
+      // 2. Referências do DOM
+      const form = document.getElementById("session-form");
+      if (!form) return; // Garante que não quebra se o elemento sumir
 
-      // 3. Carregar Pacientes
-      await loadPatientsForSelect();
+      //carregando dados do paciente
+      const patientSelect = document.getElementById("id_paciente");
+      const valorInput = document.getElementById("valor");
 
-      // 4. Carregar Sessões
-      loadSessions();
+      // 3. Carregar dados em paralelo (Melhora a performance)
+      try {
+        await Promise.all([loadPatientsForSelect(), loadSessions()]);
+      } catch (err) {
+        console.error("Falha ao carregar dados iniciais:", err);
+      }
 
       // --- EVENT LISTENERS ---
 
-      // Novo
-      document.getElementById('new-btn')?.addEventListener('click', () => {
-        document.getElementById('session-id').value = '';
+      // 2. Listener para preencher o valor automaticamente ao selecionar paciente
+      patientSelect?.addEventListener("change", (e) => {
+        const patientId = e.target.value;
+        const sessionId = document.getElementById("session-id").value;
+        
+        // Só preenche automaticamente se for uma NOVA sessão (ID vazio)
+        // Isso evita sobrescrever valores de sessões antigas que tiveram preço diferenciado
+        if (!sessionId && patientId && patientDetails.has(patientId)) {
+          valorInput.value = patientDetails.get(patientId).valor_sessao || 0;
+        }
+      });
+
+      // Usamos delegação ou verificação de existência para evitar erros de 'null'
+      document.getElementById("new-btn")?.addEventListener("click", () => {
+        document.getElementById("session-id").value = "";
         form.reset();
-        // Define data atual como padrão
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-        document.getElementById('data').value = now.toISOString().slice(0, 16);
-
+        document.getElementById("data").value = now.toISOString().slice(0, 16);
         toggleForm(true);
       });
 
-      // Cancelar
-      document.getElementById('cancel-btn')?.addEventListener('click', () => toggleForm(false));
+      document
+        .getElementById("cancel-btn")
+        ?.addEventListener("click", () => toggleForm(false));
 
-      // Salvar (Submit)
-      form?.addEventListener('submit', async (ev) => {
-        ev.preventDefault();
-        const id = document.getElementById('session-id').value;
-        const rawDate = document.getElementById('data').value;
-
-        // CORREÇÃO DATA: Converte valor do input local para UTC ISO String
-        const utcDate = rawDate ? new Date(rawDate).toISOString() : '';
-
-        const payload = {
-          id_paciente: document.getElementById('id_paciente').value,
-          data: utcDate, // Envia no formato 2026-02-17T12:00:00.000Z
-          valor: Number(document.getElementById('valor').value) || 0,
-          pago: document.getElementById('pago').checked,
-        };
-
-        try {
-          const url = id ? `${collectionBase}/${id}` : collectionBase;
-          const method = id ? 'PUT' : 'POST'; // PocketBase geralmente usa PATCH para update parcial, mas PUT funciona se enviar tudo
-
-          const res = await fetchWithAuth(url, {
-            method: method,
-            body: JSON.stringify(payload),
-          });
-
-          if (!res.ok) throw new Error('Erro na requisição');
-
-          toggleForm(false);
-          loadSessions(); // Recarrega a tabela
-        } catch (err) {
-          console.error(err);
-          alert('Erro ao salvar. Verifique o console.');
-        }
-      });
+      form.addEventListener("submit", handleFormSubmit);
     }
 
-    // --- FUNÇÕES DE DADOS E RENDERIZAÇÃO ---
+    // --- HANDLERS ---
+    async function handleFormSubmit(ev) {
+      ev.preventDefault();
+      const id = document.getElementById("session-id").value;
+      const rawDate = document.getElementById("data").value;
+      const utcDate = rawDate ? new Date(rawDate).toISOString() : "";
+
+      const payload = {
+        id_paciente: document.getElementById("id_paciente").value,
+        data: utcDate,
+        valor: Number(document.getElementById("valor").value) || 0,
+        pago: document.getElementById("pago").checked,
+      };
+
+      try {
+        const url = id ? `${collectionBase}/${id}` : collectionBase;
+        const res = await fetchWithAuth(url, {
+          method: id ? "PUT" : "POST",
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error("Erro ao salvar");
+        toggleForm(false);
+        loadSessions();
+      } catch (err) {
+        alert("Erro ao salvar sessão.", err);
+      }
+    }
 
     function toggleForm(show) {
-      document.getElementById('form-container').classList.toggle('hidden', !show);
+      document
+        .getElementById("form-container")
+        ?.classList.toggle("hidden", !show);
     }
 
     async function loadPatientsForSelect() {
-      try {
-        const res = await fetchWithAuth('/api/pacientes'); // Assumindo paginação padrão ou endpoint 'all'
-        const data = await res.json();
-        const items = data?.items || [];
+      const res = await fetchWithAuth("/api/pacientes");
+      const data = await res.json();
+      const items = data?.items || [];
+      patientMap = new Map(
+        items.map((p) => [p.id, p.nome || p.email || "Sem nome"]),
+      );
+      patientDetails = new Map(items.map((p) => [p.id, p]));
 
-        patientMap = new Map(items.map((p) => [p.id, p.nome || p.email || 'Sem nome']));
-
-        const select = document.getElementById('id_paciente');
-        if (select) {
-          select.innerHTML =
-            '<option value="">— selecione —</option>' +
-            items.map((p) => `<option value="${p.id}">${p.nome || p.email}</option>`).join('');
-        }
-      } catch (err) {
-        console.error('Erro ao carregar pacientes', err);
+      const select = document.getElementById("id_paciente");
+      if (select) {
+        select.innerHTML =
+          '<option value="">— selecione —</option>' +
+          items
+            .map((p) => `<option value="${p.id}">${p.nome || p.email}</option>`)
+            .join("");
       }
     }
 
     async function loadSessions() {
-      const body = document.getElementById('sessions-body');
+      const body = document.getElementById("sessions-body");
+      if (!body) return;
       try {
-        // Ordenando por data decrescente (exemplo de parâmetro do PocketBase: ?sort=-data)
         const res = await fetchWithAuth(`${collectionBase}?sort=-data`);
         const data = await res.json();
         renderTable(data?.items || []);
       } catch (err) {
         console.error(err);
-        body.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao carregar dados.</td></tr>';
+        body.innerHTML =
+          '<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao carregar dados.</td></tr>';
       }
     }
 
     function renderTable(items) {
-      const body = document.getElementById('sessions-body');
+      const body = document.getElementById("sessions-body");
       if (!items.length) {
         body.innerHTML =
           '<tr><td colspan="5" class="p-4 text-center text-gray-500">Nenhuma sessão registrada.</td></tr>';
@@ -264,83 +279,81 @@ const metadata = {
       body.innerHTML = items
         .map(
           (it) => `
-        <tr class="border-b dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-          <td class="p-3 font-medium text-gray-900 dark:text-gray-200">${patientMap.get(it.id_paciente) || 'Desconhecido'}</td>
-          <td class="p-3 text-gray-600 dark:text-gray-400">${formatDateDisplay(it.data)}</td>
-          <td class="p-3 text-gray-600 dark:text-gray-400">R$ ${Number(it.valor).toFixed(2)}</td>
-          <td class="p-3 text-center">
-            <button 
-              onclick="togglePaymentStatus('${it.id}', ${it.pago})"
-              class="px-3 py-1 rounded-full text-xs font-semibold border ${
-                it.pago
-                  ? 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:text-green-300'
-                  : 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:text-red-300'
-              } hover:opacity-80 transition"
-              title="Clique para alterar status"
-            >
-              ${it.pago ? 'PAGO' : 'PENDENTE'}
-            </button>
-          </td>
-          <td class="p-3 text-right space-x-2">
-            <button class="edit-btn text-blue-600 hover:text-blue-800 text-sm font-medium" data-id="${it.id}">Editar</button>
-            <button class="del-btn text-red-600 hover:text-red-800 text-sm font-medium" data-id="${it.id}">Excluir</button>
-          </td>
-        </tr>
-      `
+      <tr class="border-b dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+        <td class="p-3 font-medium text-gray-900 dark:text-gray-200">${patientMap.get(it.id_paciente) || "Desconhecido"}</td>
+        <td class="p-3 text-gray-600 dark:text-gray-400">${formatDateDisplay(it.data)}</td>
+        <td class="p-3 text-gray-600 dark:text-gray-400">R$ ${Number(it.valor).toFixed(2)}</td>
+        <td class="p-3 text-center">
+          <button onclick="togglePaymentStatus('${it.id}', ${it.pago})" class="px-3 py-1 rounded-full text-xs font-semibold border ${it.pago ? "bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:text-green-300" : "bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:text-red-300"} hover:opacity-80 transition">
+            ${it.pago ? "PAGO" : "PENDENTE"}
+          </button>
+        </td>
+        <td class="p-3 text-right space-x-2">
+          <button class="edit-btn text-blue-600 hover:text-blue-800 text-sm font-medium" data-id="${it.id}">Editar</button>
+          <button class="del-btn text-red-600 hover:text-red-800 text-sm font-medium" data-id="${it.id}">Excluir</button>
+        </td>
+      </tr>
+    `,
         )
-        .join('');
-
-      // Re-attach Edit/Delete listeners
+        .join("");
       attachRowListeners(items);
     }
 
+    // listeners de edição e exclusão omitidos aqui por brevidade, permanecem iguais
     // Tornar a função global para ser acessada pelo onclick inline do HTML
     window.togglePaymentStatus = async (id, currentStatus) => {
       try {
         await fetchWithAuth(`${collectionBase}/${id}`, {
-          method: 'PUT',
-          body: JSON.stringify({ pago: !currentStatus }),
+          method: "PUT",
+          body: JSON.stringify({pago: !currentStatus}),
         });
         loadSessions(); // Atualiza apenas a tabela
       } catch (err) {
-        alert('Erro ao atualizar pagamento', err);
+        alert("Erro ao atualizar pagamento", err);
       }
     };
 
     function attachRowListeners(items) {
       // Editar
-      document.querySelectorAll('.edit-btn').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const id = btn.getAttribute('data-id');
+      document.querySelectorAll(".edit-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const id = btn.getAttribute("data-id");
           const record = items.find((i) => i.id === id);
           if (!record) return;
 
-          document.getElementById('session-id').value = record.id;
-          document.getElementById('id_paciente').value = record.id_paciente;
-          document.getElementById('data').value = isoToInputDate(record.data); // Converte UTC -> Input Local
-          document.getElementById('valor').value = record.valor;
-          document.getElementById('pago').checked = record.pago;
+          document.getElementById("session-id").value = record.id;
+          document.getElementById("id_paciente").value = record.id_paciente;
+          document.getElementById("data").value = isoToInputDate(record.data); // Converte UTC -> Input Local
+          document.getElementById("valor").value = record.valor;
+          document.getElementById("pago").checked = record.pago;
 
           toggleForm(true);
         });
       });
 
       // Excluir
-      document.querySelectorAll('.del-btn').forEach((btn) => {
-        btn.addEventListener('click', async () => {
-          if (!confirm('Tem certeza que deseja excluir esta sessão?')) return;
-          const id = btn.getAttribute('data-id');
+      document.querySelectorAll(".del-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          if (!confirm("Tem certeza que deseja excluir esta sessão?")) return;
+          const id = btn.getAttribute("data-id");
           try {
-            await fetchWithAuth(`${collectionBase}/${id}`, { method: 'DELETE' });
+            await fetchWithAuth(`${collectionBase}/${id}`, {method: "DELETE"});
             loadSessions();
           } catch (err) {
-            alert('Erro ao excluir sessão:', err);
+            alert("Erro ao excluir sessão:", err);
           }
         });
       });
     }
 
-    // Inicializa o script
-    init();
+    // --- O PURO PULP DO ASTRO ---
+    // Escuta tanto o carregamento inicial quanto as transições do Astro
+    document.addEventListener("astro:page-load", init);
+    // Fallback para quando não se usa ViewTransitions
+    if (document.readyState === "complete") {
+      init();
+    } else {
+      document.addEventListener("DOMContentLoaded", init);
+    }
   </script>
 </PageLayout>

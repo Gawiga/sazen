@@ -1,24 +1,36 @@
 ---
-// Componente para mostrar usuário logado e botão de logout
+// Importe a tipagem correta do seu arquivo auth.d.ts
+// Ajuste o caminho '../types/auth' conforme a estrutura das suas pastas
+// import type { PBUser } from '../types/auth';
 
 interface Props {
   user?: Record<string, unknown> | null;
 }
 
-const { user } = Astro.props;
+const {user} = Astro.props;
+
+// Lógica de exibição:
+// 1. Tenta mostrar o "name" (Raquel)
+// 2. Se não tiver nome, tenta "username" (caso você adicione no futuro)
+// 3. Se não tiver nenhum, fica vazio (ou poderia por "Sem nome")
+const displayName = user?.name || user?.username || "Visitante";
 ---
 
 {
   user && (
     <div class="flex items-center space-x-4">
       <div class="text-right">
-        <p class="text-sm font-medium text-gray-900 dark:text-white">{user.email}</p>
-        {user.username && <p class="text-xs text-gray-500 dark:text-gray-400">@{user.username}</p>}
+        <p class="text-sm font-medium text-gray-900 dark:text-white">
+          {user.email}
+        </p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 capitalize">
+          {displayName ?? "Sem nome"}
+        </p>
       </div>
+
       <button
         id="logout-btn"
-        class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-      >
+        class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
         Sair
       </button>
     </div>
@@ -26,21 +38,22 @@ const { user } = Astro.props;
 }
 
 <script>
-  const logoutBtn = document.getElementById('logout-btn');
+  // O script permanece o mesmo
+  const logoutBtn = document.getElementById("logout-btn");
 
   if (logoutBtn) {
-    logoutBtn.addEventListener('click', async () => {
+    logoutBtn.addEventListener("click", async () => {
       try {
-        const response = await fetch('/api/auth/logout', {
-          method: 'POST',
+        const response = await fetch("/api/auth/logout", {
+          method: "POST",
         });
 
         if (response.ok) {
-          localStorage.removeItem('pb_auth');
-          window.location.href = '/';
+          localStorage.removeItem("pb_auth");
+          window.location.href = "/";
         }
       } catch (error) {
-        console.error('Logout error:', error);
+        console.error("Logout error:", error);
       }
     });
   }
