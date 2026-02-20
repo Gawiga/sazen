@@ -49,6 +49,18 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     }
     const pb = getPb(token);
     const payload = await request.json();
+
+    // EXTRAÇÃO SEGURA DO OWNER: Decodificamos o JWT para pegar o ID do usuário
+    const tokenParts = token.split(".");
+    if (tokenParts.length === 3) {
+      const tokenPayload = JSON.parse(
+        Buffer.from(tokenParts[1], "base64").toString(),
+      );
+      if (tokenPayload.id) {
+        payload.owner = tokenPayload.id;
+      }
+    }
+
     const record = await pb.collection("paciente").create(payload);
     return new Response(JSON.stringify({ success: true, record }), {
       status: 201,
