@@ -85,7 +85,7 @@ describe("API Endpoints - CRUD Operations", () => {
 
       const collection = url.searchParams.get("collection");
       const page = parseInt(url.searchParams.get("page") || "1");
-      const perPage = parseInt(url.searchParams.get("perPage") || "20");
+      const perPage = parseInt(url.searchParams.get("perPage") || "10");
 
       expect(collection).toBe("faturamento_mensal");
       expect(page).toBe(2);
@@ -98,10 +98,10 @@ describe("API Endpoints - CRUD Operations", () => {
       );
 
       const page = parseInt(url.searchParams.get("page") || "1");
-      const perPage = parseInt(url.searchParams.get("perPage") || "20");
+      const perPage = parseInt(url.searchParams.get("perPage") || "10");
 
       expect(page).toBe(1);
-      expect(perPage).toBe(20);
+      expect(perPage).toBe(10);
     });
 
     it("should validate collection parameter", () => {
@@ -146,7 +146,7 @@ describe("API Endpoints - CRUD Operations", () => {
           { id: "2", name: "Item 2" },
         ],
         page: 1,
-        perPage: 20,
+        perPage: 10,
         totalItems: 25,
         totalPages: 3,
       };

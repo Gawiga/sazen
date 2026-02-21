@@ -1,37 +1,17 @@
 ---
-import LinkButtons from "~/components/ui/LinkButtons.astro";
-import Layout from "~/layouts/Layout.astro";
+import Layout from '~/layouts/PageLayout.astro';
+import LinkButtons from '~/components/ui/LinkButtons.astro';
 
 const metadata = {
-  title: "Sazen",
-  description: "Acesse o painel Sazen",
+  title: 'Sazen',
+  ignoreTitleTemplate: true,
 };
 ---
 
 <Layout metadata={metadata}>
-  <section class="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-4 py-10">
-    <div class="rounded-xl border bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <h1 class="mb-2 text-3xl font-bold">Sazen</h1>
-      <p class="mb-6 text-sm text-slate-600 dark:text-slate-400">
-        Sistema de gestão clínica.
-      </p>
-
-      <div class="grid grid-cols-1 gap-3">
-        <a
-          href="/login"
-          class="inline-flex min-h-12 w-full items-center justify-center rounded-md border border-blue-700 bg-blue-600 px-4 py-3 text-center text-base font-semibold text-white transition hover:bg-blue-700">
-          Entrar no sistema
-        </a>
-        <a
-          href="/dashboard"
-          class="inline-flex min-h-12 w-full items-center justify-center rounded-md border border-slate-300 bg-slate-100 px-4 py-3 text-center text-base font-semibold text-slate-800 transition hover:bg-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">
-          Ir para dashboard
-        </a>
-      </div>
-    </div>
-  </section>
   <LinkButtons
     actions={[
+      { href: '/login', text: 'Login', variant: 'primary' },
       { href: '/api', text: 'API', variant: 'primary' },
     ]}
     direction="row"

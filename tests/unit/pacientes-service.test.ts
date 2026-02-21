@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
-  getListMock,
+  getFullListMock,
   createMock,
   getOneMock,
   updateMock,
@@ -10,7 +11,7 @@ const {
   getTokenFromRequestMock,
   decodeJwtMock,
 } = vi.hoisted(() => ({
-  getListMock: vi.fn(),
+  getFullListMock: vi.fn(),
   createMock: vi.fn(),
   getOneMock: vi.fn(),
   updateMock: vi.fn(),
@@ -24,7 +25,7 @@ vi.mock("pocketbase", () => {
   class MockPocketBase {
     authStore = { save: saveMock };
     collection = vi.fn(() => ({
-      getList: getListMock,
+      getFullList: getFullListMock,
       create: createMock,
       getOne: getOneMock,
       update: updateMock,
@@ -64,18 +65,12 @@ describe("pacientesService", () => {
     );
 
     expect(response.status).toBe(401);
-    expect(getListMock).not.toHaveBeenCalled();
+    expect(getFullListMock).not.toHaveBeenCalled();
   });
 
-  it("lista pacientes autenticados com paginação padrão 20", async () => {
+  it("lista pacientes autenticados", async () => {
     getTokenFromRequestMock.mockReturnValue("jwt_token");
-    getListMock.mockResolvedValue({
-      page: 1,
-      perPage: 20,
-      totalPages: 1,
-      totalItems: 2,
-      items: [{ id: "p1" }, { id: "p2" }],
-    });
+    getFullListMock.mockResolvedValue([{ id: "p1" }, { id: "p2" }]);
 
     const response = await listPacientes(
       new Request("https://example.com/api/pacientes"),
@@ -84,8 +79,7 @@ describe("pacientesService", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(getListMock).toHaveBeenCalledWith(1, 20, { sort: "-created" });
-    expect(body.perPage).toBe(20);
+    expect(getFullListMock).toHaveBeenCalledWith({ sort: "-created" });
     expect(body.items).toHaveLength(2);
   });
 
@@ -118,11 +112,7 @@ describe("pacientesService", () => {
     updateMock.mockResolvedValue({ id: "p1", nome: "Novo" });
     deleteMock.mockResolvedValue(true);
 
-    const getResponse = await getPacienteById(
-      "p1",
-      new Request("https://example.com"),
-      {},
-    );
+    const getResponse = await getPacienteById("p1", new Request("https://example.com"), {});
     expect(getResponse.status).toBe(200);
 
     const updateResponse = await updatePaciente(
@@ -138,11 +128,7 @@ describe("pacientesService", () => {
     expect(updateResponse.status).toBe(200);
     expect(updateMock).toHaveBeenCalledWith("p1", { nome: "Novo" });
 
-    const deleteResponse = await deletePaciente(
-      "p1",
-      new Request("https://example.com"),
-      {},
-    );
+    const deleteResponse = await deletePaciente("p1", new Request("https://example.com"), {});
     expect(deleteResponse.status).toBe(200);
     expect(deleteMock).toHaveBeenCalledWith("p1");
   });

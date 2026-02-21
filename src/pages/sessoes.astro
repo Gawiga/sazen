@@ -101,7 +101,7 @@ const metadata = {
           <button
             type="button"
             class="per-page-btn rounded border px-3 py-1 text-sm"
-            data-per-page="20">20</button>
+            data-per-page="10">10</button>
           <button
             type="button"
             class="per-page-btn rounded border px-3 py-1 text-sm"
@@ -153,12 +153,12 @@ const metadata = {
     </div>
   </section>
 
-  <script is:inline>
+  <script type="module">
     const collectionBase = "/api/sessoes";
     let patientMap = new Map();
     let patientDetails = new Map();
     let currentPage = 1;
-    let perPage = 20;
+    let perPage = 10;
     let totalPages = 1;
     let totalItems = 0;
 
@@ -495,7 +495,7 @@ const metadata = {
     function attachPerPageListeners() {
       document.querySelectorAll(".per-page-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
-          perPage = Number(btn.getAttribute("data-per-page")) || 20;
+          perPage = Number(btn.getAttribute("data-per-page")) || 10;
           currentPage = 1;
           updatePerPageButtons();
           loadSessions(currentPage);

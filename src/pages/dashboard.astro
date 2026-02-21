@@ -1,100 +1,111 @@
 ---
-import PageLayout from "~/layouts/PageLayout.astro";
+import PageLayout from '~/layouts/PageLayout.astro';
 
 const metadata = {
-  title: "Dashboard",
-  description: "Seu painel de controle",
+  title: 'Dashboard',
+  description: 'Seu painel de controle',
 };
+
+// In a real app, you'd check authentication here
+// This is a simple example - in production use middleware
 ---
 
 <PageLayout metadata={metadata}>
-  <section class="mx-auto w-full max-w-5xl px-4 py-8 sm:py-10">
-    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <h1 class="text-3xl font-bold">Dashboard</h1>
+  <section class="mx-auto max-w-4xl py-12">
+    <div class="mb-8 flex items-center justify-between">
+      <h1 class="text-4xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
       <div id="user-menu-container"></div>
     </div>
 
-    <nav class="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-      <a
-        href="/pacientes"
-        class="inline-flex min-h-12 items-center justify-center rounded-md border border-blue-700 bg-blue-600 px-4 py-3 text-base font-semibold text-white hover:bg-blue-700">
-        Pacientes
-      </a>
-      <a
-        href="/sessoes"
-        class="inline-flex min-h-12 items-center justify-center rounded-md border border-green-700 bg-green-600 px-4 py-3 text-base font-semibold text-white hover:bg-green-700">
-        Sessões
-      </a>
-      <a
-        href="/relatorios"
-        class="inline-flex min-h-12 items-center justify-center rounded-md border border-indigo-700 bg-indigo-600 px-4 py-3 text-base font-semibold text-white hover:bg-indigo-700">
-        Relatórios
-      </a>
+    <nav class="mb-8">
+      <div class="flex space-x-3">
+        <a href="/pacientes" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Pacientes</a>
+        <a href="/sessoes" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Sessões</a>
+        <a href="/relatorios" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Relatórios</a>
+      </div>
     </nav>
-
-    <div class="rounded-lg border bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <h2 class="mb-2 text-xl font-semibold">Bem-vindo ao seu dashboard</h2>
-      <p class="text-sm text-slate-600 dark:text-slate-400">
-        Gerencie pacientes, sessões e relatórios em um único lugar.
-      </p>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4">Bem-vindo ao seu dashboard!</h2>
+      <p class="text-gray-600 dark:text-gray-400">Aqui você pode gerenciar seus pacientes, sessões e relatórios.</p>
     </div>
   </section>
 </PageLayout>
 
-<script is:inline>
+<script>
+  // Load user info and populate menu
   async function loadUserInfo() {
     try {
-      const response = await fetch("/api/auth/user");
+      const response = await fetch('/api/auth/user');
       const data = await response.json();
 
+      // O PocketBase geralmente coloca os dados em data.user.record
+      // ou data.user. Se a API falhar em trazer o record, tentamos o localStorage
       let user = data.user?.record || data.user;
+
+      // Se a API retornar apenas o token (como vimos no log anterior), 
+      // pegamos os dados completos (como o nome Raquel) do localStorage
       if (!user?.name) {
-        const pbAuth = localStorage.getItem("pb_auth");
+        const pbAuth = localStorage.getItem('pb_auth');
         if (pbAuth) {
           const authData = JSON.parse(pbAuth);
           user = authData.model || authData.record;
         }
       }
 
-      const container = document.getElementById("user-menu-container");
-      if (!user || !container) {
-        window.location.href = "/login";
-        return;
-      }
-
-      container.innerHTML = `
-        <div class="flex items-center gap-2">
-          <span class="hidden text-xs text-slate-500 sm:inline">${user.email || ""}</span>
-          <span class="text-sm font-medium">Olá ${user.name || "Usuário"}</span>
-<button
+      if (user) {
+        const container = document.getElementById('user-menu-container');
+        if (container) {
+          container.innerHTML = `
+            <div class="flex items-center space-x-4">
+              <div>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  ${user.email || ''}
+                </p>
+              </div>
+              <div class="text-right">
+                <p class="text-sm font-medium text-gray-900 dark:text-white">
+                  Olá ${user.name || 'Usuário'}
+                </p>
+              </div>
+              <button
                 id="logout-btn"
                 class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
               >
                 Sair
               </button>
-        </div>
-      `;
+            </div>
+          `;
 
-      const logoutBtn = document.getElementById("logout-btn");
-      if (logoutBtn) logoutBtn.addEventListener("click", handleLogout);
+          const logoutBtn = document.getElementById('logout-btn');
+          if (logoutBtn) {
+            logoutBtn.addEventListener('click', handleLogout);
+          }
+        }
+      } else {
+        window.location.href = '/login';
+      }
     } catch (error) {
-      console.error("Error loading user info:", error);
-      window.location.href = "/login";
+      console.error('Error loading user info:', error);
+      window.location.href = '/login';
     }
   }
 
   async function handleLogout() {
     try {
-      const response = await fetch("/api/auth/logout", { method: "POST" });
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+      });
+
       if (response.ok) {
-        localStorage.removeItem("pb_auth");
-        window.location.href = "/";
+        localStorage.removeItem('pb_auth');
+        window.location.href = '/';
       }
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error('Logout error:', error);
     }
   }
 
-  document.addEventListener("astro:page-load", loadUserInfo);
-  if (document.readyState === "complete") loadUserInfo();
+  document.addEventListener('astro:page-load', loadUserInfo);
+  
+  loadUserInfo();
 </script>
