@@ -1,19 +1,32 @@
 ---
-import Layout from '~/layouts/PageLayout.astro';
-import LinkButtons from '~/components/ui/LinkButtons.astro';
+import Layout from "~/layouts/PageLayout.astro";
 
 const metadata = {
-  title: 'Sazen',
+  title: "Sazen",
   ignoreTitleTemplate: true,
 };
 ---
 
 <Layout metadata={metadata}>
-  <LinkButtons
-    actions={[
-      { href: '/login', text: 'Login', variant: 'primary' },
-      { href: '/api', text: 'API', variant: 'primary' },
-    ]}
-    direction="row"
-  />
+  <section class="mx-auto max-w-xl px-4 py-10 sm:py-14">
+    <div class="rounded-xl border bg-white p-6 shadow dark:border-gray-800 dark:bg-gray-900 sm:p-8">
+      <h1 class="mb-2 text-3xl font-bold text-gray-900 dark:text-white">Sazen</h1>
+      <p class="mb-6 text-sm text-gray-600 dark:text-gray-400">
+        Acesse o sistema para gerenciar pacientes, sessões e relatórios.
+      </p>
+
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <a
+          href="/login"
+          class="inline-flex min-h-12 items-center justify-center rounded-md border border-blue-700 bg-blue-600 px-4 py-3 text-base font-semibold text-white transition hover:bg-blue-700">
+          Login
+        </a>
+        <a
+          href="/dashboard"
+          class="inline-flex min-h-12 items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-3 text-base font-semibold text-gray-800 transition hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700">
+          Dashboard
+        </a>
+      </div>
+    </div>
+  </section>
 </Layout>

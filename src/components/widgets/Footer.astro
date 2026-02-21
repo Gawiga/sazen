@@ -1,5 +1,6 @@
 ---
 import { Icon } from 'astro-icon/components';
+import packageJson from '../../../package.json';
 interface Link {
   text?: string;
   href?: string;
@@ -21,6 +22,7 @@ export interface Props {
 }
 
 const { socialLinks = [], links = [], footNote = '', theme = 'light' } = Astro.props;
+const appVersion = packageJson.version;
 ---
 <br>
 <footer class:list={[{ dark: theme === 'dark' }, 'relative border-t border-gray-200 dark:border-slate-800 not-prose']}>
@@ -95,6 +97,7 @@ const { socialLinks = [], links = [], footNote = '', theme = 'light' } = Astro.p
 
     <div class="text-sm mr-4 dark:text-muted">
       <Fragment set:html={footNote} />
+      <p class="mt-1 text-xs opacity-80">Versão {appVersion}</p>
     </div>
   </div>
 </footer>

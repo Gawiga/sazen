@@ -5,6 +5,7 @@ const metadata = {
   title: "Sessões",
   description: "Cadastro e gerenciamento de sessões",
 };
+
 ---
 
 <PageLayout metadata={metadata}>
@@ -101,7 +102,7 @@ const metadata = {
           <button
             type="button"
             class="per-page-btn rounded border px-3 py-1 text-sm"
-            data-per-page="10">10</button>
+            data-per-page="20">20</button>
           <button
             type="button"
             class="per-page-btn rounded border px-3 py-1 text-sm"
@@ -153,20 +154,52 @@ const metadata = {
     </div>
   </section>
 
-  <script type="module">
+  <script>
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+    import {
+      buildPaginationParams,
+      getPaginationView,
+      getPerPageValue,
+      normalizePaginationData,
+    } from "~/services/paginationService";
+
     const collectionBase = "/api/sessoes";
+    type PacienteOption = {
+      id: string;
+      nome?: string;
+      email?: string;
+      valor_sessao?: number;
+    };
+    type SessionItem = {
+      id: string;
+      id_paciente: string;
+      data: string;
+      valor: number | string;
+      pago: boolean;
+    };
+    type ScriptElement = HTMLElement & {
+      value?: string;
+      checked?: boolean;
+      disabled?: boolean;
+      reset?: () => void;
+      dataset?: DOMStringMap;
+    };
     let patientMap = new Map();
     let patientDetails = new Map();
     let currentPage = 1;
-    let perPage = 10;
+    let perPage = 20;
     let totalPages = 1;
     let totalItems = 0;
+    const byId = (id: string): ScriptElement =>
+      document.getElementById(id) as ScriptElement;
 
-    function fetchWithAuth(url, options = {}) {
+    function fetchWithAuth(url: string, options: RequestInit = {}) {
       const tokenStr = localStorage.getItem("pb_auth");
       const auth = tokenStr ? JSON.parse(tokenStr).token : null;
-      const headers = {"Content-Type": "application/json", ...options.headers};
-      if (auth) headers.Authorization = `Bearer ${auth}`;
+      const headers = new Headers(options.headers ?? {});
+      headers.set("Content-Type", "application/json");
+      if (auth) headers.set("Authorization", `Bearer ${auth}`);
       return fetch(url, {...options, headers});
     }
 
@@ -190,7 +223,7 @@ const metadata = {
       }
     }
 
-    function parseCurrencyInput(value) {
+    function parseCurrencyInput(value: string | number) {
       if (!value) return 0;
       const normalized = String(value)
         .replace(/\s/g, "")
@@ -202,7 +235,7 @@ const metadata = {
       return Number.isFinite(parsed) ? parsed : 0;
     }
 
-    function formatCurrencyInput(value) {
+    function formatCurrencyInput(value: string | number) {
       const number = Number(value);
       if (!Number.isFinite(number)) return "";
       return `R$ ${number.toLocaleString("pt-BR", {
@@ -211,7 +244,7 @@ const metadata = {
       })}`;
     }
 
-    function attachCurrencyMask(input) {
+    function attachCurrencyMask(input: HTMLInputElement | null) {
       if (!input) return;
 
       input.addEventListener("input", () => {
@@ -236,24 +269,21 @@ const metadata = {
       });
     }
 
-    function isoToInputDate(isoString) {
+    function isoToInputDate(isoString: string) {
       if (!isoString) return "";
       const date = new Date(isoString);
       date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
       return date.toISOString().slice(0, 16);
     }
 
-    function formatDateDisplay(isoString) {
+    function formatDateDisplay(isoString: string) {
       if (!isoString) return "-";
       const date = new Date(isoString);
       const weekday = date.toLocaleDateString("pt-BR", {weekday: "long"});
       const day = date.toLocaleDateString("pt-BR", {day: "2-digit"});
       const month = date.toLocaleDateString("pt-BR", {month: "long"});
       const hour = date.toLocaleTimeString("pt-BR", {hour: "2-digit", hour12: false});
-      const minute = date.toLocaleTimeString("pt-BR", {
-        minute: "2-digit",
-        hour12: false,
-      });
+      const minute = date.toLocaleTimeString("pt-BR", {minute: "2-digit"});
       return `${weekday}, ${day} de ${month} às ${hour}h${minute}`;
     }
 
@@ -264,13 +294,13 @@ const metadata = {
         return;
       }
 
-      const form = document.getElementById("session-form");
+      const form = byId("session-form");
       if (!form || form.dataset.initialized) return;
       form.dataset.initialized = "true";
 
-      const patientSelect = document.getElementById("id_paciente");
-      const valorInput = document.getElementById("valor");
-      attachCurrencyMask(valorInput);
+      const patientSelect = byId("id_paciente");
+      const valorInput = byId("valor");
+      attachCurrencyMask(valorInput as HTMLInputElement);
 
       try {
         await Promise.all([loadPatientsForSelect(), loadSessions()]);
@@ -279,8 +309,9 @@ const metadata = {
       }
 
       patientSelect?.addEventListener("change", (e) => {
-        const patientId = e.target.value;
-        const sessionId = document.getElementById("session-id").value;
+        const target = e.target as HTMLSelectElement | null;
+        const patientId = target?.value ?? "";
+        const sessionId = byId("session-id").value;
 
         if (!sessionId && patientId && patientDetails.has(patientId)) {
           const value = patientDetails.get(patientId).valor_sessao || 0;
@@ -288,13 +319,15 @@ const metadata = {
         }
       });
 
-      document.getElementById("new-btn")?.addEventListener("click", () => {
-        document.getElementById("session-id").value = "";
-        form.reset();
+      byId("new-btn")?.addEventListener("click", () => {
+        byId("session-id").value = "";
+        if (form && typeof form.reset === "function") {
+          form.reset();
+        }
         sortPatientsForSelect();
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-        document.getElementById("data").value = now.toISOString().slice(0, 16);
+        byId("data").value = now.toISOString().slice(0, 16);
         toggleForm(true);
       });
 
@@ -309,17 +342,17 @@ const metadata = {
       updatePaginationControls();
     }
 
-    async function handleFormSubmit(ev) {
+    async function handleFormSubmit(ev: Event) {
       ev.preventDefault();
-      const id = document.getElementById("session-id").value;
-      const rawDate = document.getElementById("data").value;
+      const id = byId("session-id").value;
+      const rawDate = byId("data").value;
       const utcDate = rawDate ? new Date(rawDate).toISOString() : "";
 
-      const payload = {
-        id_paciente: document.getElementById("id_paciente").value,
+      const payload: Record<string, unknown> = {
+        id_paciente: byId("id_paciente").value,
         data: utcDate,
-        valor: parseCurrencyInput(document.getElementById("valor").value),
-        pago: document.getElementById("pago").checked,
+        valor: parseCurrencyInput(byId("valor").value || ""),
+        pago: byId("pago").checked,
       };
 
       if (!id) {
@@ -338,27 +371,39 @@ const metadata = {
         if (!res.ok) throw new Error("Erro ao salvar");
         toggleForm(false);
         loadSessions(currentPage);
-      } catch (err) {
-        alert("Erro ao salvar sessão.", err);
+      } catch {
+        alert("Erro ao salvar sessão.");
       }
     }
 
-    function toggleForm(show) {
+    function toggleForm(show: boolean) {
       document
         .getElementById("form-container")
         ?.classList.toggle("hidden", !show);
     }
 
     async function loadPatientsForSelect() {
-      const res = await fetchWithAuth("/api/pacientes");
-      const data = await res.json();
-      const items = sortPatientsByName(data?.items || []);
+      const firstParams = buildPaginationParams(1, 100);
+      const firstRes = await fetchWithAuth(`/api/pacientes?${firstParams.toString()}`);
+      const firstData = await firstRes.json();
+      const firstPage = normalizePaginationData(firstData, 1, 100);
+      let items = [...(firstPage.items as PacienteOption[])];
+
+      for (let page = 2; page <= firstPage.totalPages; page += 1) {
+        const params = buildPaginationParams(page, 100);
+        const res = await fetchWithAuth(`/api/pacientes?${params.toString()}`);
+        const data = await res.json();
+        const normalized = normalizePaginationData<PacienteOption>(data, page, 100);
+        items = items.concat(normalized.items);
+      }
+
+      items = sortPatientsByName(items);
       patientMap = new Map(
         items.map((p) => [p.id, p.nome || p.email || "Sem nome"]),
       );
       patientDetails = new Map(items.map((p) => [p.id, p]));
 
-      const select = document.getElementById("id_paciente");
+      const select = byId("id_paciente");
       if (select) {
         select.innerHTML =
           '<option value="">— selecione —</option>' +
@@ -368,7 +413,7 @@ const metadata = {
       }
     }
 
-    function sortPatientsByName(items) {
+    function sortPatientsByName(items: PacienteOption[]) {
       return [...items].sort((a, b) =>
         (a?.nome || a?.email || "").localeCompare(b?.nome || b?.email || "", "pt-BR", {
           sensitivity: "base",
@@ -378,7 +423,7 @@ const metadata = {
 
     function sortPatientsForSelect() {
       const items = sortPatientsByName(Array.from(patientDetails.values()));
-      const select = document.getElementById("id_paciente");
+      const select = byId("id_paciente");
       if (!select) return;
 
       const currentValue = select.value;
@@ -391,20 +436,17 @@ const metadata = {
     }
 
     async function loadSessions(page = 1) {
-      const body = document.getElementById("sessions-body");
+      const body = byId("sessions-body");
       if (!body) return;
       try {
-        const params = new URLSearchParams({
-          sort: "-data",
-          page: String(page),
-          perPage: String(perPage),
-        });
+        const params = buildPaginationParams(page, perPage, { sort: "-data" });
         const res = await fetchWithAuth(`${collectionBase}?${params.toString()}`);
         const data = await res.json();
-        currentPage = Number(data?.page || page);
-        totalPages = Math.max(1, Number(data?.totalPages || 1));
-        totalItems = Number(data?.totalItems || 0);
-        renderTable(data?.items || []);
+        const normalized = normalizePaginationData(data, page, perPage);
+        currentPage = normalized.page;
+        totalPages = normalized.totalPages;
+        totalItems = normalized.totalItems;
+        renderTable(normalized.items as SessionItem[]);
         updatePaginationControls();
         updateSessionCount();
       } catch (err) {
@@ -414,8 +456,8 @@ const metadata = {
       }
     }
 
-    function renderTable(items) {
-      const body = document.getElementById("sessions-body");
+    function renderTable(items: SessionItem[]) {
+      const body = byId("sessions-body");
       if (!items.length) {
         body.innerHTML =
           '<tr><td colspan="5" class="p-4 text-center text-gray-500">Nenhuma sessão registrada.</td></tr>';
@@ -424,7 +466,7 @@ const metadata = {
 
       body.innerHTML = items
         .map(
-          (it) => `
+          (it: SessionItem) => `
       <tr class="border-b transition hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800">
         <td class="p-3 font-medium text-gray-900 dark:text-gray-200">${patientMap.get(it.id_paciente) || "Desconhecido"}</td>
         <td class="p-3 text-gray-600 dark:text-gray-400">${formatDateDisplay(it.data)}</td>
@@ -447,32 +489,32 @@ const metadata = {
       attachRowListeners(items);
     }
 
-    window.togglePaymentStatus = async (id, currentStatus) => {
+    (window as any).togglePaymentStatus = async (id: string, currentStatus: boolean) => {
       try {
         await fetchWithAuth(`${collectionBase}/${id}`, {
           method: "PUT",
           body: JSON.stringify({pago: !currentStatus}),
         });
         loadSessions(currentPage);
-      } catch (err) {
-        alert("Erro ao atualizar pagamento", err);
+      } catch {
+        alert("Erro ao atualizar pagamento");
       }
     };
 
-    function attachRowListeners(items) {
+    function attachRowListeners(items: SessionItem[]) {
       document.querySelectorAll(".edit-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
           const id = btn.getAttribute("data-id");
-          const record = items.find((i) => i.id === id);
+          const record = items.find((i: SessionItem) => i.id === id);
           if (!record) return;
 
-          document.getElementById("session-id").value = record.id;
-          document.getElementById("id_paciente").value = record.id_paciente;
-          document.getElementById("data").value = isoToInputDate(record.data);
-          document.getElementById("valor").value = formatCurrencyInput(
+          byId("session-id").value = record.id;
+          byId("id_paciente").value = record.id_paciente;
+          byId("data").value = isoToInputDate(record.data);
+          byId("valor").value = formatCurrencyInput(
             Number(record.valor) || 0,
           );
-          document.getElementById("pago").checked = record.pago;
+          byId("pago").checked = record.pago;
 
           toggleForm(true);
         });
@@ -485,8 +527,8 @@ const metadata = {
           try {
             await fetchWithAuth(`${collectionBase}/${id}`, {method: "DELETE"});
             loadSessions(currentPage);
-          } catch (err) {
-            alert("Erro ao excluir sessão:", err);
+          } catch {
+            alert("Erro ao excluir sessão");
           }
         });
       });
@@ -495,7 +537,7 @@ const metadata = {
     function attachPerPageListeners() {
       document.querySelectorAll(".per-page-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
-          perPage = Number(btn.getAttribute("data-per-page")) || 10;
+          perPage = getPerPageValue(btn.getAttribute("data-per-page"), 20);
           currentPage = 1;
           updatePerPageButtons();
           loadSessions(currentPage);
@@ -504,12 +546,12 @@ const metadata = {
     }
 
     function attachPaginationListeners() {
-      document.getElementById("prev-page-btn")?.addEventListener("click", () => {
+      byId("prev-page-btn")?.addEventListener("click", () => {
         if (currentPage <= 1) return;
         loadSessions(currentPage - 1);
       });
 
-      document.getElementById("next-page-btn")?.addEventListener("click", () => {
+      byId("next-page-btn")?.addEventListener("click", () => {
         if (currentPage >= totalPages) return;
         loadSessions(currentPage + 1);
       });
@@ -525,17 +567,18 @@ const metadata = {
     }
 
     function updatePaginationControls() {
-      const prevBtn = document.getElementById("prev-page-btn");
-      const nextBtn = document.getElementById("next-page-btn");
-      const pageIndicator = document.getElementById("page-indicator");
+      const prevBtn = byId("prev-page-btn");
+      const nextBtn = byId("next-page-btn");
+      const pageIndicator = byId("page-indicator");
 
-      if (prevBtn) prevBtn.disabled = currentPage <= 1;
-      if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
-      if (pageIndicator) pageIndicator.textContent = `Página ${currentPage} de ${totalPages}`;
+      const view = getPaginationView(currentPage, totalPages);
+      if (prevBtn) prevBtn.disabled = !view.canPrev;
+      if (nextBtn) nextBtn.disabled = !view.canNext;
+      if (pageIndicator) pageIndicator.textContent = view.indicator;
     }
 
     function updateSessionCount() {
-      const countEl = document.getElementById("sessions-count");
+      const countEl = byId("sessions-count");
       if (countEl) countEl.textContent = String(totalItems);
     }
 
