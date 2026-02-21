@@ -67,11 +67,11 @@ describe("sessoesService", () => {
     expect(getListMock).not.toHaveBeenCalled();
   });
 
-  it("lista sessões com paginação padrão de 10 por página", async () => {
+  it("lista sessões com paginação padrão de 20 por página", async () => {
     getTokenFromRequestMock.mockReturnValue("jwt_token");
     getListMock.mockResolvedValue({
       page: 1,
-      perPage: 10,
+      perPage: 20,
       totalPages: 1,
       totalItems: 2,
       items: [{ id: "s1" }, { id: "s2" }],
@@ -84,8 +84,8 @@ describe("sessoesService", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(getListMock).toHaveBeenCalledWith(1, 10, { sort: "-data" });
-    expect(body.perPage).toBe(10);
+    expect(getListMock).toHaveBeenCalledWith(1, 20, { sort: "-data" });
+    expect(body.perPage).toBe(20);
     expect(body.items).toHaveLength(2);
   });
 

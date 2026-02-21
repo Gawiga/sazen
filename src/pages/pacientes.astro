@@ -145,6 +145,27 @@ const metadata = {
     </div>
 
     <div class="overflow-x-auto rounded border bg-white p-3 shadow dark:border-gray-800 dark:bg-gray-900 sm:p-4">
+      <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div class="text-sm text-gray-600 dark:text-gray-400">
+          Exibindo <span id="patients-count">0</span> pacientes
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-gray-600 dark:text-gray-400">Por página:</span>
+          <button
+            type="button"
+            class="per-page-btn rounded border px-3 py-1 text-sm"
+            data-per-page="20">20</button>
+          <button
+            type="button"
+            class="per-page-btn rounded border px-3 py-1 text-sm"
+            data-per-page="50">50</button>
+          <button
+            type="button"
+            class="per-page-btn rounded border px-3 py-1 text-sm"
+            data-per-page="100">100</button>
+        </div>
+      </div>
+
       <table class="w-full table-auto text-left">
         <thead>
           <tr class="border-b text-sm text-gray-600 dark:border-gray-700 dark:text-gray-400">
@@ -163,11 +184,47 @@ const metadata = {
           </tr>
         </tbody>
       </table>
+
+      <div class="mt-4 flex items-center justify-between gap-3">
+        <button
+          id="prev-page-btn"
+          type="button"
+          class="rounded border px-3 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50">
+          Anterior
+        </button>
+        <span id="page-indicator" class="text-sm text-gray-600 dark:text-gray-400">Página 1 de 1</span>
+        <button
+          id="next-page-btn"
+          type="button"
+          class="rounded border px-3 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50">
+          Próxima
+        </button>
+      </div>
     </div>
   </section>
 
-  <script type="module">
+  <script>
+    import {
+      buildPaginationParams,
+      getPaginationView,
+      getPerPageValue,
+      normalizePaginationData,
+    } from "~/services/paginationService";
+
     const collectionBase = "/api/pacientes";
+    let currentPage = 1;
+    let perPage = 20;
+    let totalPages = 1;
+    let totalItems = 0;
+    type ScriptElement = HTMLElement & {
+      value?: string;
+      checked?: boolean;
+      disabled?: boolean;
+      reset?: () => void;
+      dataset?: DOMStringMap;
+    };
+    const byId = (id: string): ScriptElement =>
+      document.getElementById(id) as ScriptElement;
 
     function getTokenFromLocalStorage() {
       const tokenStr = localStorage.getItem("pb_auth");
@@ -181,10 +238,11 @@ const metadata = {
       }
     }
 
-    function fetchWithAuth(url, options = {}) {
+    function fetchWithAuth(url: string, options: RequestInit = {}) {
       const token = getTokenFromLocalStorage();
-      const headers = {"Content-Type": "application/json", ...options.headers};
-      if (token) headers.Authorization = `Bearer ${token}`;
+      const headers = new Headers(options.headers ?? {});
+      headers.set("Content-Type", "application/json");
+      if (token) headers.set("Authorization", `Bearer ${token}`);
       return fetch(url, {...options, headers});
     }
 
@@ -240,22 +298,26 @@ const metadata = {
     }
 
     async function init() {
-      const form = document.getElementById("patient-form");
-      const body = document.getElementById("patients-body");
-      const valueInput = document.getElementById("valor_sessao");
+      const form = byId("patient-form");
+      const body = byId("patients-body");
+      const valueInput = byId("valor_sessao");
       if (!form || !body || form.dataset.initialized) return;
 
       form.dataset.initialized = "true";
       attachCurrencyMask(valueInput);
       setupUIListeners(form);
+      attachPerPageListeners();
+      attachPaginationListeners();
+      updatePerPageButtons();
+      updatePaginationControls();
       loadPatients();
     }
 
     function setupUIListeners(form) {
-      document.getElementById("new-btn")?.addEventListener("click", () => {
-        document.getElementById("patient-id").value = "";
+      byId("new-btn")?.addEventListener("click", () => {
+        byId("patient-id").value = "";
         form.reset();
-        document.getElementById("ativo").checked = true;
+        byId("ativo").checked = true;
         toggleForm(true);
       });
 
@@ -266,19 +328,19 @@ const metadata = {
       form.addEventListener("submit", async (ev) => {
         ev.preventDefault();
 
-        const id = document.getElementById("patient-id").value;
-        const dataNasc = document.getElementById("data_nascimento").value;
-        const dataInicio = document.getElementById("data_inicio").value;
+        const id = byId("patient-id").value;
+        const dataNasc = byId("data_nascimento").value;
+        const dataInicio = byId("data_inicio").value;
 
-        const payload = {
-          nome: document.getElementById("nome").value,
-          email: document.getElementById("email").value,
-          contato: document.getElementById("contato").value,
-          endereco: document.getElementById("endereco").value,
+        const payload: Record<string, unknown> = {
+          nome: byId("nome").value,
+          email: byId("email").value,
+          contato: byId("contato").value,
+          endereco: byId("endereco").value,
           valor_sessao: parseCurrencyInput(
-            document.getElementById("valor_sessao").value,
+            byId("valor_sessao").value,
           ),
-          ativo: document.getElementById("ativo").checked,
+          ativo: byId("ativo").checked,
         };
 
         if (dataNasc) payload.data_nascimento = `${dataNasc} 12:00:00.000Z`;
@@ -294,7 +356,7 @@ const metadata = {
           if (!res.ok) throw new Error("Erro ao salvar");
 
           toggleForm(false);
-          loadPatients();
+          loadPatients(currentPage);
         } catch (err) {
           console.error(err);
           alert("Erro ao salvar paciente.");
@@ -302,12 +364,19 @@ const metadata = {
       });
     }
 
-    async function loadPatients() {
-      const body = document.getElementById("patients-body");
+    async function loadPatients(page = 1) {
+      const body = byId("patients-body");
       try {
-        const res = await fetchWithAuth(collectionBase);
+        const params = buildPaginationParams(page, perPage);
+        const res = await fetchWithAuth(`${collectionBase}?${params.toString()}`);
         const data = await res.json();
-        render(data?.items || []);
+        const normalized = normalizePaginationData(data, page, perPage);
+        currentPage = normalized.page;
+        totalPages = normalized.totalPages;
+        totalItems = normalized.totalItems;
+        render(normalized.items);
+        updatePaginationControls();
+        updatePatientsCount();
       } catch (err) {
         console.error(err);
         if (body)
@@ -317,7 +386,7 @@ const metadata = {
     }
 
     function render(items) {
-      const body = document.getElementById("patients-body");
+      const body = byId("patients-body");
       if (!body) return;
 
       if (!items.length) {
@@ -362,22 +431,22 @@ const metadata = {
           const record = items.find((i) => i.id === id);
           if (!record) return;
 
-          document.getElementById("patient-id").value = record.id;
-          document.getElementById("nome").value = record.nome || "";
-          document.getElementById("email").value = record.email || "";
-          document.getElementById("contato").value = record.contato || "";
-          document.getElementById("endereco").value = record.endereco || "";
-          document.getElementById("valor_sessao").value = formatCurrencyInput(
+          byId("patient-id").value = record.id;
+          byId("nome").value = record.nome || "";
+          byId("email").value = record.email || "";
+          byId("contato").value = record.contato || "";
+          byId("endereco").value = record.endereco || "";
+          byId("valor_sessao").value = formatCurrencyInput(
             Number(record.valor_sessao) || 0,
           );
 
-          document.getElementById("data_nascimento").value = formatDateForInput(
+          byId("data_nascimento").value = formatDateForInput(
             record.data_nascimento,
           );
-          document.getElementById("data_inicio").value = formatDateForInput(
+          byId("data_inicio").value = formatDateForInput(
             record.data_inicio,
           );
-          document.getElementById("ativo").checked = record.ativo !== false;
+          byId("ativo").checked = record.ativo !== false;
 
           toggleForm(true);
         });
@@ -392,7 +461,7 @@ const metadata = {
             const res = await fetchWithAuth(`${collectionBase}/${id}`, {
               method: "DELETE",
             });
-            if (res.ok) loadPatients();
+            if (res.ok) loadPatients(currentPage);
           } catch (err) {
             console.error(err);
             alert("Erro ao excluir paciente.");
@@ -407,6 +476,59 @@ const metadata = {
         ?.classList.toggle("hidden", !show);
     }
 
+    function attachPerPageListeners() {
+      document.querySelectorAll(".per-page-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          perPage = getPerPageValue(btn.getAttribute("data-per-page"), 20);
+          currentPage = 1;
+          updatePerPageButtons();
+          loadPatients(currentPage);
+        });
+      });
+    }
+
+    function attachPaginationListeners() {
+      byId("prev-page-btn")?.addEventListener("click", () => {
+        if (currentPage <= 1) return;
+        loadPatients(currentPage - 1);
+      });
+
+      byId("next-page-btn")?.addEventListener("click", () => {
+        if (currentPage >= totalPages) return;
+        loadPatients(currentPage + 1);
+      });
+    }
+
+    function updatePerPageButtons() {
+      document.querySelectorAll(".per-page-btn").forEach((btn) => {
+        const isActive = Number(btn.getAttribute("data-per-page")) === perPage;
+        btn.classList.toggle("bg-blue-600", isActive);
+        btn.classList.toggle("text-white", isActive);
+        btn.classList.toggle("border-blue-600", isActive);
+      });
+    }
+
+    function updatePaginationControls() {
+      const prevBtn = byId("prev-page-btn");
+      const nextBtn = byId("next-page-btn");
+      const indicator = byId("page-indicator");
+
+      const view = getPaginationView(currentPage, totalPages);
+      if (prevBtn) prevBtn.disabled = !view.canPrev;
+      if (nextBtn) nextBtn.disabled = !view.canNext;
+      if (indicator) indicator.textContent = view.indicator;
+    }
+
+    function updatePatientsCount() {
+      const countEl = byId("patients-count");
+      if (countEl) countEl.textContent = String(totalItems);
+    }
+
     document.addEventListener("astro:page-load", init);
+    if (document.readyState === "complete") {
+      init();
+    } else {
+      document.addEventListener("DOMContentLoaded", init);
+    }
   </script>
 </PageLayout>

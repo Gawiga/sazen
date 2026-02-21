@@ -40,7 +40,7 @@ const metadata = {
           </div>
           <div class="flex items-center gap-2">
             <span class="text-sm text-gray-600 dark:text-gray-400">Por página:</span>
-            <button type="button" class="fatur-per-page-btn rounded border px-3 py-1 text-sm" data-per-page="10">10</button>
+            <button type="button" class="fatur-per-page-btn rounded border px-3 py-1 text-sm" data-per-page="20">20</button>
             <button type="button" class="fatur-per-page-btn rounded border px-3 py-1 text-sm" data-per-page="50">50</button>
             <button type="button" class="fatur-per-page-btn rounded border px-3 py-1 text-sm" data-per-page="100">100</button>
           </div>
@@ -83,7 +83,7 @@ const metadata = {
           </div>
           <div class="flex items-center gap-2">
             <span class="text-sm text-gray-600 dark:text-gray-400">Por página:</span>
-            <button type="button" class="rec-per-page-btn rounded border px-3 py-1 text-sm" data-per-page="10">10</button>
+            <button type="button" class="rec-per-page-btn rounded border px-3 py-1 text-sm" data-per-page="20">20</button>
             <button type="button" class="rec-per-page-btn rounded border px-3 py-1 text-sm" data-per-page="50">50</button>
             <button type="button" class="rec-per-page-btn rounded border px-3 py-1 text-sm" data-per-page="100">100</button>
           </div>
@@ -122,20 +122,35 @@ const metadata = {
     </div>
   </section>
 
-  <script type="module">
-    const endpoint = "/api/reports";
+  <script>
+    import {
+      buildPaginationParams,
+      getPaginationView,
+      getPerPageValue,
+      normalizePaginationData,
+    } from "~/services/paginationService";
 
-    let fatur = [];
-    let receber = [];
-    let filteredReceber = [];
+    const endpoint = "/api/reports";
+    type ReportItem = Record<string, unknown>;
+    type ScriptElement = HTMLElement & {
+      value?: string;
+      disabled?: boolean;
+      dataset?: DOMStringMap;
+    };
+    const byId = (id: string): ScriptElement =>
+      document.getElementById(id) as ScriptElement;
+
+    let fatur: ReportItem[] = [];
+    let receber: ReportItem[] = [];
+    let filteredReceber: ReportItem[] = [];
 
     let pageF = 1;
-    let perPageF = 10;
+    let perPageF = 20;
     let totalPagesF = 1;
     let totalItemsF = 0;
 
     let pageR = 1;
-    let perPageR = 10;
+    let perPageR = 20;
     let totalPagesR = 1;
     let totalItemsR = 0;
 
@@ -146,11 +161,12 @@ const metadata = {
       currency: "BRL",
     });
 
-    function fetchWithAuth(url, options = {}) {
+    function fetchWithAuth(url: string, options: RequestInit = {}) {
       const tokenStr = localStorage.getItem("pb_auth");
       const auth = tokenStr ? JSON.parse(tokenStr).token : null;
-      const headers = {"Content-Type": "application/json", ...options.headers};
-      if (auth) headers.Authorization = `Bearer ${auth}`;
+      const headers = new Headers(options.headers ?? {});
+      headers.set("Content-Type", "application/json");
+      if (auth) headers.set("Authorization", `Bearer ${auth}`);
       return fetch(url, {...options, headers});
     }
 
@@ -162,24 +178,21 @@ const metadata = {
     }
 
     async function fetchCollectionPage(collection, page, perPage) {
-      const params = new URLSearchParams({
-        collection,
-        page: String(page),
-        perPage: String(perPage),
-      });
+      const params = buildPaginationParams(page, perPage, { collection });
       const res = await fetchWithAuth(`${endpoint}?${params.toString()}`);
       if (!res.ok) throw new Error("Falha na requisição");
       return res.json();
     }
 
     async function loadF() {
-      const body = document.getElementById("body-fatur");
+      const body = byId("body-fatur");
       try {
         const data = await fetchCollectionPage("faturamento_mensal", pageF, perPageF);
-        fatur = data.items || [];
-        totalItemsF = Number(data.totalItems || 0);
-        totalPagesF = Math.max(1, Number(data.totalPages || 1));
-        pageF = Number(data.page || pageF);
+        const normalized = normalizePaginationData<ReportItem>(data, pageF, perPageF);
+        fatur = normalized.items;
+        totalItemsF = normalized.totalItems;
+        totalPagesF = normalized.totalPages;
+        pageF = normalized.page;
 
         renderF();
         updatePaginationF();
@@ -194,13 +207,14 @@ const metadata = {
     }
 
     async function loadR() {
-      const body = document.getElementById("body-rec");
+      const body = byId("body-rec");
       try {
         const data = await fetchCollectionPage("valores_receber", pageR, perPageR);
-        receber = data.items || [];
-        totalItemsR = Number(data.totalItems || 0);
-        totalPagesR = Math.max(1, Number(data.totalPages || 1));
-        pageR = Number(data.page || pageR);
+        const normalized = normalizePaginationData<ReportItem>(data, pageR, perPageR);
+        receber = normalized.items;
+        totalItemsR = normalized.totalItems;
+        totalPagesR = normalized.totalPages;
+        pageR = normalized.page;
 
         applyFrontFilter();
         updatePaginationR();
@@ -228,7 +242,7 @@ const metadata = {
     }
 
     function renderF() {
-      const body = document.getElementById("body-fatur");
+      const body = byId("body-fatur");
       if (!body) return;
 
       if (!fatur.length) {
@@ -250,7 +264,7 @@ const metadata = {
     }
 
     function renderR() {
-      const body = document.getElementById("body-rec");
+      const body = byId("body-rec");
       if (!body) return;
 
       if (!filteredReceber.length) {
@@ -272,27 +286,29 @@ const metadata = {
     }
 
     function updatePaginationF() {
-      const prev = document.getElementById("prev-fatur");
-      const next = document.getElementById("next-fatur");
-      const indicator = document.getElementById("page-ind-fatur");
+      const prev = byId("prev-fatur");
+      const next = byId("next-fatur");
+      const indicator = byId("page-ind-fatur");
 
-      if (prev) prev.disabled = pageF <= 1;
-      if (next) next.disabled = pageF >= totalPagesF;
-      if (indicator) indicator.textContent = `Página ${pageF} de ${totalPagesF}`;
+      const view = getPaginationView(pageF, totalPagesF);
+      if (prev) prev.disabled = !view.canPrev;
+      if (next) next.disabled = !view.canNext;
+      if (indicator) indicator.textContent = view.indicator;
     }
 
     function updatePaginationR() {
-      const prev = document.getElementById("prev-rec");
-      const next = document.getElementById("next-rec");
-      const indicator = document.getElementById("page-ind-rec");
+      const prev = byId("prev-rec");
+      const next = byId("next-rec");
+      const indicator = byId("page-ind-rec");
 
-      if (prev) prev.disabled = pageR <= 1;
-      if (next) next.disabled = pageR >= totalPagesR;
-      if (indicator) indicator.textContent = `Página ${pageR} de ${totalPagesR}`;
+      const view = getPaginationView(pageR, totalPagesR);
+      if (prev) prev.disabled = !view.canPrev;
+      if (next) next.disabled = !view.canNext;
+      if (indicator) indicator.textContent = view.indicator;
     }
 
     function updateCount(id, value) {
-      const element = document.getElementById(id);
+      const element = byId(id);
       if (element) element.textContent = String(value);
     }
 
@@ -308,7 +324,7 @@ const metadata = {
     function setupEventListeners() {
       document.querySelectorAll(".fatur-per-page-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
-          perPageF = Number(btn.getAttribute("data-per-page")) || 10;
+          perPageF = getPerPageValue(btn.getAttribute("data-per-page"), 20);
           pageF = 1;
           updatePerPageButtons(".fatur-per-page-btn", perPageF, {
             "bg-green-600": true,
@@ -321,7 +337,7 @@ const metadata = {
 
       document.querySelectorAll(".rec-per-page-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
-          perPageR = Number(btn.getAttribute("data-per-page")) || 10;
+          perPageR = getPerPageValue(btn.getAttribute("data-per-page"), 20);
           pageR = 1;
           updatePerPageButtons(".rec-per-page-btn", perPageR, {
             "bg-green-600": true,
@@ -332,32 +348,33 @@ const metadata = {
         });
       });
 
-      document.getElementById("prev-fatur")?.addEventListener("click", () => {
+      byId("prev-fatur")?.addEventListener("click", () => {
         if (pageF <= 1) return;
         pageF -= 1;
         loadF();
       });
 
-      document.getElementById("next-fatur")?.addEventListener("click", () => {
+      byId("next-fatur")?.addEventListener("click", () => {
         if (pageF >= totalPagesF) return;
         pageF += 1;
         loadF();
       });
 
-      document.getElementById("prev-rec")?.addEventListener("click", () => {
+      byId("prev-rec")?.addEventListener("click", () => {
         if (pageR <= 1) return;
         pageR -= 1;
         loadR();
       });
 
-      document.getElementById("next-rec")?.addEventListener("click", () => {
+      byId("next-rec")?.addEventListener("click", () => {
         if (pageR >= totalPagesR) return;
         pageR += 1;
         loadR();
       });
 
-      document.getElementById("name-filter-rec")?.addEventListener("input", (e) => {
-        nameFilter = e.target.value || "";
+      byId("name-filter-rec")?.addEventListener("input", (e: Event) => {
+        const target = e.target as HTMLInputElement | null;
+        nameFilter = target?.value || "";
         applyFrontFilter();
       });
     }
@@ -369,7 +386,7 @@ const metadata = {
         return;
       }
 
-      const pageNode = document.getElementById("body-fatur");
+      const pageNode = byId("body-fatur");
       if (!pageNode || pageNode.dataset.initialized) return;
       pageNode.dataset.initialized = "true";
 

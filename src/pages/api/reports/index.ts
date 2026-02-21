@@ -13,6 +13,21 @@ function getPb(token?: string) {
   return pb;
 }
 
+function parsePagination(url: URL) {
+  const pageRaw = Number.parseInt(url.searchParams.get("page") || "1", 10);
+  const perPageRaw = Number.parseInt(
+    url.searchParams.get("perPage") || "20",
+    10,
+  );
+
+  return {
+    page: Number.isNaN(pageRaw) ? 1 : Math.max(1, pageRaw),
+    perPage: Number.isNaN(perPageRaw)
+      ? 20
+      : Math.max(1, Math.min(100, perPageRaw)),
+  };
+}
+
 export const GET: APIRoute = async ({ request, cookies }) => {
   try {
     const token = getTokenFromRequest(request, cookies);
@@ -25,8 +40,7 @@ export const GET: APIRoute = async ({ request, cookies }) => {
 
     const url = new URL(request.url);
     const collection = url.searchParams.get("collection");
-    const page = Number(url.searchParams.get("page") || "1");
-    const perPage = Number(url.searchParams.get("perPage") || "10");
+    const { page, perPage } = parsePagination(url);
 
     if (collection) {
       // Return a paginated list for the requested collection
@@ -37,12 +51,8 @@ export const GET: APIRoute = async ({ request, cookies }) => {
     }
 
     // Backwards-compatible: return first page for both collections
-    const fatur = await pb
-      .collection("faturamento_mensal")
-      .getList(1, Math.max(10, perPage));
-    const receber = await pb
-      .collection("valores_receber")
-      .getList(1, Math.max(10, perPage));
+    const fatur = await pb.collection("faturamento_mensal").getList(1, perPage);
+    const receber = await pb.collection("valores_receber").getList(1, perPage);
     return new Response(JSON.stringify({ success: true, fatur, receber }), {
       status: 200,
     });
