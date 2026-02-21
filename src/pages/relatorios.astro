@@ -40,7 +40,7 @@ const metadata = {
           </div>
           <div class="flex items-center gap-2">
             <span class="text-sm text-gray-600 dark:text-gray-400">Por página:</span>
-            <button type="button" class="fatur-per-page-btn rounded border px-3 py-1 text-sm" data-per-page="10">10</button>
+            <button type="button" class="fatur-per-page-btn rounded border px-3 py-1 text-sm" data-per-page="20">20</button>
             <button type="button" class="fatur-per-page-btn rounded border px-3 py-1 text-sm" data-per-page="50">50</button>
             <button type="button" class="fatur-per-page-btn rounded border px-3 py-1 text-sm" data-per-page="100">100</button>
           </div>
@@ -83,7 +83,7 @@ const metadata = {
           </div>
           <div class="flex items-center gap-2">
             <span class="text-sm text-gray-600 dark:text-gray-400">Por página:</span>
-            <button type="button" class="rec-per-page-btn rounded border px-3 py-1 text-sm" data-per-page="10">10</button>
+            <button type="button" class="rec-per-page-btn rounded border px-3 py-1 text-sm" data-per-page="20">20</button>
             <button type="button" class="rec-per-page-btn rounded border px-3 py-1 text-sm" data-per-page="50">50</button>
             <button type="button" class="rec-per-page-btn rounded border px-3 py-1 text-sm" data-per-page="100">100</button>
           </div>
@@ -122,7 +122,7 @@ const metadata = {
     </div>
   </section>
 
-  <script type="module">
+  <script is:inline>
     const endpoint = "/api/reports";
 
     let fatur = [];
@@ -130,12 +130,12 @@ const metadata = {
     let filteredReceber = [];
 
     let pageF = 1;
-    let perPageF = 10;
+    let perPageF = 20;
     let totalPagesF = 1;
     let totalItemsF = 0;
 
     let pageR = 1;
-    let perPageR = 10;
+    let perPageR = 20;
     let totalPagesR = 1;
     let totalItemsR = 0;
 
@@ -308,7 +308,7 @@ const metadata = {
     function setupEventListeners() {
       document.querySelectorAll(".fatur-per-page-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
-          perPageF = Number(btn.getAttribute("data-per-page")) || 10;
+          perPageF = Number(btn.getAttribute("data-per-page")) || 20;
           pageF = 1;
           updatePerPageButtons(".fatur-per-page-btn", perPageF, {
             "bg-green-600": true,
@@ -321,7 +321,7 @@ const metadata = {
 
       document.querySelectorAll(".rec-per-page-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
-          perPageR = Number(btn.getAttribute("data-per-page")) || 10;
+          perPageR = Number(btn.getAttribute("data-per-page")) || 20;
           pageR = 1;
           updatePerPageButtons(".rec-per-page-btn", perPageR, {
             "bg-green-600": true,

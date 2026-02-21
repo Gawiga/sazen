@@ -7,7 +7,7 @@ const POCKETBASE_URL =
   "https://gawiga-server.bonito-dace.ts.net/";
 
 const DEFAULT_PAGE = 1;
-const DEFAULT_PER_PAGE = 10;
+const DEFAULT_PER_PAGE = 20;
 const MIN_PER_PAGE = 1;
 const MAX_PER_PAGE = 100;
 
