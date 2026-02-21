@@ -8,184 +8,115 @@ const metadata = {
 ---
 
 <PageLayout metadata={metadata}>
-  <section class="mx-auto max-w-4xl py-12">
+  <section class="mx-auto max-w-5xl px-4 py-8 sm:py-10">
     <div class="mb-6">
       <a
         href="/dashboard"
-        class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:underline mb-3"
+        class="mb-3 inline-flex items-center text-sm text-gray-600 hover:underline dark:text-gray-400"
         >← Voltar ao Dashboard</a
       >
-      <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">
         Relatórios
       </h1>
       <p class="text-sm text-gray-600 dark:text-gray-400">
         Visualize faturamento e valores a receber
       </p>
     </div>
-    <div class="space-y-8">
-      <div class="bg-white dark:bg-gray-900 rounded-lg shadow-md p-6">
+
+    <div class="space-y-6">
+      <div class="rounded-lg border bg-white p-4 shadow dark:border-gray-800 dark:bg-gray-900 sm:p-6">
         <div class="mb-4">
-          <div>
-            <h2 class="font-semibold text-lg text-gray-900 dark:text-white">
-              Faturamento Mensal
-            </h2>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              Resumo mensal do faturamento
-            </p>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            Faturamento Mensal
+          </h2>
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            Resumo mensal do faturamento
+          </p>
+        </div>
+
+        <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div class="text-sm text-gray-600 dark:text-gray-400">
+            Exibindo <span id="fatur-count">0</span> registros
           </div>
-          <div
-            class="mt-3 flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-2 items-start md:items-center bg-transparent md:bg-gray-50 dark:md:bg-gray-800 rounded-md p-0 md:p-2">
-            <input
-              id="filter-fatur"
-              placeholder="Filtrar por mês/ano"
-              class="px-2 py-2 rounded border bg-white dark:bg-gray-800 text-sm w-full md:w-auto"
-            />
-            <select
-              id="sort-fatur"
-              class="px-2 py-2 rounded border bg-white dark:bg-gray-800 text-sm w-full md:w-auto">
-              <option value="mes_ano">Ordenar por mês</option>
-              <option value="total">Ordenar por total</option>
-            </select>
-            <div class="flex items-center space-x-2 w-full md:w-auto">
-              <button
-                id="order-fatur"
-                class="px-3 py-2 rounded border bg-white dark:bg-gray-800 text-sm"
-                >Asc</button
-              >
-              <select
-                id="page-size-fatur"
-                class="px-2 py-2 rounded border bg-white dark:bg-gray-800 text-sm">
-                <option value="5">5</option>
-                <option value="10" selected>10</option>
-                <option value="25">25</option>
-              </select>
-              <button
-                id="prev-fatur"
-                class="px-3 py-2 rounded border bg-white dark:bg-gray-800 text-sm"
-                >◀</button
-              >
-              <span
-                id="page-ind-fatur"
-                class="text-sm text-gray-600 dark:text-gray-400">1</span
-              >
-              <button
-                id="next-fatur"
-                class="px-3 py-2 rounded border bg-white dark:bg-gray-800 text-sm"
-                >▶</button
-              >
-            </div>
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Por página:</span>
+            <button type="button" class="fatur-per-page-btn rounded border px-3 py-1 text-sm" data-per-page="10">10</button>
+            <button type="button" class="fatur-per-page-btn rounded border px-3 py-1 text-sm" data-per-page="50">50</button>
+            <button type="button" class="fatur-per-page-btn rounded border px-3 py-1 text-sm" data-per-page="100">100</button>
           </div>
         </div>
 
         <div class="overflow-auto">
-          <table
-            id="table-fatur"
-            class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
-            <thead class="bg-gray-50 dark:bg-gray-800">
+          <table class="min-w-full text-sm">
+            <thead class="border-b bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
               <tr>
-                <th
-                  class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >Mês/Ano</th
-                >
-                <th
-                  class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >Total</th
-                >
+                <th class="px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Mês/Ano</th>
+                <th class="px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Total</th>
               </tr>
             </thead>
-            <tbody
-              id="body-fatur"
-              class="bg-white dark:bg-gray-900 divide-y divide-gray-100 dark:divide-gray-800">
-              <tr
-                ><td colspan="2" class="p-4 text-center text-sm text-gray-500"
-                  >Carregando...</td
-                ></tr
-              >
+            <tbody id="body-fatur" class="divide-y divide-gray-100 dark:divide-gray-800">
+              <tr><td colspan="2" class="p-4 text-center text-gray-500">Carregando...</td></tr>
             </tbody>
           </table>
+        </div>
+
+        <div class="mt-4 flex items-center justify-between gap-3">
+          <button id="prev-fatur" type="button" class="rounded border px-3 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50">Anterior</button>
+          <span id="page-ind-fatur" class="text-sm text-gray-600 dark:text-gray-400">Página 1 de 1</span>
+          <button id="next-fatur" type="button" class="rounded border px-3 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50">Próxima</button>
         </div>
       </div>
 
-      <div class="bg-white dark:bg-gray-900 rounded-lg shadow-md p-6">
+      <div class="rounded-lg border bg-white p-4 shadow dark:border-gray-800 dark:bg-gray-900 sm:p-6">
         <div class="mb-4">
-          <div>
-            <h2 class="font-semibold text-lg text-gray-900 dark:text-white">
-              Valores a Receber
-            </h2>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              Lista de valores pendentes por paciente
-            </p>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+            Valores a Receber
+          </h2>
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            Lista de valores pendentes por paciente
+          </p>
+        </div>
+
+        <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div class="text-sm text-gray-600 dark:text-gray-400">
+            Exibindo <span id="rec-count">0</span> registros
           </div>
-          <div
-            class="mt-3 flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-2 items-start md:items-center bg-transparent md:bg-gray-50 dark:md:bg-gray-800 rounded-md p-0 md:p-2">
-            <input
-              id="filter-rec"
-              placeholder="Filtrar por nome"
-              class="px-2 py-2 rounded border bg-white dark:bg-gray-800 text-sm w-full md:w-auto"
-            />
-            <select
-              id="sort-rec"
-              class="px-2 py-2 rounded border bg-white dark:bg-gray-800 text-sm w-full md:w-auto">
-              <option value="nome">Ordenar por nome</option>
-              <option value="total">Ordenar por total</option>
-            </select>
-            <div class="flex items-center space-x-2 w-full md:w-auto">
-              <button
-                id="order-rec"
-                class="px-3 py-2 rounded border bg-white dark:bg-gray-800 text-sm"
-                >Asc</button
-              >
-              <select
-                id="page-size-rec"
-                class="px-2 py-2 rounded border bg-white dark:bg-gray-800 text-sm">
-                <option value="5">5</option>
-                <option value="10" selected>10</option>
-                <option value="25">25</option>
-              </select>
-              <button
-                id="prev-rec"
-                class="px-3 py-2 rounded border bg-white dark:bg-gray-800 text-sm"
-                >◀</button
-              >
-              <span
-                id="page-ind-rec"
-                class="text-sm text-gray-600 dark:text-gray-400">1</span
-              >
-              <button
-                id="next-rec"
-                class="px-3 py-2 rounded border bg-white dark:bg-gray-800 text-sm"
-                >▶</button
-              >
-            </div>
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Por página:</span>
+            <button type="button" class="rec-per-page-btn rounded border px-3 py-1 text-sm" data-per-page="10">10</button>
+            <button type="button" class="rec-per-page-btn rounded border px-3 py-1 text-sm" data-per-page="50">50</button>
+            <button type="button" class="rec-per-page-btn rounded border px-3 py-1 text-sm" data-per-page="100">100</button>
           </div>
         </div>
 
         <div class="overflow-auto">
-          <table
-            id="table-rec"
-            class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
-            <thead class="bg-gray-50 dark:bg-gray-800">
+          <table class="min-w-full text-sm">
+            <thead class="border-b bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
               <tr>
-                <th
-                  class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >Nome</th
-                >
-                <th
-                  class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >Total</th
-                >
+                <th class="px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-400">
+                  <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <span>Nome</span>
+                    <input
+                      id="name-filter-rec"
+                      type="text"
+                      placeholder="Filtrar nome"
+                      class="w-full rounded border px-2 py-1 text-sm dark:border-gray-700 dark:bg-gray-900 sm:w-56"
+                    />
+                  </div>
+                </th>
+                <th class="px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Total</th>
               </tr>
             </thead>
-            <tbody
-              id="body-rec"
-              class="bg-white dark:bg-gray-900 divide-y divide-gray-100 dark:divide-gray-800">
-              <tr
-                ><td colspan="2" class="p-4 text-center text-sm text-gray-500"
-                  >Carregando...</td
-                ></tr
-              >
+            <tbody id="body-rec" class="divide-y divide-gray-100 dark:divide-gray-800">
+              <tr><td colspan="2" class="p-4 text-center text-gray-500">Carregando...</td></tr>
             </tbody>
           </table>
+        </div>
+
+        <div class="mt-4 flex items-center justify-between gap-3">
+          <button id="prev-rec" type="button" class="rounded border px-3 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50">Anterior</button>
+          <span id="page-ind-rec" class="text-sm text-gray-600 dark:text-gray-400">Página 1 de 1</span>
+          <button id="next-rec" type="button" class="rounded border px-3 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50">Próxima</button>
         </div>
       </div>
     </div>
@@ -194,22 +125,26 @@ const metadata = {
   <script type="module">
     const endpoint = "/api/reports";
 
-    // Estado Global do Script
     let fatur = [];
     let receber = [];
+    let filteredReceber = [];
+
     let pageF = 1;
-    let pageSizeF = 10;
+    let perPageF = 10;
+    let totalPagesF = 1;
     let totalItemsF = 0;
+
     let pageR = 1;
-    let pageSizeR = 10;
+    let perPageR = 10;
+    let totalPagesR = 1;
     let totalItemsR = 0;
+
+    let nameFilter = "";
 
     const currencyFormatter = new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: "BRL",
     });
-
-    // --- HELPER FUNCTIONS ---
 
     function fetchWithAuth(url, options = {}) {
       const tokenStr = localStorage.getItem("pb_auth");
@@ -222,121 +157,87 @@ const metadata = {
     function tryParseNumber(v) {
       if (v == null) return 0;
       if (typeof v === "number") return v;
-      try {
-        const parsed =
-          typeof v === "string" && v.startsWith("{") ? JSON.parse(v) : v;
-        if (typeof parsed === "number") return parsed;
-        if (parsed && typeof parsed.total === "number") return parsed.total;
-      } catch {
-        return 0;
-      }
       const n = Number(String(v).replace(/[^\d.-]+/g, ""));
       return Number.isNaN(n) ? 0 : n;
     }
 
-    async function fetchCollectionPage(
-      collection,
-      page,
-      perPage,
-      q,
-      sort,
-      dir,
-    ) {
+    async function fetchCollectionPage(collection, page, perPage) {
       const params = new URLSearchParams({
         collection,
         page: String(page),
         perPage: String(perPage),
       });
-      if (q) params.set("q", q);
-      if (sort) params.set("sort", sort);
-      if (dir) params.set("dir", dir);
       const res = await fetchWithAuth(`${endpoint}?${params.toString()}`);
       if (!res.ok) throw new Error("Falha na requisição");
       return res.json();
     }
 
-    // --- MÉTODOS DE CARREGAMENTO ---
-
     async function loadF() {
-      const bodyF = document.getElementById("body-fatur");
+      const body = document.getElementById("body-fatur");
       try {
-        const q = document.getElementById("filter-fatur")?.value || "";
-        const sort = document.getElementById("sort-fatur")?.value;
-        const dir = (
-          document.getElementById("order-fatur")?.textContent || "Asc"
-        ).toLowerCase();
+        const data = await fetchCollectionPage("faturamento_mensal", pageF, perPageF);
+        fatur = data.items || [];
+        totalItemsF = Number(data.totalItems || 0);
+        totalPagesF = Math.max(1, Number(data.totalPages || 1));
+        pageF = Number(data.page || pageF);
 
-        const data = await fetchCollectionPage(
-          "faturamento_mensal",
-          pageF,
-          pageSizeF,
-          q,
-          sort,
-          dir,
-        );
-
-        fatur = data.items || data.fatur || [];
-        totalItemsF =
-          data.totalItems ||
-          (Array.isArray(data.fatur) ? data.fatur.length : 0);
         renderF();
+        updatePaginationF();
+        updateCount("fatur-count", totalItemsF);
       } catch (err) {
-        console.error('load reports fatur', err);
-        if (bodyF)
-          bodyF.innerHTML =
+        console.error("load reports fatur", err);
+        if (body) {
+          body.innerHTML =
             '<tr><td colspan="2" class="p-4 text-center text-red-500">Erro ao carregar faturamento</td></tr>';
+        }
       }
     }
 
     async function loadR() {
-      const bodyR = document.getElementById("body-rec");
+      const body = document.getElementById("body-rec");
       try {
-        const q = document.getElementById("filter-rec")?.value || "";
-        const sort = document.getElementById("sort-rec")?.value;
-        const dir = (
-          document.getElementById("order-rec")?.textContent || "Asc"
-        ).toLowerCase();
+        const data = await fetchCollectionPage("valores_receber", pageR, perPageR);
+        receber = data.items || [];
+        totalItemsR = Number(data.totalItems || 0);
+        totalPagesR = Math.max(1, Number(data.totalPages || 1));
+        pageR = Number(data.page || pageR);
 
-        const data = await fetchCollectionPage(
-          "valores_receber",
-          pageR,
-          pageSizeR,
-          q,
-          sort,
-          dir,
-        );
-
-        receber = data.items || data.receber || [];
-        totalItemsR =
-          data.totalItems ||
-          (Array.isArray(data.receber) ? data.receber.length : 0);
-        renderR();
+        applyFrontFilter();
+        updatePaginationR();
+        updateCount("rec-count", totalItemsR);
       } catch (err) {
-        console.error('load reports receber', err);
-        if (bodyR)
-          bodyR.innerHTML =
+        console.error("load reports receber", err);
+        if (body) {
+          body.innerHTML =
             '<tr><td colspan="2" class="p-4 text-center text-red-500">Erro ao carregar valores a receber</td></tr>';
+        }
       }
     }
 
-    // --- MÉTODOS DE RENDERIZAÇÃO ---
+    function applyFrontFilter() {
+      const q = nameFilter.trim().toLowerCase();
+      if (!q) {
+        filteredReceber = [...receber];
+      } else {
+        filteredReceber = receber.filter((it) =>
+          String(it?.nome || "").toLowerCase().includes(q),
+        );
+      }
+
+      renderR();
+    }
 
     function renderF() {
-      const bodyF = document.getElementById("body-fatur");
-      const indF = document.getElementById("page-ind-fatur");
-      if (!bodyF) return;
+      const body = document.getElementById("body-fatur");
+      if (!body) return;
 
-      if (!totalItemsF) {
-        bodyF.innerHTML =
+      if (!fatur.length) {
+        body.innerHTML =
           '<tr><td colspan="2" class="p-4 text-center text-gray-500">Nenhum registro</td></tr>';
-        if (indF) indF.textContent = "0 / 0";
         return;
       }
 
-      const totalPages = Math.ceil(totalItemsF / pageSizeF);
-      if (indF) indF.textContent = `${pageF} / ${totalPages}`;
-
-      bodyF.innerHTML = fatur
+      body.innerHTML = fatur
         .map(
           (it) => `
       <tr class="border-t dark:border-gray-800">
@@ -349,21 +250,16 @@ const metadata = {
     }
 
     function renderR() {
-      const bodyR = document.getElementById("body-rec");
-      const indR = document.getElementById("page-ind-rec");
-      if (!bodyR) return;
+      const body = document.getElementById("body-rec");
+      if (!body) return;
 
-      if (!totalItemsR) {
-        bodyR.innerHTML =
+      if (!filteredReceber.length) {
+        body.innerHTML =
           '<tr><td colspan="2" class="p-4 text-center text-gray-500">Nenhum registro</td></tr>';
-        if (indR) indR.textContent = "0 / 0";
         return;
       }
 
-      const totalPages = Math.ceil(totalItemsR / pageSizeR);
-      if (indR) indR.textContent = `${pageR} / ${totalPages}`;
-
-      bodyR.innerHTML = receber
+      body.innerHTML = filteredReceber
         .map(
           (it) => `
       <tr class="border-t dark:border-gray-800">
@@ -375,107 +271,124 @@ const metadata = {
         .join("");
     }
 
-    // --- INICIALIZAÇÃO ---
+    function updatePaginationF() {
+      const prev = document.getElementById("prev-fatur");
+      const next = document.getElementById("next-fatur");
+      const indicator = document.getElementById("page-ind-fatur");
+
+      if (prev) prev.disabled = pageF <= 1;
+      if (next) next.disabled = pageF >= totalPagesF;
+      if (indicator) indicator.textContent = `Página ${pageF} de ${totalPagesF}`;
+    }
+
+    function updatePaginationR() {
+      const prev = document.getElementById("prev-rec");
+      const next = document.getElementById("next-rec");
+      const indicator = document.getElementById("page-ind-rec");
+
+      if (prev) prev.disabled = pageR <= 1;
+      if (next) next.disabled = pageR >= totalPagesR;
+      if (indicator) indicator.textContent = `Página ${pageR} de ${totalPagesR}`;
+    }
+
+    function updateCount(id, value) {
+      const element = document.getElementById(id);
+      if (element) element.textContent = String(value);
+    }
+
+    function updatePerPageButtons(groupSelector, value, activeClasses) {
+      document.querySelectorAll(groupSelector).forEach((btn) => {
+        const isActive = Number(btn.getAttribute("data-per-page")) === value;
+        Object.entries(activeClasses).forEach(([className, enabled]) => {
+          btn.classList.toggle(className, isActive && enabled);
+        });
+      });
+    }
+
+    function setupEventListeners() {
+      document.querySelectorAll(".fatur-per-page-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          perPageF = Number(btn.getAttribute("data-per-page")) || 10;
+          pageF = 1;
+          updatePerPageButtons(".fatur-per-page-btn", perPageF, {
+            "bg-green-600": true,
+            "text-white": true,
+            "border-green-600": true,
+          });
+          loadF();
+        });
+      });
+
+      document.querySelectorAll(".rec-per-page-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          perPageR = Number(btn.getAttribute("data-per-page")) || 10;
+          pageR = 1;
+          updatePerPageButtons(".rec-per-page-btn", perPageR, {
+            "bg-green-600": true,
+            "text-white": true,
+            "border-green-600": true,
+          });
+          loadR();
+        });
+      });
+
+      document.getElementById("prev-fatur")?.addEventListener("click", () => {
+        if (pageF <= 1) return;
+        pageF -= 1;
+        loadF();
+      });
+
+      document.getElementById("next-fatur")?.addEventListener("click", () => {
+        if (pageF >= totalPagesF) return;
+        pageF += 1;
+        loadF();
+      });
+
+      document.getElementById("prev-rec")?.addEventListener("click", () => {
+        if (pageR <= 1) return;
+        pageR -= 1;
+        loadR();
+      });
+
+      document.getElementById("next-rec")?.addEventListener("click", () => {
+        if (pageR >= totalPagesR) return;
+        pageR += 1;
+        loadR();
+      });
+
+      document.getElementById("name-filter-rec")?.addEventListener("input", (e) => {
+        nameFilter = e.target.value || "";
+        applyFrontFilter();
+      });
+    }
 
     async function init() {
-      // 1. Verificação Instantânea de Auth
       const pbAuth = localStorage.getItem("pb_auth");
       if (!pbAuth) {
         window.location.href = "/login";
         return;
       }
 
-      // 2. Setup de Listeners (Prevenção de múltiplos disparos)
-      setupEventListeners();
+      const pageNode = document.getElementById("body-fatur");
+      if (!pageNode || pageNode.dataset.initialized) return;
+      pageNode.dataset.initialized = "true";
 
-      // 3. Carregamento em Paralelo
+      setupEventListeners();
+      updatePerPageButtons(".fatur-per-page-btn", perPageF, {
+        "bg-green-600": true,
+        "text-white": true,
+        "border-green-600": true,
+      });
+      updatePerPageButtons(".rec-per-page-btn", perPageR, {
+        "bg-green-600": true,
+        "text-white": true,
+        "border-green-600": true,
+      });
+
       await Promise.all([loadF(), loadR()]);
     }
 
-    function setupEventListeners() {
-      // Faturamento
-      document
-        .getElementById("filter-fatur")
-        ?.replaceWith(document.getElementById("filter-fatur").cloneNode(true));
-      document.getElementById("filter-fatur").addEventListener("input", () => {
-        pageF = 1;
-        loadF();
-      });
-
-      document.getElementById("sort-fatur")?.addEventListener("change", () => {
-        pageF = 1;
-        loadF();
-      });
-
-      const orderF = document.getElementById("order-fatur");
-      orderF?.addEventListener("click", () => {
-        orderF.textContent = orderF.textContent === "Asc" ? "Desc" : "Asc";
-        loadF();
-      });
-
-      document
-        .getElementById("page-size-fatur")
-        ?.addEventListener("change", (e) => {
-          pageSizeF = Number(e.target.value);
-          pageF = 1;
-          loadF();
-        });
-
-      document.getElementById("prev-fatur")?.addEventListener("click", () => {
-        if (pageF > 1) {
-          pageF--;
-          loadF();
-        }
-      });
-      document.getElementById("next-fatur")?.addEventListener("click", () => {
-        if (pageF * pageSizeF < totalItemsF) {
-          pageF++;
-          loadF();
-        }
-      });
-
-      // Valores a Receber
-      document.getElementById("filter-rec")?.addEventListener("input", () => {
-        pageR = 1;
-        loadR();
-      });
-      document.getElementById("sort-rec")?.addEventListener("change", () => {
-        pageR = 1;
-        loadR();
-      });
-
-      const orderR = document.getElementById("order-rec");
-      orderR?.addEventListener("click", () => {
-        orderR.textContent = orderR.textContent === "Asc" ? "Desc" : "Asc";
-        loadR();
-      });
-
-      document
-        .getElementById("page-size-rec")
-        ?.addEventListener("change", (e) => {
-          pageSizeR = Number(e.target.value);
-          pageR = 1;
-          loadR();
-        });
-
-      document.getElementById("prev-rec")?.addEventListener("click", () => {
-        if (pageR > 1) {
-          pageR--;
-          loadR();
-        }
-      });
-      document.getElementById("next-rec")?.addEventListener("click", () => {
-        if (pageR * pageSizeR < totalItemsR) {
-          pageR++;
-          loadR();
-        }
-      });
-    }
-
-    // Ciclo de Vida do Astro
     document.addEventListener("astro:page-load", init);
-
-    // Fallback para carregamento direto sem ViewTransitions
     if (document.readyState === "complete") {
       init();
     }
