@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import PocketBase from "pocketbase";
 import { decodeJwt, getTokenFromRequest } from "../lib/jwt-helper";
 
@@ -7,12 +8,11 @@ const POCKETBASE_URL =
 
 function getPb(token?: string) {
   const pb = new PocketBase(POCKETBASE_URL);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  
   if (token) pb.authStore.save(token, {} as any);
   return pb;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getTokenOrUnauthorized(
   request: Request,
   cookies: any,
@@ -38,7 +38,7 @@ function getOwnerIdFromToken(token: string): string | null {
   return typeof userId === "string" && userId.length > 0 ? userId : null;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 export async function listPacientes(
   request: Request,
   cookies: any,
@@ -63,7 +63,7 @@ export async function listPacientes(
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 export async function createPaciente(
   request: Request,
   cookies: any,
@@ -98,7 +98,7 @@ export async function createPaciente(
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 export async function getPacienteById(
   id: string | undefined,
   request: Request,
@@ -129,7 +129,7 @@ export async function getPacienteById(
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 export async function updatePaciente(
   id: string | undefined,
   request: Request,
@@ -162,7 +162,7 @@ export async function updatePaciente(
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 export async function deletePaciente(
   id: string | undefined,
   request: Request,
