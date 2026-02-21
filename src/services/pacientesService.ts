@@ -13,7 +13,10 @@ function getPb(token?: string) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getTokenOrUnauthorized(request: Request, cookies: any): { token?: string; response?: Response } {
+function getTokenOrUnauthorized(
+  request: Request,
+  cookies: any,
+): { token?: string; response?: Response } {
   const token = getTokenFromRequest(request, cookies);
   if (!token) {
     return {
@@ -36,13 +39,18 @@ function getOwnerIdFromToken(token: string): string | null {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function listPacientes(request: Request, cookies: any): Promise<Response> {
+export async function listPacientes(
+  request: Request,
+  cookies: any,
+): Promise<Response> {
   try {
     const auth = getTokenOrUnauthorized(request, cookies);
     if (auth.response) return auth.response;
 
     const pb = getPb(auth.token);
-    const list = await pb.collection("paciente").getFullList({ sort: "-created" });
+    const list = await pb
+      .collection("paciente")
+      .getFullList({ sort: "-created" });
     return new Response(JSON.stringify({ success: true, items: list }), {
       status: 200,
     });
@@ -56,7 +64,10 @@ export async function listPacientes(request: Request, cookies: any): Promise<Res
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function createPaciente(request: Request, cookies: any): Promise<Response> {
+export async function createPaciente(
+  request: Request,
+  cookies: any,
+): Promise<Response> {
   try {
     const auth = getTokenOrUnauthorized(request, cookies);
     if (auth.response) return auth.response;
@@ -88,7 +99,11 @@ export async function createPaciente(request: Request, cookies: any): Promise<Re
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function getPacienteById(id: string | undefined, request: Request, cookies: any): Promise<Response> {
+export async function getPacienteById(
+  id: string | undefined,
+  request: Request,
+  cookies: any,
+): Promise<Response> {
   try {
     if (!id) {
       return new Response(
@@ -115,7 +130,11 @@ export async function getPacienteById(id: string | undefined, request: Request, 
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function updatePaciente(id: string | undefined, request: Request, cookies: any): Promise<Response> {
+export async function updatePaciente(
+  id: string | undefined,
+  request: Request,
+  cookies: any,
+): Promise<Response> {
   try {
     if (!id) {
       return new Response(
@@ -144,7 +163,11 @@ export async function updatePaciente(id: string | undefined, request: Request, c
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function deletePaciente(id: string | undefined, request: Request, cookies: any): Promise<Response> {
+export async function deletePaciente(
+  id: string | undefined,
+  request: Request,
+  cookies: any,
+): Promise<Response> {
   try {
     if (!id) {
       return new Response(

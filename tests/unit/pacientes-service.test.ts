@@ -112,7 +112,11 @@ describe("pacientesService", () => {
     updateMock.mockResolvedValue({ id: "p1", nome: "Novo" });
     deleteMock.mockResolvedValue(true);
 
-    const getResponse = await getPacienteById("p1", new Request("https://example.com"), {});
+    const getResponse = await getPacienteById(
+      "p1",
+      new Request("https://example.com"),
+      {},
+    );
     expect(getResponse.status).toBe(200);
 
     const updateResponse = await updatePaciente(
@@ -128,7 +132,11 @@ describe("pacientesService", () => {
     expect(updateResponse.status).toBe(200);
     expect(updateMock).toHaveBeenCalledWith("p1", { nome: "Novo" });
 
-    const deleteResponse = await deletePaciente("p1", new Request("https://example.com"), {});
+    const deleteResponse = await deletePaciente(
+      "p1",
+      new Request("https://example.com"),
+      {},
+    );
     expect(deleteResponse.status).toBe(200);
     expect(deleteMock).toHaveBeenCalledWith("p1");
   });
