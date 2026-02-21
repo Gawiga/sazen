@@ -170,14 +170,18 @@ const metadata = {
       return fetch(url, {...options, headers});
     }
 
-    function tryParseNumber(v) {
+    function tryParseNumber(v: string | number | null | undefined): number {
       if (v == null) return 0;
       if (typeof v === "number") return v;
       const n = Number(String(v).replace(/[^\d.-]+/g, ""));
       return Number.isNaN(n) ? 0 : n;
     }
 
-    async function fetchCollectionPage(collection, page, perPage) {
+    function safeGetNumber(obj: unknown, key: string): number {
+      return tryParseNumber(obj && typeof obj === "object" && key in obj ? (obj as Record<string, unknown>)[key] as string | number | null | undefined : null);
+    }
+
+    async function fetchCollectionPage(collection: string, page: number, perPage: number) {
       const params = buildPaginationParams(page, perPage, { collection });
       const res = await fetchWithAuth(`${endpoint}?${params.toString()}`);
       if (!res.ok) throw new Error("Falha na requisição");
@@ -233,7 +237,7 @@ const metadata = {
       if (!q) {
         filteredReceber = [...receber];
       } else {
-        filteredReceber = receber.filter((it) =>
+        filteredReceber = receber.filter((it: ReportItem) =>
           String(it?.nome || "").toLowerCase().includes(q),
         );
       }
@@ -253,10 +257,10 @@ const metadata = {
 
       body.innerHTML = fatur
         .map(
-          (it) => `
+          (it: ReportItem) => `
       <tr class="border-t dark:border-gray-800">
         <td class="px-4 py-2 dark:text-gray-300">${it.mes_ano ?? ""}</td>
-        <td class="px-4 py-2 font-medium dark:text-white">${currencyFormatter.format(tryParseNumber(it.total))}</td>
+        <td class="px-4 py-2 font-medium dark:text-white">${currencyFormatter.format(safeGetNumber(it, "total"))}</td>
       </tr>
     `,
         )
@@ -275,10 +279,10 @@ const metadata = {
 
       body.innerHTML = filteredReceber
         .map(
-          (it) => `
+          (it: ReportItem) => `
       <tr class="border-t dark:border-gray-800">
         <td class="px-4 py-2 dark:text-gray-300">${it.nome ?? ""}</td>
-        <td class="px-4 py-2 font-medium dark:text-white">${currencyFormatter.format(tryParseNumber(it.total))}</td>
+        <td class="px-4 py-2 font-medium dark:text-white">${currencyFormatter.format(safeGetNumber(it, "total"))}</td>
       </tr>
     `,
         )
@@ -307,12 +311,12 @@ const metadata = {
       if (indicator) indicator.textContent = view.indicator;
     }
 
-    function updateCount(id, value) {
+    function updateCount(id: string, value: number) {
       const element = byId(id);
       if (element) element.textContent = String(value);
     }
 
-    function updatePerPageButtons(groupSelector, value, activeClasses) {
+    function updatePerPageButtons(groupSelector: string, value: number, activeClasses: Record<string, boolean>) {
       document.querySelectorAll(groupSelector).forEach((btn) => {
         const isActive = Number(btn.getAttribute("data-per-page")) === value;
         Object.entries(activeClasses).forEach(([className, enabled]) => {

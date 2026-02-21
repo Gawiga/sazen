@@ -212,10 +212,20 @@ const metadata = {
     } from "~/services/paginationService";
 
     const collectionBase = "/api/pacientes";
-    let currentPage = 1;
-    let perPage = 20;
-    let totalPages = 1;
-    let totalItems = 0;
+    
+    type PacienteItem = {
+      id: string;
+      nome?: string;
+      email?: string;
+      contato?: string;
+      endereco?: string;
+      data_nascimento?: string;
+      data_inicio?: string;
+      valor_sessao?: number | string;
+      ativo?: boolean;
+      [key: string]: string | number | boolean | undefined;
+    };
+    
     type ScriptElement = HTMLElement & {
       value?: string;
       checked?: boolean;
@@ -223,10 +233,16 @@ const metadata = {
       reset?: () => void;
       dataset?: DOMStringMap;
     };
+    
+    let currentPage = 1;
+    let perPage = 20;
+    let totalPages = 1;
+    let totalItems = 0;
+    
     const byId = (id: string): ScriptElement =>
       document.getElementById(id) as ScriptElement;
 
-    function getTokenFromLocalStorage() {
+    function getTokenFromLocalStorage(): string | null {
       const tokenStr = localStorage.getItem("pb_auth");
       if (!tokenStr) return null;
 
@@ -246,12 +262,12 @@ const metadata = {
       return fetch(url, {...options, headers});
     }
 
-    function formatDateForInput(dateString) {
+    function formatDateForInput(dateString: string): string {
       if (!dateString) return "";
       return dateString.split(" ")[0];
     }
 
-    function parseCurrencyInput(value) {
+    function parseCurrencyInput(value: string | number): number {
       if (!value) return 0;
       const normalized = String(value)
         .replace(/\s/g, "")
@@ -263,7 +279,7 @@ const metadata = {
       return Number.isFinite(parsed) ? parsed : 0;
     }
 
-    function formatCurrencyInput(value) {
+    function formatCurrencyInput(value: string | number): string {
       const number = Number(value);
       if (!Number.isFinite(number)) return "";
       return `R$ ${number.toLocaleString("pt-BR", {
@@ -272,7 +288,7 @@ const metadata = {
       })}`;
     }
 
-    function attachCurrencyMask(input) {
+    function attachCurrencyMask(input: HTMLInputElement | null) {
       if (!input) return;
 
       input.addEventListener("input", () => {
@@ -304,8 +320,8 @@ const metadata = {
       if (!form || !body || form.dataset.initialized) return;
 
       form.dataset.initialized = "true";
-      attachCurrencyMask(valueInput);
-      setupUIListeners(form);
+      attachCurrencyMask(valueInput as HTMLInputElement);
+      setupUIListeners(form as HTMLFormElement);
       attachPerPageListeners();
       attachPaginationListeners();
       updatePerPageButtons();
@@ -313,7 +329,7 @@ const metadata = {
       loadPatients();
     }
 
-    function setupUIListeners(form) {
+    function setupUIListeners(form: HTMLFormElement) {
       byId("new-btn")?.addEventListener("click", () => {
         byId("patient-id").value = "";
         form.reset();
@@ -325,7 +341,7 @@ const metadata = {
         .getElementById("cancel-btn")
         ?.addEventListener("click", () => toggleForm(false));
 
-      form.addEventListener("submit", async (ev) => {
+      form.addEventListener("submit", async (ev: Event) => {
         ev.preventDefault();
 
         const id = byId("patient-id").value;
@@ -338,7 +354,7 @@ const metadata = {
           contato: byId("contato").value,
           endereco: byId("endereco").value,
           valor_sessao: parseCurrencyInput(
-            byId("valor_sessao").value,
+            byId("valor_sessao").value || "",
           ),
           ativo: byId("ativo").checked,
         };
@@ -374,7 +390,7 @@ const metadata = {
         currentPage = normalized.page;
         totalPages = normalized.totalPages;
         totalItems = normalized.totalItems;
-        render(normalized.items);
+        render(normalized.items as PacienteItem[]);
         updatePaginationControls();
         updatePatientsCount();
       } catch (err) {
@@ -385,7 +401,7 @@ const metadata = {
       }
     }
 
-    function render(items) {
+    function render(items: PacienteItem[]) {
       const body = byId("patients-body");
       if (!body) return;
 
@@ -397,7 +413,7 @@ const metadata = {
 
       body.innerHTML = items
         .map(
-          (it) => `
+          (it: PacienteItem) => `
         <tr class="border-t transition hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800">
           <td class="p-2 dark:text-gray-300">
             <div class="font-medium">${it.nome || ""}</div>
@@ -424,11 +440,11 @@ const metadata = {
       attachRowListeners(items);
     }
 
-    function attachRowListeners(items) {
+    function attachRowListeners(items: PacienteItem[]) {
       document.querySelectorAll(".edit-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
           const id = btn.getAttribute("data-id");
-          const record = items.find((i) => i.id === id);
+          const record = items.find((i: PacienteItem) => i.id === id);
           if (!record) return;
 
           byId("patient-id").value = record.id;
@@ -441,10 +457,10 @@ const metadata = {
           );
 
           byId("data_nascimento").value = formatDateForInput(
-            record.data_nascimento,
+            record.data_nascimento || "",
           );
           byId("data_inicio").value = formatDateForInput(
-            record.data_inicio,
+            record.data_inicio || "",
           );
           byId("ativo").checked = record.ativo !== false;
 
@@ -470,7 +486,7 @@ const metadata = {
       });
     }
 
-    function toggleForm(show) {
+    function toggleForm(show: boolean) {
       document
         .getElementById("form-container")
         ?.classList.toggle("hidden", !show);

@@ -171,6 +171,14 @@ const metadata = {
       email?: string;
       valor_sessao?: number;
     };
+    type SessionItem = {
+      id: string;
+      id_paciente: string;
+      data: string;
+      valor: number | string;
+      pago: boolean;
+      [key: string]: any;
+    };
     type ScriptElement = HTMLElement & {
       value?: string;
       checked?: boolean;
@@ -216,7 +224,7 @@ const metadata = {
       }
     }
 
-    function parseCurrencyInput(value) {
+    function parseCurrencyInput(value: string | number) {
       if (!value) return 0;
       const normalized = String(value)
         .replace(/\s/g, "")
@@ -228,7 +236,7 @@ const metadata = {
       return Number.isFinite(parsed) ? parsed : 0;
     }
 
-    function formatCurrencyInput(value) {
+    function formatCurrencyInput(value: string | number) {
       const number = Number(value);
       if (!Number.isFinite(number)) return "";
       return `R$ ${number.toLocaleString("pt-BR", {
@@ -237,7 +245,7 @@ const metadata = {
       })}`;
     }
 
-    function attachCurrencyMask(input) {
+    function attachCurrencyMask(input: HTMLInputElement | null) {
       if (!input) return;
 
       input.addEventListener("input", () => {
@@ -262,14 +270,14 @@ const metadata = {
       });
     }
 
-    function isoToInputDate(isoString) {
+    function isoToInputDate(isoString: string) {
       if (!isoString) return "";
       const date = new Date(isoString);
       date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
       return date.toISOString().slice(0, 16);
     }
 
-    function formatDateDisplay(isoString) {
+    function formatDateDisplay(isoString: string) {
       if (!isoString) return "-";
       const date = new Date(isoString);
       const weekday = date.toLocaleDateString("pt-BR", {weekday: "long"});
@@ -293,7 +301,7 @@ const metadata = {
 
       const patientSelect = byId("id_paciente");
       const valorInput = byId("valor");
-      attachCurrencyMask(valorInput);
+      attachCurrencyMask(valorInput as HTMLInputElement);
 
       try {
         await Promise.all([loadPatientsForSelect(), loadSessions()]);
@@ -335,7 +343,7 @@ const metadata = {
       updatePaginationControls();
     }
 
-    async function handleFormSubmit(ev) {
+    async function handleFormSubmit(ev: Event) {
       ev.preventDefault();
       const id = byId("session-id").value;
       const rawDate = byId("data").value;
@@ -344,7 +352,7 @@ const metadata = {
       const payload: Record<string, unknown> = {
         id_paciente: byId("id_paciente").value,
         data: utcDate,
-        valor: parseCurrencyInput(byId("valor").value),
+        valor: parseCurrencyInput(byId("valor").value || ""),
         pago: byId("pago").checked,
       };
 
@@ -369,7 +377,7 @@ const metadata = {
       }
     }
 
-    function toggleForm(show) {
+    function toggleForm(show: boolean) {
       document
         .getElementById("form-container")
         ?.classList.toggle("hidden", !show);
@@ -406,7 +414,7 @@ const metadata = {
       }
     }
 
-    function sortPatientsByName(items) {
+    function sortPatientsByName(items: PacienteOption[]) {
       return [...items].sort((a, b) =>
         (a?.nome || a?.email || "").localeCompare(b?.nome || b?.email || "", "pt-BR", {
           sensitivity: "base",
@@ -439,7 +447,7 @@ const metadata = {
         currentPage = normalized.page;
         totalPages = normalized.totalPages;
         totalItems = normalized.totalItems;
-        renderTable(normalized.items);
+        renderTable(normalized.items as SessionItem[]);
         updatePaginationControls();
         updateSessionCount();
       } catch (err) {
@@ -449,7 +457,7 @@ const metadata = {
       }
     }
 
-    function renderTable(items) {
+    function renderTable(items: SessionItem[]) {
       const body = byId("sessions-body");
       if (!items.length) {
         body.innerHTML =
@@ -459,7 +467,7 @@ const metadata = {
 
       body.innerHTML = items
         .map(
-          (it) => `
+          (it: SessionItem) => `
       <tr class="border-b transition hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800">
         <td class="p-3 font-medium text-gray-900 dark:text-gray-200">${patientMap.get(it.id_paciente) || "Desconhecido"}</td>
         <td class="p-3 text-gray-600 dark:text-gray-400">${formatDateDisplay(it.data)}</td>
@@ -482,7 +490,7 @@ const metadata = {
       attachRowListeners(items);
     }
 
-    (window as any).togglePaymentStatus = async (id, currentStatus) => {
+    (window as any).togglePaymentStatus = async (id: string, currentStatus: boolean) => {
       try {
         await fetchWithAuth(`${collectionBase}/${id}`, {
           method: "PUT",
@@ -494,11 +502,11 @@ const metadata = {
       }
     };
 
-    function attachRowListeners(items) {
+    function attachRowListeners(items: SessionItem[]) {
       document.querySelectorAll(".edit-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
           const id = btn.getAttribute("data-id");
-          const record = items.find((i) => i.id === id);
+          const record = items.find((i: SessionItem) => i.id === id);
           if (!record) return;
 
           byId("session-id").value = record.id;
