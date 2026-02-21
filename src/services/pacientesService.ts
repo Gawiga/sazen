@@ -8,7 +8,7 @@ const POCKETBASE_URL =
 
 function getPb(token?: string) {
   const pb = new PocketBase(POCKETBASE_URL);
-  
+
   if (token) pb.authStore.save(token, {} as any);
   return pb;
 }
@@ -38,7 +38,6 @@ function getOwnerIdFromToken(token: string): string | null {
   return typeof userId === "string" && userId.length > 0 ? userId : null;
 }
 
-
 export async function listPacientes(
   request: Request,
   cookies: any,
@@ -62,7 +61,6 @@ export async function listPacientes(
     );
   }
 }
-
 
 export async function createPaciente(
   request: Request,
@@ -98,7 +96,6 @@ export async function createPaciente(
   }
 }
 
-
 export async function getPacienteById(
   id: string | undefined,
   request: Request,
@@ -128,7 +125,6 @@ export async function getPacienteById(
     );
   }
 }
-
 
 export async function updatePaciente(
   id: string | undefined,
@@ -161,7 +157,6 @@ export async function updatePaciente(
     );
   }
 }
-
 
 export async function deletePaciente(
   id: string | undefined,
