@@ -91,6 +91,27 @@ const metadata = {
 
     <div
       class="bg-white dark:bg-gray-900 rounded shadow p-4 border dark:border-gray-800 overflow-x-auto">
+      <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div class="text-sm text-gray-600 dark:text-gray-400">
+          Exibindo <span id="sessions-count">0</span> sessões
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-gray-600 dark:text-gray-400">Por página:</span>
+          <button
+            type="button"
+            class="per-page-btn px-3 py-1 rounded border text-sm"
+            data-per-page="10">10</button>
+          <button
+            type="button"
+            class="per-page-btn px-3 py-1 rounded border text-sm"
+            data-per-page="50">50</button>
+          <button
+            type="button"
+            class="per-page-btn px-3 py-1 rounded border text-sm"
+            data-per-page="100">100</button>
+        </div>
+      </div>
+
       <table class="w-full text-left table-auto">
         <thead>
           <tr
@@ -110,14 +131,33 @@ const metadata = {
           >
         </tbody>
       </table>
+
+      <div class="mt-4 flex items-center justify-between gap-3">
+        <button
+          id="prev-page-btn"
+          type="button"
+          class="px-3 py-1 rounded border text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+          Anterior
+        </button>
+        <span id="page-indicator" class="text-sm text-gray-600 dark:text-gray-400">Página 1 de 1</span>
+        <button
+          id="next-page-btn"
+          type="button"
+          class="px-3 py-1 rounded border text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+          Próxima
+        </button>
+      </div>
     </div>
   </section>
 
   <script type="module">
     const collectionBase = "/api/sessoes";
     let patientMap = new Map();
-    // 1. Novo Map para guardar os detalhes (incluindo o valor)
     let patientDetails = new Map();
+    let currentPage = 1;
+    let perPage = 10;
+    let totalPages = 1;
+    let totalItems = 0;
 
     // --- FUNÇÕES AUXILIARES ---
     function fetchWithAuth(url, options = {}) {
@@ -126,6 +166,26 @@ const metadata = {
       const headers = {"Content-Type": "application/json", ...options.headers};
       if (auth) headers.Authorization = `Bearer ${auth}`;
       return fetch(url, {...options, headers});
+    }
+
+    function getAuthData() {
+      const tokenStr = localStorage.getItem("pb_auth");
+      if (!tokenStr) return { token: null, userId: null };
+      try {
+        const parsed = JSON.parse(tokenStr);
+        const token = parsed?.token || null;
+        const userIdFromModel = parsed?.model?.id || null;
+
+        if (userIdFromModel) return { token, userId: userIdFromModel };
+        if (!token) return { token: null, userId: null };
+
+        const tokenPayload = JSON.parse(
+          atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")),
+        );
+        return { token, userId: tokenPayload?.id || null };
+      } catch {
+        return { token: null, userId: null };
+      }
     }
 
     function isoToInputDate(isoString) {
@@ -188,6 +248,7 @@ const metadata = {
       document.getElementById("new-btn")?.addEventListener("click", () => {
         document.getElementById("session-id").value = "";
         form.reset();
+        sortPatientsForSelect();
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         document.getElementById("data").value = now.toISOString().slice(0, 16);
@@ -199,6 +260,10 @@ const metadata = {
         ?.addEventListener("click", () => toggleForm(false));
 
       form.addEventListener("submit", handleFormSubmit);
+      attachPerPageListeners();
+      attachPaginationListeners();
+      updatePerPageButtons();
+      updatePaginationControls();
     }
 
     // --- HANDLERS ---
@@ -215,6 +280,13 @@ const metadata = {
         pago: document.getElementById("pago").checked,
       };
 
+      if (!id) {
+        const { userId } = getAuthData();
+        if (userId) {
+          payload.owner = userId;
+        }
+      }
+
       try {
         const url = id ? `${collectionBase}/${id}` : collectionBase;
         const res = await fetchWithAuth(url, {
@@ -223,7 +295,7 @@ const metadata = {
         });
         if (!res.ok) throw new Error("Erro ao salvar");
         toggleForm(false);
-        loadSessions();
+        loadSessions(currentPage);
       } catch (err) {
         alert("Erro ao salvar sessão.", err);
       }
@@ -238,7 +310,7 @@ const metadata = {
     async function loadPatientsForSelect() {
       const res = await fetchWithAuth("/api/pacientes");
       const data = await res.json();
-      const items = data?.items || [];
+      const items = sortPatientsByName(data?.items || []);
       patientMap = new Map(
         items.map((p) => [p.id, p.nome || p.email || "Sem nome"]),
       );
@@ -254,13 +326,45 @@ const metadata = {
       }
     }
 
-    async function loadSessions() {
+    function sortPatientsByName(items) {
+      return [...items].sort((a, b) =>
+        (a?.nome || a?.email || "").localeCompare(b?.nome || b?.email || "", "pt-BR", {
+          sensitivity: "base",
+        }),
+      );
+    }
+
+    function sortPatientsForSelect() {
+      const items = sortPatientsByName(Array.from(patientDetails.values()));
+      const select = document.getElementById("id_paciente");
+      if (!select) return;
+
+      const currentValue = select.value;
+      select.innerHTML =
+        '<option value="">— selecione —</option>' +
+        items
+          .map((p) => `<option value="${p.id}">${p.nome || p.email}</option>`)
+          .join("");
+      select.value = currentValue;
+    }
+
+    async function loadSessions(page = 1) {
       const body = document.getElementById("sessions-body");
       if (!body) return;
       try {
-        const res = await fetchWithAuth(`${collectionBase}?sort=-data`);
+        const params = new URLSearchParams({
+          sort: "-data",
+          page: String(page),
+          perPage: String(perPage),
+        });
+        const res = await fetchWithAuth(`${collectionBase}?${params.toString()}`);
         const data = await res.json();
+        currentPage = Number(data?.page || page);
+        totalPages = Math.max(1, Number(data?.totalPages || 1));
+        totalItems = Number(data?.totalItems || 0);
         renderTable(data?.items || []);
+        updatePaginationControls();
+        updateSessionCount();
       } catch (err) {
         console.error(err);
         body.innerHTML =
@@ -307,7 +411,7 @@ const metadata = {
           method: "PUT",
           body: JSON.stringify({pago: !currentStatus}),
         });
-        loadSessions(); // Atualiza apenas a tabela
+        loadSessions(currentPage); // Atualiza apenas a tabela
       } catch (err) {
         alert("Erro ao atualizar pagamento", err);
       }
@@ -338,12 +442,59 @@ const metadata = {
           const id = btn.getAttribute("data-id");
           try {
             await fetchWithAuth(`${collectionBase}/${id}`, {method: "DELETE"});
-            loadSessions();
+            loadSessions(currentPage);
           } catch (err) {
             alert("Erro ao excluir sessão:", err);
           }
         });
       });
+    }
+
+    function attachPerPageListeners() {
+      document.querySelectorAll(".per-page-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          perPage = Number(btn.getAttribute("data-per-page")) || 10;
+          currentPage = 1;
+          updatePerPageButtons();
+          loadSessions(currentPage);
+        });
+      });
+    }
+
+    function attachPaginationListeners() {
+      document.getElementById("prev-page-btn")?.addEventListener("click", () => {
+        if (currentPage <= 1) return;
+        loadSessions(currentPage - 1);
+      });
+
+      document.getElementById("next-page-btn")?.addEventListener("click", () => {
+        if (currentPage >= totalPages) return;
+        loadSessions(currentPage + 1);
+      });
+    }
+
+    function updatePerPageButtons() {
+      document.querySelectorAll(".per-page-btn").forEach((btn) => {
+        const isActive = Number(btn.getAttribute("data-per-page")) === perPage;
+        btn.classList.toggle("bg-green-600", isActive);
+        btn.classList.toggle("text-white", isActive);
+        btn.classList.toggle("border-green-600", isActive);
+      });
+    }
+
+    function updatePaginationControls() {
+      const prevBtn = document.getElementById("prev-page-btn");
+      const nextBtn = document.getElementById("next-page-btn");
+      const pageIndicator = document.getElementById("page-indicator");
+
+      if (prevBtn) prevBtn.disabled = currentPage <= 1;
+      if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+      if (pageIndicator) pageIndicator.textContent = `Página ${currentPage} de ${totalPages}`;
+    }
+
+    function updateSessionCount() {
+      const countEl = document.getElementById("sessions-count");
+      if (countEl) countEl.textContent = String(totalItems);
     }
 
     // --- O PURO PULP DO ASTRO ---
