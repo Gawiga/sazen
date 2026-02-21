@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
@@ -59,7 +58,10 @@ describe("sessoesService", () => {
   it("retorna 401 quando token não existe", async () => {
     getTokenFromRequestMock.mockReturnValue(null);
 
-    const response = await listSessoes(new Request("https://example.com/api/sessoes"), {});
+    const response = await listSessoes(
+      new Request("https://example.com/api/sessoes"),
+      {},
+    );
 
     expect(response.status).toBe(401);
     expect(getListMock).not.toHaveBeenCalled();
@@ -75,7 +77,10 @@ describe("sessoesService", () => {
       items: [{ id: "s1" }, { id: "s2" }],
     });
 
-    const response = await listSessoes(new Request("https://example.com/api/sessoes"), {});
+    const response = await listSessoes(
+      new Request("https://example.com/api/sessoes"),
+      {},
+    );
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -95,7 +100,9 @@ describe("sessoesService", () => {
     });
 
     await listSessoes(
-      new Request("https://example.com/api/sessoes?page=0&perPage=999&sort=-data"),
+      new Request(
+        "https://example.com/api/sessoes?page=0&perPage=999&sort=-data",
+      ),
       {},
     );
 
@@ -131,7 +138,11 @@ describe("sessoesService", () => {
     updateMock.mockResolvedValue({ id: "s1", pago: true });
     deleteMock.mockResolvedValue(true);
 
-    const getResponse = await getSessaoById("s1", new Request("https://example.com"), {});
+    const getResponse = await getSessaoById(
+      "s1",
+      new Request("https://example.com"),
+      {},
+    );
     expect(getResponse.status).toBe(200);
 
     const updateResponse = await updateSessao(
@@ -146,7 +157,11 @@ describe("sessoesService", () => {
     expect(updateResponse.status).toBe(200);
     expect(updateMock).toHaveBeenCalledWith("s1", { pago: true });
 
-    const deleteResponse = await deleteSessao("s1", new Request("https://example.com"), {});
+    const deleteResponse = await deleteSessao(
+      "s1",
+      new Request("https://example.com"),
+      {},
+    );
     expect(deleteResponse.status).toBe(200);
     expect(deleteMock).toHaveBeenCalledWith("s1");
   });

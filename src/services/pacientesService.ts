@@ -9,11 +9,13 @@ export const patientService = {
 
   async save(paciente: Paciente): Promise<Response> {
     const method = paciente.id ? "PUT" : "POST";
-    const url = paciente.id ? `/api/pacientes/${paciente.id}` : "/api/pacientes";
+    const url = paciente.id
+      ? `/api/pacientes/${paciente.id}`
+      : "/api/pacientes";
     return fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(paciente),
     });
-  }
+  },
 };

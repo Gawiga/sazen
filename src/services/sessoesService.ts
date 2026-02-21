@@ -18,7 +18,10 @@ function getPb(token?: string) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getTokenOrUnauthorized(request: Request, cookies: any): { token?: string; response?: Response } {
+function getTokenOrUnauthorized(
+  request: Request,
+  cookies: any,
+): { token?: string; response?: Response } {
   const token = getTokenFromRequest(request, cookies);
   if (!token) {
     return {
@@ -56,7 +59,10 @@ function getOwnerIdFromToken(token: string): string | null {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function listSessoes(request: Request, cookies: any): Promise<Response> {
+export async function listSessoes(
+  request: Request,
+  cookies: any,
+): Promise<Response> {
   try {
     const auth = getTokenOrUnauthorized(request, cookies);
     if (auth.response) return auth.response;
@@ -87,7 +93,10 @@ export async function listSessoes(request: Request, cookies: any): Promise<Respo
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function createSessao(request: Request, cookies: any): Promise<Response> {
+export async function createSessao(
+  request: Request,
+  cookies: any,
+): Promise<Response> {
   try {
     const auth = getTokenOrUnauthorized(request, cookies);
     if (auth.response) return auth.response;
@@ -121,7 +130,11 @@ export async function createSessao(request: Request, cookies: any): Promise<Resp
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function getSessaoById(id: string | undefined, request: Request, cookies: any): Promise<Response> {
+export async function getSessaoById(
+  id: string | undefined,
+  request: Request,
+  cookies: any,
+): Promise<Response> {
   try {
     if (!id) {
       return new Response(
@@ -148,7 +161,11 @@ export async function getSessaoById(id: string | undefined, request: Request, co
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function updateSessao(id: string | undefined, request: Request, cookies: any): Promise<Response> {
+export async function updateSessao(
+  id: string | undefined,
+  request: Request,
+  cookies: any,
+): Promise<Response> {
   try {
     if (!id) {
       return new Response(
@@ -177,7 +194,11 @@ export async function updateSessao(id: string | undefined, request: Request, coo
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function deleteSessao(id: string | undefined, request: Request, cookies: any): Promise<Response> {
+export async function deleteSessao(
+  id: string | undefined,
+  request: Request,
+  cookies: any,
+): Promise<Response> {
   try {
     if (!id) {
       return new Response(
