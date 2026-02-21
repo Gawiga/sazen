@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import PocketBase from "pocketbase";
 import { decodeJwt, getTokenFromRequest } from "../lib/jwt-helper";
 
@@ -12,12 +13,10 @@ const MAX_PER_PAGE = 100;
 
 function getPb(token?: string) {
   const pb = new PocketBase(POCKETBASE_URL);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (token) pb.authStore.save(token, {} as any);
   return pb;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getTokenOrUnauthorized(
   request: Request,
   cookies: any,
@@ -58,7 +57,6 @@ function getOwnerIdFromToken(token: string): string | null {
   return typeof userId === "string" && userId.length > 0 ? userId : null;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function listSessoes(
   request: Request,
   cookies: any,
@@ -92,7 +90,6 @@ export async function listSessoes(
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function createSessao(
   request: Request,
   cookies: any,
@@ -129,7 +126,6 @@ export async function createSessao(
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getSessaoById(
   id: string | undefined,
   request: Request,
@@ -160,7 +156,6 @@ export async function getSessaoById(
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function updateSessao(
   id: string | undefined,
   request: Request,
@@ -193,7 +188,6 @@ export async function updateSessao(
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function deleteSessao(
   id: string | undefined,
   request: Request,

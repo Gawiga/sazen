@@ -6,10 +6,9 @@ npm run astro dev
 
 npm run check
 npm run fix
-
-# link do design
-
 npx prettier --write .
+
+# pastas
 
 nginx/ # Configurações de servidor e proxy reverso
 public/ # Arquivos estáticos (ícones, imagens, robos.txt)
