@@ -3,7 +3,7 @@ export function createFetchWithLoading(getToken: () => string | null) {
   return async function fetchWithAuthAndLoading(
     url: string,
     options: RequestInit = {},
-    showLoader = true
+    showLoader = true,
   ) {
     if (showLoader) {
       window.showLoading?.();
@@ -29,5 +29,5 @@ export function createFetchWithLoading(getToken: () => string | null) {
 export type FetchWithAuthAndLoading = (
   url: string,
   options?: RequestInit,
-  showLoader?: boolean
+  showLoader?: boolean,
 ) => Promise<Response>;

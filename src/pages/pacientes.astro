@@ -207,120 +207,49 @@ const metadata = {
 
   <script>
     import {
-      buildPaginationParams,
       getPaginationView,
       getPerPageValue,
-      normalizePaginationData,
     } from "~/services/paginationService";
+    import { PatientService } from "~/services/patientService";
+    import { scrollToElement } from "~/services/uiService";
+    import {
+      formatCurrency,
+      parseCurrency,
+      formatDateForInput,
+      attachCurrencyMask,
+      getFormElement,
+      toggleElement,
+    } from "~/utils/formatting";
+    import type { Paciente } from "~/types/api";
 
-    const collectionBase = "/api/pacientes";
-    
-    type PacienteItem = {
-      id: string;
-      nome?: string;
-      email?: string;
-      contato?: string;
-      endereco?: string;
-      data_nascimento?: string;
-      data_inicio?: string;
-      valor_sessao?: number | string;
-      ativo?: boolean;
-    };
-    
-    type ScriptElement = HTMLElement & {
-      value?: string;
-      checked?: boolean;
-      disabled?: boolean;
-      reset?: () => void;
-      dataset?: DOMStringMap;
-    };
-    
+    const formContainerId = "form-container";
+
     let currentPage = 1;
     let perPage = 20;
     let totalPages = 1;
     let totalItems = 0;
-    
-    const byId = (id: string): ScriptElement =>
-      document.getElementById(id) as ScriptElement;
 
-    function getTokenFromLocalStorage(): string | null {
-      const tokenStr = localStorage.getItem("pb_auth");
-      if (!tokenStr) return null;
+    const byId = (id: string) => getFormElement(id);
 
+    async function loadPatients(page = 1) {
+      const body = byId("patients-body");
       try {
-        const parsed = JSON.parse(tokenStr);
-        return parsed?.token || null;
-      } catch {
-        return tokenStr;
-      }
-    }
+        const data = await PatientService.getPatients(page, perPage);
 
-    function fetchWithAuth(url: string, options: RequestInit = {}) {
-      const token = getTokenFromLocalStorage();
-      const headers = new Headers(options.headers ?? {});
-      headers.set("Content-Type", "application/json");
-      if (token) headers.set("Authorization", `Bearer ${token}`);
-      return fetch(url, {...options, headers});
-    }
+        currentPage = data.page;
+        totalPages = data.totalPages;
+        totalItems = data.totalItems;
 
-    async function fetchWithAuthAndLoading(url: string, options: RequestInit = {}) {
-      window.showLoading?.();
-      try {
-        return await fetchWithAuth(url, options);
-      } finally {
-        window.hideLoading?.();
-      }
-    }
-
-    function formatDateForInput(dateString: string): string {
-      if (!dateString) return "";
-      return dateString.split(" ")[0];
-    }
-
-    function parseCurrencyInput(value: string | number): number {
-      if (!value) return 0;
-      const normalized = String(value)
-        .replace(/\s/g, "")
-        .replace("R$", "")
-        .replace(/\./g, "")
-        .replace(",", ".")
-        .replace(/[^\d.-]/g, "");
-      const parsed = Number(normalized);
-      return Number.isFinite(parsed) ? parsed : 0;
-    }
-
-    function formatCurrencyInput(value: string | number): string {
-      const number = Number(value);
-      if (!Number.isFinite(number)) return "";
-      return `R$ ${number.toLocaleString("pt-BR", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}`;
-    }
-
-    function attachCurrencyMask(input: HTMLInputElement | null) {
-      if (!input) return;
-
-      input.addEventListener("input", () => {
-        input.value = input.value.replace(/[^\d,.-]/g, "");
-      });
-
-      input.addEventListener("focus", () => {
-        const numeric = parseCurrencyInput(input.value);
-        if (!numeric) {
-          input.value = "";
-          return;
+        render(data.items);
+        updatePaginationControls();
+        updatePatientsCount();
+      } catch (err) {
+        console.error(err);
+        if (body) {
+          body.innerHTML =
+            '<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao carregar dados.</td></tr>';
         }
-
-        input.value = Number.isInteger(numeric)
-          ? String(numeric)
-          : String(numeric).replace(".", ",");
-      });
-
-      input.addEventListener("blur", () => {
-        if (!input.value.trim()) return;
-        input.value = formatCurrencyInput(parseCurrencyInput(input.value));
-      });
+      }
     }
 
     async function init() {
@@ -345,42 +274,40 @@ const metadata = {
         form.reset();
         byId("ativo").checked = true;
         toggleForm(true);
+        scrollToElement(formContainerId);
       });
 
-      document
-        .getElementById("cancel-btn")
-        ?.addEventListener("click", () => toggleForm(false));
+      document.getElementById("cancel-btn")?.addEventListener("click", () => toggleForm(false));
 
       form.addEventListener("submit", async (ev: Event) => {
         ev.preventDefault();
 
-        const id = byId("patient-id").value;
+        const id = byId("patient-id").value || undefined;
         const dataNasc = byId("data_nascimento").value;
         const dataInicio = byId("data_inicio").value;
 
-        const payload: Record<string, unknown> = {
+        const payload: Partial<Paciente> = {
           nome: byId("nome").value,
           email: byId("email").value,
           contato: byId("contato").value,
           endereco: byId("endereco").value,
-          valor_sessao: parseCurrencyInput(
-            byId("valor_sessao").value || "",
-          ),
+          valor_sessao: parseCurrency(byId("valor_sessao").value || ""),
           ativo: byId("ativo").checked,
         };
 
-        if (dataNasc) payload.data_nascimento = `${dataNasc} 12:00:00.000Z`;
-        if (dataInicio) payload.data_inicio = `${dataInicio} 12:00:00.000Z`;
+        if (dataNasc) {
+          payload.data_nascimento = `${dataNasc} 12:00:00.000Z`;
+        }
+        if (dataInicio) {
+          payload.data_inicio = `${dataInicio} 12:00:00.000Z`;
+        }
 
         try {
-          const url = id ? `${collectionBase}/${id}` : collectionBase;
-          const res = await fetchWithAuthAndLoading(url, {
-            method: id ? "PUT" : "POST",
-            body: JSON.stringify(payload),
-          });
-
-          if (!res.ok) throw new Error("Erro ao salvar");
-
+          if (id) {
+            await PatientService.updatePatient(id, payload);
+          } else {
+            await PatientService.createPatient(payload);
+          }
           toggleForm(false);
           loadPatients(currentPage);
         } catch (err) {
@@ -390,28 +317,9 @@ const metadata = {
       });
     }
 
-    async function loadPatients(page = 1) {
-      const body = byId("patients-body");
-      try {
-        const params = buildPaginationParams(page, perPage);
-        const res = await fetchWithAuthAndLoading(`${collectionBase}?${params.toString()}`);
-        const data = await res.json();
-        const normalized = normalizePaginationData(data, page, perPage);
-        currentPage = normalized.page;
-        totalPages = normalized.totalPages;
-        totalItems = normalized.totalItems;
-        render(normalized.items as PacienteItem[]);
-        updatePaginationControls();
-        updatePatientsCount();
-      } catch (err) {
-        console.error(err);
-        if (body)
-          body.innerHTML =
-            '<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao carregar dados.</td></tr>';
-      }
-    }
 
-    function render(items: PacienteItem[]) {
+
+    function render(items: Paciente[]) {
       const body = byId("patients-body");
       if (!body) return;
 
@@ -423,14 +331,14 @@ const metadata = {
 
       body.innerHTML = items
         .map(
-          (it: PacienteItem) => `
+          (it) => `
         <tr class="border-t transition hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800">
           <td class="p-2 dark:text-gray-300">
             <div class="font-medium">${it.nome || ""}</div>
             <div class="text-xs text-gray-500">${it.email || ""}</div>
           </td>
           <td class="p-2 dark:text-gray-300">${it.contato || ""}</td>
-          <td class="p-2 dark:text-gray-300">${formatCurrencyInput(Number(it.valor_sessao) || 0)}</td>
+          <td class="p-2 dark:text-gray-300">${formatCurrency(Number(it.valor_sessao) || 0)}</td>
           <td class="p-2">
             <span class="rounded px-2 py-1 text-xs ${it.ativo ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}">
               ${it.ativo ? "Ativo" : "Inativo"}
@@ -450,31 +358,26 @@ const metadata = {
       attachRowListeners(items);
     }
 
-    function attachRowListeners(items: PacienteItem[]) {
+    function attachRowListeners(items: Paciente[]) {
       document.querySelectorAll(".edit-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
           const id = btn.getAttribute("data-id");
-          const record = items.find((i: PacienteItem) => i.id === id);
+          const record = items.find((i) => i.id === id);
           if (!record) return;
 
-          byId("patient-id").value = record.id;
+          byId("patient-id").value = record.id || "";
           byId("nome").value = record.nome || "";
           byId("email").value = record.email || "";
           byId("contato").value = record.contato || "";
           byId("endereco").value = record.endereco || "";
-          byId("valor_sessao").value = formatCurrencyInput(
-            Number(record.valor_sessao) || 0,
-          );
+          byId("valor_sessao").value = formatCurrency(Number(record.valor_sessao) || 0);
 
-          byId("data_nascimento").value = formatDateForInput(
-            record.data_nascimento || "",
-          );
-          byId("data_inicio").value = formatDateForInput(
-            record.data_inicio || "",
-          );
+          byId("data_nascimento").value = formatDateForInput(record.data_nascimento || "");
+          byId("data_inicio").value = formatDateForInput(record.data_inicio || "");
           byId("ativo").checked = record.ativo !== false;
 
           toggleForm(true);
+          scrollToElement(formContainerId);
         });
       });
 
@@ -484,10 +387,8 @@ const metadata = {
           if (!confirm("Deseja realmente excluir este paciente?")) return;
 
           try {
-            const res = await fetchWithAuthAndLoading(`${collectionBase}/${id}`, {
-              method: "DELETE",
-            });
-            if (res.ok) loadPatients(currentPage);
+            await PatientService.deletePatient(id || "");
+            loadPatients(currentPage);
           } catch (err) {
             console.error(err);
             alert("Erro ao excluir paciente.");
@@ -497,9 +398,7 @@ const metadata = {
     }
 
     function toggleForm(show: boolean) {
-      document
-        .getElementById("form-container")
-        ?.classList.toggle("hidden", !show);
+      toggleElement(formContainerId, show);
     }
 
     function attachPerPageListeners() {
