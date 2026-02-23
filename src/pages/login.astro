@@ -1,6 +1,7 @@
 ---
 import Layout from '~/layouts/Layout.astro';
 import LoginForm from '~/components/auth/LoginForm.astro';
+import Loading from '~/components/widgets/Loading.astro';
 
 const metadata = {
   title: 'Login',
@@ -9,6 +10,7 @@ const metadata = {
 ---
 
 <Layout metadata={metadata}>
+  <Loading />
   <section class="mx-auto max-w-md py-12">
     <div class="bg-white dark:bg-gray-900 rounded-lg shadow-md p-8">
       <div class="mb-8">

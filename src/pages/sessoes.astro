@@ -1,5 +1,6 @@
 ---
 import PageLayout from "~/layouts/PageLayout.astro";
+import Loading from "~/components/widgets/Loading.astro";
 
 const metadata = {
   title: "Sessões",
@@ -9,6 +10,7 @@ const metadata = {
 ---
 
 <PageLayout metadata={metadata}>
+  <Loading />
   <section class="mx-auto max-w-5xl px-4 py-8 sm:py-10">
     <a
       href="/dashboard"
@@ -203,6 +205,15 @@ const metadata = {
       return fetch(url, {...options, headers});
     }
 
+    async function fetchWithAuthAndLoading(url: string, options: RequestInit = {}) {
+      window.showLoading?.();
+      try {
+        return await fetchWithAuth(url, options);
+      } finally {
+        window.hideLoading?.();
+      }
+    }
+
     function getAuthData() {
       const tokenStr = localStorage.getItem("pb_auth");
       if (!tokenStr) return {token: null, userId: null};
@@ -364,7 +375,7 @@ const metadata = {
 
       try {
         const url = id ? `${collectionBase}/${id}` : collectionBase;
-        const res = await fetchWithAuth(url, {
+        const res = await fetchWithAuthAndLoading(url, {
           method: id ? "PUT" : "POST",
           body: JSON.stringify(payload),
         });
@@ -384,7 +395,7 @@ const metadata = {
 
     async function loadPatientsForSelect() {
       const firstParams = buildPaginationParams(1, 100);
-      const firstRes = await fetchWithAuth(`/api/pacientes?${firstParams.toString()}`);
+      const firstRes = await fetchWithAuthAndLoading(`/api/pacientes?${firstParams.toString()}`);
       const firstData = await firstRes.json();
       const firstPage = normalizePaginationData(firstData, 1, 100);
       let items = [...(firstPage.items as PacienteOption[])];
@@ -440,7 +451,7 @@ const metadata = {
       if (!body) return;
       try {
         const params = buildPaginationParams(page, perPage, { sort: "-data" });
-        const res = await fetchWithAuth(`${collectionBase}?${params.toString()}`);
+        const res = await fetchWithAuthAndLoading(`${collectionBase}?${params.toString()}`);
         const data = await res.json();
         const normalized = normalizePaginationData(data, page, perPage);
         currentPage = normalized.page;
@@ -491,7 +502,7 @@ const metadata = {
 
     (window as any).togglePaymentStatus = async (id: string, currentStatus: boolean) => {
       try {
-        await fetchWithAuth(`${collectionBase}/${id}`, {
+        await fetchWithAuthAndLoading(`${collectionBase}/${id}`, {
           method: "PUT",
           body: JSON.stringify({pago: !currentStatus}),
         });
@@ -525,7 +536,7 @@ const metadata = {
           if (!confirm("Tem certeza que deseja excluir esta sessão?")) return;
           const id = btn.getAttribute("data-id");
           try {
-            await fetchWithAuth(`${collectionBase}/${id}`, {method: "DELETE"});
+            await fetchWithAuthAndLoading(`${collectionBase}/${id}`, {method: "DELETE"});
             loadSessions(currentPage);
           } catch {
             alert("Erro ao excluir sessão");

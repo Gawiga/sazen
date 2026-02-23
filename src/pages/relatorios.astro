@@ -1,5 +1,6 @@
 ---
 import PageLayout from "~/layouts/PageLayout.astro";
+import Loading from "~/components/widgets/Loading.astro";
 
 const metadata = {
   title: "Relatórios",
@@ -8,6 +9,7 @@ const metadata = {
 ---
 
 <PageLayout metadata={metadata}>
+  <Loading />
   <section class="mx-auto max-w-5xl px-4 py-8 sm:py-10">
     <div class="mb-6">
       <a
@@ -170,6 +172,15 @@ const metadata = {
       return fetch(url, {...options, headers});
     }
 
+    async function fetchWithAuthAndLoading(url: string, options: RequestInit = {}) {
+      window.showLoading?.();
+      try {
+        return await fetchWithAuth(url, options);
+      } finally {
+        window.hideLoading?.();
+      }
+    }
+
     function tryParseNumber(v: string | number | null | undefined): number {
       if (v == null) return 0;
       if (typeof v === "number") return v;
@@ -183,7 +194,7 @@ const metadata = {
 
     async function fetchCollectionPage(collection: string, page: number, perPage: number) {
       const params = buildPaginationParams(page, perPage, { collection });
-      const res = await fetchWithAuth(`${endpoint}?${params.toString()}`);
+      const res = await fetchWithAuthAndLoading(`${endpoint}?${params.toString()}`);
       if (!res.ok) throw new Error("Falha na requisição");
       return res.json();
     }

@@ -1,5 +1,6 @@
 ---
 import PageLayout from "~/layouts/PageLayout.astro";
+import Loading from "~/components/widgets/Loading.astro";
 
 const metadata = {
   title: "Pacientes",
@@ -8,6 +9,7 @@ const metadata = {
 ---
 
 <PageLayout metadata={metadata}>
+  <Loading />
   <section class="mx-auto max-w-5xl px-4 py-8 sm:py-10">
     <a
       href="/dashboard"
@@ -261,6 +263,15 @@ const metadata = {
       return fetch(url, {...options, headers});
     }
 
+    async function fetchWithAuthAndLoading(url: string, options: RequestInit = {}) {
+      window.showLoading?.();
+      try {
+        return await fetchWithAuth(url, options);
+      } finally {
+        window.hideLoading?.();
+      }
+    }
+
     function formatDateForInput(dateString: string): string {
       if (!dateString) return "";
       return dateString.split(" ")[0];
@@ -363,7 +374,7 @@ const metadata = {
 
         try {
           const url = id ? `${collectionBase}/${id}` : collectionBase;
-          const res = await fetchWithAuth(url, {
+          const res = await fetchWithAuthAndLoading(url, {
             method: id ? "PUT" : "POST",
             body: JSON.stringify(payload),
           });
@@ -383,7 +394,7 @@ const metadata = {
       const body = byId("patients-body");
       try {
         const params = buildPaginationParams(page, perPage);
-        const res = await fetchWithAuth(`${collectionBase}?${params.toString()}`);
+        const res = await fetchWithAuthAndLoading(`${collectionBase}?${params.toString()}`);
         const data = await res.json();
         const normalized = normalizePaginationData(data, page, perPage);
         currentPage = normalized.page;
@@ -473,7 +484,7 @@ const metadata = {
           if (!confirm("Deseja realmente excluir este paciente?")) return;
 
           try {
-            const res = await fetchWithAuth(`${collectionBase}/${id}`, {
+            const res = await fetchWithAuthAndLoading(`${collectionBase}/${id}`, {
               method: "DELETE",
             });
             if (res.ok) loadPatients(currentPage);

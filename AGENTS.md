@@ -52,7 +52,7 @@ npm install
 npm run dev
 ```
 
-3. Login: `/login` (ex.: `rcmafei@gmail.com` / `mozao123`), depois acesse `/dashboard`.
+3. Login: `/login` (ex.: `gawiga@gmail.com` / `teste123`), depois acesse `/dashboard`.
 
 Notas técnicas e decisões relevantes
 
