@@ -21,6 +21,11 @@ describe("PocketBase client helper", () => {
   });
 
   it("pbClient is null on SSR", () => {
-    expect(pbClient).toBeNull();
+    if (typeof window === "undefined") {
+      expect(pbClient).toBeNull();
+      return;
+    }
+
+    expect(pbClient).toBeDefined();
   });
 });

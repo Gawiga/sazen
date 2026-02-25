@@ -27,6 +27,9 @@ const metadata = {
 
     <div class="space-y-6">
       <div class="rounded-lg border bg-white p-4 shadow dark:border-gray-800 dark:bg-gray-900 sm:p-6">
+        <div class="mb-4 rounded bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+          <strong>ℹ️ Informação:</strong> Esta tabela exibe o resumo mensal do faturamento. Você pode escolher quantos registros deseja exibir por página (20, 50 ou 100).
+        </div>
         <div class="mb-4">
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
             Faturamento Mensal
@@ -70,6 +73,9 @@ const metadata = {
       </div>
 
       <div class="rounded-lg border bg-white p-4 shadow dark:border-gray-800 dark:bg-gray-900 sm:p-6">
+        <div class="mb-4 rounded bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+          <strong>ℹ️ Informação:</strong> Esta tabela exibe os valores pendentes de recebimento por paciente. Você pode filtrar e buscar por nome na caixa de pesquisa acima.
+        </div>
         <div class="mb-4">
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
             Valores a Receber
@@ -126,25 +132,19 @@ const metadata = {
 
   <script>
     import {
-      buildPaginationParams,
       getPaginationView,
       getPerPageValue,
-      normalizePaginationData,
     } from "~/services/paginationService";
+    import { UIService } from "~/services/uiService";
+    import { formatCurrency } from "~/utils/formatting";
+    import type { RelatorioData } from "~/types/api";
 
     const endpoint = "/api/reports";
-    type ReportItem = Record<string, unknown>;
-    type ScriptElement = HTMLElement & {
-      value?: string;
-      disabled?: boolean;
-      dataset?: DOMStringMap;
-    };
-    const byId = (id: string): ScriptElement =>
-      document.getElementById(id) as ScriptElement;
+    const byId = (id: string) => document.getElementById(id) as HTMLElement;
 
-    let fatur: ReportItem[] = [];
-    let receber: ReportItem[] = [];
-    let filteredReceber: ReportItem[] = [];
+    let fatur: RelatorioData[] = [];
+    let receber: RelatorioData[] = [];
+    let filteredReceber: RelatorioData[] = [];
 
     let pageF = 1;
     let perPageF = 20;
@@ -158,56 +158,16 @@ const metadata = {
 
     let nameFilter = "";
 
-    const currencyFormatter = new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    });
-
-    function fetchWithAuth(url: string, options: RequestInit = {}) {
-      const tokenStr = localStorage.getItem("pb_auth");
-      const auth = tokenStr ? JSON.parse(tokenStr).token : null;
-      const headers = new Headers(options.headers ?? {});
-      headers.set("Content-Type", "application/json");
-      if (auth) headers.set("Authorization", `Bearer ${auth}`);
-      return fetch(url, {...options, headers});
-    }
-
-    async function fetchWithAuthAndLoading(url: string, options: RequestInit = {}) {
-      window.showLoading?.();
-      try {
-        return await fetchWithAuth(url, options);
-      } finally {
-        window.hideLoading?.();
-      }
-    }
-
-    function tryParseNumber(v: string | number | null | undefined): number {
-      if (v == null) return 0;
-      if (typeof v === "number") return v;
-      const n = Number(String(v).replace(/[^\d.-]+/g, ""));
-      return Number.isNaN(n) ? 0 : n;
-    }
-
-    function safeGetNumber(obj: unknown, key: string): number {
-      return tryParseNumber(obj && typeof obj === "object" && key in obj ? (obj as Record<string, unknown>)[key] as string | number | null | undefined : null);
-    }
-
-    async function fetchCollectionPage(collection: string, page: number, perPage: number) {
-      const params = buildPaginationParams(page, perPage, { collection });
-      const res = await fetchWithAuthAndLoading(`${endpoint}?${params.toString()}`);
-      if (!res.ok) throw new Error("Falha na requisição");
-      return res.json();
-    }
-
     async function loadF() {
       const body = byId("body-fatur");
       try {
-        const data = await fetchCollectionPage("faturamento_mensal", pageF, perPageF);
-        const normalized = normalizePaginationData<ReportItem>(data, pageF, perPageF);
-        fatur = normalized.items;
-        totalItemsF = normalized.totalItems;
-        totalPagesF = normalized.totalPages;
-        pageF = normalized.page;
+        const url = `${endpoint}?collection=faturamento_mensal&page=${pageF}&perPage=${perPageF}`;
+        const data = await UIService.get<{ page: number; perPage: number; totalPages: number; totalItems: number; items: RelatorioData[] }>(url);
+
+        fatur = data.items;
+        totalItemsF = data.totalItems;
+        totalPagesF = data.totalPages;
+        pageF = data.page;
 
         renderF();
         updatePaginationF();
@@ -224,12 +184,13 @@ const metadata = {
     async function loadR() {
       const body = byId("body-rec");
       try {
-        const data = await fetchCollectionPage("valores_receber", pageR, perPageR);
-        const normalized = normalizePaginationData<ReportItem>(data, pageR, perPageR);
-        receber = normalized.items;
-        totalItemsR = normalized.totalItems;
-        totalPagesR = normalized.totalPages;
-        pageR = normalized.page;
+        const url = `${endpoint}?collection=valores_receber&page=${pageR}&perPage=${perPageR}`;
+        const data = await UIService.get<{ page: number; perPage: number; totalPages: number; totalItems: number; items: RelatorioData[] }>(url);
+
+        receber = data.items;
+        totalItemsR = data.totalItems;
+        totalPagesR = data.totalPages;
+        pageR = data.page;
 
         applyFrontFilter();
         updatePaginationR();
@@ -248,7 +209,7 @@ const metadata = {
       if (!q) {
         filteredReceber = [...receber];
       } else {
-        filteredReceber = receber.filter((it: ReportItem) =>
+        filteredReceber = receber.filter((it: RelatorioData) =>
           String(it?.nome || "").toLowerCase().includes(q),
         );
       }
@@ -268,10 +229,10 @@ const metadata = {
 
       body.innerHTML = fatur
         .map(
-          (it: ReportItem) => `
+          (it: RelatorioData) => `
       <tr class="border-t dark:border-gray-800">
         <td class="px-4 py-2 dark:text-gray-300">${it.mes_ano ?? ""}</td>
-        <td class="px-4 py-2 font-medium dark:text-white">${currencyFormatter.format(safeGetNumber(it, "total"))}</td>
+        <td class="px-4 py-2 font-medium dark:text-white">${formatCurrency(Number(it.total) || 0)}</td>
       </tr>
     `,
         )
@@ -290,10 +251,10 @@ const metadata = {
 
       body.innerHTML = filteredReceber
         .map(
-          (it: ReportItem) => `
+          (it: RelatorioData) => `
       <tr class="border-t dark:border-gray-800">
         <td class="px-4 py-2 dark:text-gray-300">${it.nome ?? ""}</td>
-        <td class="px-4 py-2 font-medium dark:text-white">${currencyFormatter.format(safeGetNumber(it, "total"))}</td>
+        <td class="px-4 py-2 font-medium dark:text-white">${formatCurrency(Number(it.total) || 0)}</td>
       </tr>
     `,
         )
@@ -306,8 +267,8 @@ const metadata = {
       const indicator = byId("page-ind-fatur");
 
       const view = getPaginationView(pageF, totalPagesF);
-      if (prev) prev.disabled = !view.canPrev;
-      if (next) next.disabled = !view.canNext;
+      if (prev) (prev as HTMLButtonElement).disabled = !view.canPrev;
+      if (next) (next as HTMLButtonElement).disabled = !view.canNext;
       if (indicator) indicator.textContent = view.indicator;
     }
 
@@ -317,8 +278,8 @@ const metadata = {
       const indicator = byId("page-ind-rec");
 
       const view = getPaginationView(pageR, totalPagesR);
-      if (prev) prev.disabled = !view.canPrev;
-      if (next) next.disabled = !view.canNext;
+      if (prev) (prev as HTMLButtonElement).disabled = !view.canPrev;
+      if (next) (next as HTMLButtonElement).disabled = !view.canNext;
       if (indicator) indicator.textContent = view.indicator;
     }
 
@@ -342,9 +303,9 @@ const metadata = {
           perPageF = getPerPageValue(btn.getAttribute("data-per-page"), 20);
           pageF = 1;
           updatePerPageButtons(".fatur-per-page-btn", perPageF, {
-            "bg-green-600": true,
+            "bg-blue-600": true,
             "text-white": true,
-            "border-green-600": true,
+            "border-blue-600": true,
           });
           loadF();
         });
@@ -355,9 +316,9 @@ const metadata = {
           perPageR = getPerPageValue(btn.getAttribute("data-per-page"), 20);
           pageR = 1;
           updatePerPageButtons(".rec-per-page-btn", perPageR, {
-            "bg-green-600": true,
+            "bg-blue-600": true,
             "text-white": true,
-            "border-green-600": true,
+            "border-blue-600": true,
           });
           loadR();
         });
@@ -407,14 +368,14 @@ const metadata = {
 
       setupEventListeners();
       updatePerPageButtons(".fatur-per-page-btn", perPageF, {
-        "bg-green-600": true,
+        "bg-blue-600": true,
         "text-white": true,
-        "border-green-600": true,
+        "border-blue-600": true,
       });
       updatePerPageButtons(".rec-per-page-btn", perPageR, {
-        "bg-green-600": true,
+        "bg-blue-600": true,
         "text-white": true,
-        "border-green-600": true,
+        "border-blue-600": true,
       });
 
       await Promise.all([loadF(), loadR()]);

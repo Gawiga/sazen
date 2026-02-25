@@ -31,6 +31,9 @@ const metadata = {
     <div
       id="form-container"
       class="mb-6 hidden rounded border bg-white p-4 shadow dark:border-gray-800 dark:bg-gray-900 sm:p-6">
+      <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+        Preencha os dados do paciente. Os campos marcados com <span class="font-bold">*</span> são obrigatórios.
+      </p>
       <form id="patient-form" class="space-y-4">
         <input type="hidden" id="patient-id" />
 
@@ -147,6 +150,10 @@ const metadata = {
     </div>
 
     <div class="overflow-x-auto rounded border bg-white p-3 shadow dark:border-gray-800 dark:bg-gray-900 sm:p-4">
+      <div class="mb-4 rounded bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+        <strong>💡 Dica:</strong> Clique em "Novo paciente" para adicionar um novo paciente. Use "Editar" para modificar dados ou "Excluir" para removê-lo. A data de início será preenchida automaticamente com a data de hoje para novos pacientes.
+      </div>
+
       <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div class="text-sm text-gray-600 dark:text-gray-400">
           Exibindo <span id="patients-count">0</span> pacientes

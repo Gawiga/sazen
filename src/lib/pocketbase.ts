@@ -13,7 +13,13 @@ export function getPocketBaseClient(): PocketBase {
 
   // Restore auth state from stored token if available
   if (typeof window !== "undefined") {
-    const storedAuth = localStorage.getItem("pb_auth");
+    const storage = globalThis.localStorage as
+      | Pick<Storage, "getItem">
+      | undefined;
+    const storedAuth =
+      storage && typeof storage.getItem === "function"
+        ? storage.getItem("pb_auth")
+        : null;
     if (storedAuth) {
       try {
         pb.authStore.save(

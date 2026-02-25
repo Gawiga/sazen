@@ -146,8 +146,8 @@ src/
 │       └── Loading.astro (melhorado com fadding)
 ├── pages/
 │   ├── pacientes.astro (refatorado com PatientService)
-│   ├── sessoes.astro (usar SessionService)
-│   └── relatorios.astro (usar UIService)
+│   ├── sessoes.astro (refatorado com SessionService)
+│   └── relatorios.astro (refatorado com UIService)
 ├── services/
 │   ├── uiService.ts (requisições HTTP)
 │   ├── patientService.ts (lógica de pacientes)
@@ -162,6 +162,22 @@ src/
     └── formatting.ts (utilitários reutilizáveis)
 ```
 
+## Páginas Refatoradas
+
+As seguintes páginas foram completamente refatoradas para seguir os novos padrões:
+
+1. **pacientes.astro** - CRUD completo de pacientes com paginação
+2. **sessoes.astro** - CRUD completo de sessões com paginação e toggle de status de pagamento
+3. **relatorios.astro** - Visualização de relatórios de faturamento e valores a receber
+
+Todas as páginas agora utilizam:
+
+- UIService para requisições HTTP
+- Tipos definidos em `types/api.ts`
+- Utilitários de formatação de `utils/formatting.ts`
+- Loading automático com fadding 200ms
+- Auto-scroll ao editar formulários
+
 ## Testes
 
 Todos os utilitários têm testes em `tests/unit/formatting.test.ts`:
@@ -175,7 +191,46 @@ Rodar: `npm run test:unit -- --run`
 
 ## Próximos Passos
 
-1. Completar refatoração de `sessoes.astro` e `relatorios.astro` seguindo o padrão
-2. Remover código duplicado de formatação
-3. Usar `scrollToElement()` ao editar formulário
-4. Documentar novos padrões no AGENTS.md
+1. Implementar refresh tokens para segurança
+2. Ampliar testes E2E com Playwright
+3. Criar testes unitários para novos serviços
+4. Corrigir quaisquer warnings do npm run check
+
+## Atualização de Limpeza (Fevereiro 2026)
+
+### Remoções executadas
+
+- Páginas removidas:
+  - `src/pages/[...blog]/`
+  - `src/pages/homes/`
+  - `src/pages/landing/`
+- Componentes/layout removidos por estarem órfãos após limpeza:
+  - `src/components/blog/`
+  - `src/components/widgets/BlogLatestPosts.astro`
+  - `src/components/widgets/BlogHighlightedPosts.astro`
+  - `src/layouts/LandingLayout.astro`
+
+### Garantias de não regressão
+
+- Fluxo principal preservado:
+  - `src/pages/login.astro`
+  - `src/pages/dashboard.astro`
+  - `src/pages/pacientes.astro`
+  - `src/pages/sessoes.astro`
+  - `src/pages/relatorios.astro`
+- APIs preservadas em `src/pages/api/**`.
+- Testes e validação:
+  - `npm run check` passando sem erros/warnings.
+  - `npm run test:unit -- --run`: `127/127` passando.
+
+### Testes adicionados nesta etapa
+
+- `tests/unit/patient-service-client.test.ts`
+- `tests/unit/session-service-client.test.ts`
+- `tests/unit/pages-core.test.ts`
+
+### Ajustes técnicos para estabilidade
+
+- `src/lib/pocketbase.ts`: guard para `localStorage.getItem` em ambiente de testes.
+- `src/lib/auth.ts`: guards para `localStorage.setItem/removeItem`.
+- `.prettierignore`: adicionado `.agents` para excluir skills externas instaladas via Smithery.

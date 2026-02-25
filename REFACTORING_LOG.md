@@ -245,3 +245,40 @@ Veja `MAINTENANCE.md` para:
 - Exemplos de uso dos novos serviços
 - Padrões de desenvolvimento
 - Estrutura de diretorios explicada
+
+## [Fevereiro 2026] Limpeza de rotas e órfãos + cobertura de testes
+
+### Objetivo
+
+Reduzir código não utilizado focando nas áreas mapeadas (`[...blog]`, `homes`, `landing`) sem impacto nas páginas de operação (`login`, `dashboard`, `pacientes`, `sessoes`, `relatorios`).
+
+### Mudanças
+
+- Removidas páginas:
+  - `src/pages/[...blog]/`
+  - `src/pages/homes/`
+  - `src/pages/landing/`
+- Removidos componentes/layout órfãos:
+  - `src/components/blog/`
+  - `src/components/widgets/BlogLatestPosts.astro`
+  - `src/components/widgets/BlogHighlightedPosts.astro`
+  - `src/layouts/LandingLayout.astro`
+- Ajustes de robustez de runtime/teste:
+  - `src/lib/pocketbase.ts`
+  - `src/lib/auth.ts`
+- Ajuste de tooling:
+  - `.prettierignore` atualizado com `.agents`
+
+### Testes
+
+- Novos testes unitários:
+  - `tests/unit/patient-service-client.test.ts`
+  - `tests/unit/session-service-client.test.ts`
+  - `tests/unit/pages-core.test.ts`
+- Ajuste em teste existente:
+  - `tests/unit/pocketbase.test.ts`
+
+### Resultado
+
+- `npm run check` ✅
+- `npm run test:unit -- --run` ✅ (`127/127`)

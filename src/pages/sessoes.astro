@@ -93,6 +93,10 @@ const metadata = {
       </form>
     </div>
 
+    <div class="mb-4 rounded bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+      <strong>💡 Dica:</strong> Clique em "Marcar como pago" (ou "Marcar pendente") para alternar o status da sessão. Use "Editar" para modificar dados da sessão ou "Excluir" para removê-la.
+    </div>
+
     <div
       class="overflow-x-auto rounded border bg-white p-3 shadow dark:border-gray-800 dark:bg-gray-900 sm:p-4">
       <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -157,145 +161,52 @@ const metadata = {
   </section>
 
   <script>
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
     import {
-      buildPaginationParams,
       getPaginationView,
       getPerPageValue,
-      normalizePaginationData,
     } from "~/services/paginationService";
+    import { SessionService } from "~/services/sessionService";
+    import { scrollToElement } from "~/services/uiService";
+    import {
+      formatCurrency,
+      parseCurrency,
+      formatDateForInput,
+      formatDateInPortuguese,
+      attachCurrencyMask,
+      getFormElement,
+      toggleElement,
+    } from "~/utils/formatting";
+    import type { Sessao, PacienteOption } from "~/types/api";
 
-    const collectionBase = "/api/sessoes";
-    type PacienteOption = {
-      id: string;
-      nome?: string;
-      email?: string;
-      valor_sessao?: number;
-    };
-    type SessionItem = {
-      id: string;
-      id_paciente: string;
-      data: string;
-      valor: number | string;
-      pago: boolean;
-    };
-    type ScriptElement = HTMLElement & {
-      value?: string;
-      checked?: boolean;
-      disabled?: boolean;
-      reset?: () => void;
-      dataset?: DOMStringMap;
-    };
-    let patientMap = new Map();
-    let patientDetails = new Map();
+    const formContainerId = "form-container";
+
+    let patientDetails = new Map<string, PacienteOption>();
     let currentPage = 1;
     let perPage = 20;
     let totalPages = 1;
     let totalItems = 0;
-    const byId = (id: string): ScriptElement =>
-      document.getElementById(id) as ScriptElement;
 
-    function fetchWithAuth(url: string, options: RequestInit = {}) {
-      const tokenStr = localStorage.getItem("pb_auth");
-      const auth = tokenStr ? JSON.parse(tokenStr).token : null;
-      const headers = new Headers(options.headers ?? {});
-      headers.set("Content-Type", "application/json");
-      if (auth) headers.set("Authorization", `Bearer ${auth}`);
-      return fetch(url, {...options, headers});
-    }
+    const byId = (id: string) => getFormElement(id);
 
-    async function fetchWithAuthAndLoading(url: string, options: RequestInit = {}) {
-      window.showLoading?.();
+    async function loadSessions(page = 1) {
+      const body = byId("sessions-body");
       try {
-        return await fetchWithAuth(url, options);
-      } finally {
-        window.hideLoading?.();
-      }
-    }
+        const data = await SessionService.getSessions(page, perPage);
 
-    function getAuthData() {
-      const tokenStr = localStorage.getItem("pb_auth");
-      if (!tokenStr) return {token: null, userId: null};
-      try {
-        const parsed = JSON.parse(tokenStr);
-        const token = parsed?.token || null;
-        const userIdFromModel = parsed?.model?.id || parsed?.record?.id || null;
+        currentPage = data.page;
+        totalPages = data.totalPages;
+        totalItems = data.totalItems;
 
-        if (userIdFromModel) return {token, userId: userIdFromModel};
-        if (!token) return {token: null, userId: null};
-
-        const tokenPayload = JSON.parse(
-          atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")),
-        );
-        return {token, userId: tokenPayload?.id || null};
-      } catch {
-        return {token: null, userId: null};
-      }
-    }
-
-    function parseCurrencyInput(value: string | number) {
-      if (!value) return 0;
-      const normalized = String(value)
-        .replace(/\s/g, "")
-        .replace("R$", "")
-        .replace(/\./g, "")
-        .replace(",", ".")
-        .replace(/[^\d.-]/g, "");
-      const parsed = Number(normalized);
-      return Number.isFinite(parsed) ? parsed : 0;
-    }
-
-    function formatCurrencyInput(value: string | number) {
-      const number = Number(value);
-      if (!Number.isFinite(number)) return "";
-      return `R$ ${number.toLocaleString("pt-BR", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}`;
-    }
-
-    function attachCurrencyMask(input: HTMLInputElement | null) {
-      if (!input) return;
-
-      input.addEventListener("input", () => {
-        input.value = input.value.replace(/[^\d,.-]/g, "");
-      });
-
-      input.addEventListener("focus", () => {
-        const numeric = parseCurrencyInput(input.value);
-        if (!numeric) {
-          input.value = "";
-          return;
+        renderSessions(data.items);
+        updatePaginationControls();
+        updateSessionsCount();
+      } catch (err) {
+        console.error(err);
+        if (body) {
+          body.innerHTML =
+            '<tr><td colspan="6" class="p-4 text-center text-red-500">Erro ao carregar dados.</td></tr>';
         }
-
-        input.value = Number.isInteger(numeric)
-          ? String(numeric)
-          : String(numeric).replace(".", ",");
-      });
-
-      input.addEventListener("blur", () => {
-        if (!input.value.trim()) return;
-        input.value = formatCurrencyInput(parseCurrencyInput(input.value));
-      });
-    }
-
-    function isoToInputDate(isoString: string) {
-      if (!isoString) return "";
-      const date = new Date(isoString);
-      date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-      return date.toISOString().slice(0, 16);
-    }
-
-    function formatDateDisplay(isoString: string) {
-      if (!isoString) return "-";
-      const date = new Date(isoString);
-      const weekday = date.toLocaleDateString("pt-BR", {weekday: "long"});
-      const day = date.toLocaleDateString("pt-BR", {day: "2-digit"});
-      const month = date.toLocaleDateString("pt-BR", {month: "long"});
-      const hour = date.toLocaleTimeString("pt-BR", {hour: "2-digit", hour12: false});
-      const minute = date.toLocaleTimeString("pt-BR", {minute: "2-digit"});
-      return `${weekday}, ${day} de ${month} às ${hour}h${minute}`;
+      }
     }
 
     async function init() {
@@ -305,13 +216,12 @@ const metadata = {
         return;
       }
 
-      const form = byId("session-form");
+      const form = byId("session-form") as HTMLFormElement;
       if (!form || form.dataset.initialized) return;
       form.dataset.initialized = "true";
 
-      const patientSelect = byId("id_paciente");
-      const valorInput = byId("valor");
-      attachCurrencyMask(valorInput as HTMLInputElement);
+      const valorInput = byId("valor") as HTMLInputElement;
+      attachCurrencyMask(valorInput);
 
       try {
         await Promise.all([loadPatientsForSelect(), loadSessions()]);
@@ -319,32 +229,29 @@ const metadata = {
         console.error("Falha ao carregar dados iniciais:", err);
       }
 
-      patientSelect?.addEventListener("change", (e) => {
-        const target = e.target as HTMLSelectElement | null;
-        const patientId = target?.value ?? "";
-        const sessionId = byId("session-id").value;
+      byId("id_paciente")?.addEventListener("change", (e) => {
+        const target = e.target as HTMLSelectElement;
+        const patientId = target.value;
+        const sessionId = byId("session-id").value as string;
 
         if (!sessionId && patientId && patientDetails.has(patientId)) {
-          const value = patientDetails.get(patientId).valor_sessao || 0;
-          valorInput.value = formatCurrencyInput(value);
+          const value = patientDetails.get(patientId)?.valor_sessao || 0;
+          (valorInput).value = formatCurrency(value);
         }
       });
 
       byId("new-btn")?.addEventListener("click", () => {
         byId("session-id").value = "";
-        if (form && typeof form.reset === "function") {
-          form.reset();
-        }
+        form.reset();
         sortPatientsForSelect();
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         byId("data").value = now.toISOString().slice(0, 16);
         toggleForm(true);
+        scrollToElement(formContainerId);
       });
 
-      document
-        .getElementById("cancel-btn")
-        ?.addEventListener("click", () => toggleForm(false));
+      byId("cancel-btn")?.addEventListener("click", () => toggleForm(false));
 
       form.addEventListener("submit", handleFormSubmit);
       attachPerPageListeners();
@@ -355,86 +262,56 @@ const metadata = {
 
     async function handleFormSubmit(ev: Event) {
       ev.preventDefault();
-      const id = byId("session-id").value;
-      const rawDate = byId("data").value;
+      const id = byId("session-id").value as string;
+      const rawDate = byId("data").value as string;
       const utcDate = rawDate ? new Date(rawDate).toISOString() : "";
 
-      const payload: Record<string, unknown> = {
-        id_paciente: byId("id_paciente").value,
+      const payload: Partial<Sessao> = {
+        id_paciente: byId("id_paciente").value as string,
         data: utcDate,
-        valor: parseCurrencyInput(byId("valor").value || ""),
-        pago: byId("pago").checked,
+        valor: parseCurrency((byId("valor") as HTMLInputElement).value || ""),
+        pago: (byId("pago") as HTMLInputElement).checked,
       };
 
-      if (!id) {
-        const {userId} = getAuthData();
-        if (userId) {
-          payload.owner = userId;
-        }
-      }
-
       try {
-        const url = id ? `${collectionBase}/${id}` : collectionBase;
-        const res = await fetchWithAuthAndLoading(url, {
-          method: id ? "PUT" : "POST",
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) throw new Error("Erro ao salvar");
+        if (id) {
+          await SessionService.updateSession(id, payload);
+        } else {
+          await SessionService.createSession(payload);
+        }
         toggleForm(false);
         loadSessions(currentPage);
-      } catch {
+      } catch (err) {
+        console.error(err);
         alert("Erro ao salvar sessão.");
       }
     }
 
     function toggleForm(show: boolean) {
-      document
-        .getElementById("form-container")
-        ?.classList.toggle("hidden", !show);
+      toggleElement(formContainerId, show);
     }
 
     async function loadPatientsForSelect() {
-      const firstParams = buildPaginationParams(1, 100);
-      const firstRes = await fetchWithAuthAndLoading(`/api/pacientes?${firstParams.toString()}`);
-      const firstData = await firstRes.json();
-      const firstPage = normalizePaginationData(firstData, 1, 100);
-      let items = [...(firstPage.items as PacienteOption[])];
-
-      for (let page = 2; page <= firstPage.totalPages; page += 1) {
-        const params = buildPaginationParams(page, 100);
-        const res = await fetchWithAuth(`/api/pacientes?${params.toString()}`);
-        const data = await res.json();
-        const normalized = normalizePaginationData<PacienteOption>(data, page, 100);
-        items = items.concat(normalized.items);
-      }
-
-      items = sortPatientsByName(items);
-      patientMap = new Map(
-        items.map((p) => [p.id, p.nome || p.email || "Sem nome"]),
-      );
-      patientDetails = new Map(items.map((p) => [p.id, p]));
-
-      const select = byId("id_paciente");
-      if (select) {
-        select.innerHTML =
-          '<option value="">— selecione —</option>' +
-          items
-            .map((p) => `<option value="${p.id}">${p.nome || p.email}</option>`)
-            .join("");
+      try {
+        const items = await SessionService.getAllPatients();
+        patientDetails = new Map(items.map((p) => [p.id, p]));
+        sortPatientsForSelect();
+      } catch (err) {
+        console.error("Erro ao carregar pacientes:", err);
       }
     }
 
     function sortPatientsByName(items: PacienteOption[]) {
-      return [...items].sort((a, b) =>
-        (a?.nome || a?.email || "").localeCompare(b?.nome || b?.email || "", "pt-BR", {
-          sensitivity: "base",
-        }),
-      );
+      return items.sort((a, b) => {
+        const nameA = (a.nome || a.email || "").toLowerCase();
+        const nameB = (b.nome || b.email || "").toLowerCase();
+        return nameA.localeCompare(nameB, "pt-BR");
+      });
     }
 
     function sortPatientsForSelect() {
       const items = sortPatientsByName(Array.from(patientDetails.values()));
-      const select = byId("id_paciente");
+      const select = byId("id_paciente") as HTMLSelectElement;
       if (!select) return;
 
       const currentValue = select.value;
@@ -446,100 +323,118 @@ const metadata = {
       select.value = currentValue;
     }
 
-    async function loadSessions(page = 1) {
+    function renderSessions(items: Sessao[]) {
       const body = byId("sessions-body");
       if (!body) return;
-      try {
-        const params = buildPaginationParams(page, perPage, { sort: "-data" });
-        const res = await fetchWithAuthAndLoading(`${collectionBase}?${params.toString()}`);
-        const data = await res.json();
-        const normalized = normalizePaginationData(data, page, perPage);
-        currentPage = normalized.page;
-        totalPages = normalized.totalPages;
-        totalItems = normalized.totalItems;
-        renderTable(normalized.items as SessionItem[]);
-        updatePaginationControls();
-        updateSessionCount();
-      } catch (err) {
-        console.error(err);
-        body.innerHTML =
-          '<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao carregar dados.</td></tr>';
-      }
-    }
 
-    function renderTable(items: SessionItem[]) {
-      const body = byId("sessions-body");
       if (!items.length) {
         body.innerHTML =
-          '<tr><td colspan="5" class="p-4 text-center text-gray-500">Nenhuma sessão registrada.</td></tr>';
+          '<tr><td colspan="6" class="p-4 text-center text-gray-500">Nenhuma sessão registrada.</td></tr>';
         return;
       }
 
       body.innerHTML = items
         .map(
-          (it: SessionItem) => `
-      <tr class="border-b transition hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800">
-        <td class="p-3 font-medium text-gray-900 dark:text-gray-200">${patientMap.get(it.id_paciente) || "Desconhecido"}</td>
-        <td class="p-3 text-gray-600 dark:text-gray-400">${formatDateDisplay(it.data)}</td>
-        <td class="p-3 text-gray-600 dark:text-gray-400">${formatCurrencyInput(Number(it.valor) || 0)}</td>
-        <td class="p-3 text-center">
-          <button onclick="togglePaymentStatus('${it.id}', ${it.pago})" class="rounded-full border px-3 py-2 text-xs font-semibold ${it.pago ? "border-green-200 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300" : "border-red-200 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"} transition hover:opacity-80">
-            ${it.pago ? "PAGO" : "PENDENTE"}
-          </button>
-        </td>
-        <td class="p-3 text-right">
-          <div class="flex items-center justify-end gap-2 whitespace-nowrap">
-            <button class="edit-btn inline-flex min-h-10 items-center justify-center rounded bg-yellow-400 px-3 py-2 text-sm font-medium text-gray-900 hover:bg-yellow-500" data-id="${it.id}">Editar</button>
-            <button class="del-btn inline-flex min-h-10 items-center justify-center rounded bg-red-500 px-3 py-2 text-sm font-medium text-white hover:bg-red-600" data-id="${it.id}">Excluir</button>
-          </div>
-        </td>
-      </tr>
-    `,
+          (session) => `
+        <tr class="border-t transition hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800">
+          <td class="p-2 dark:text-gray-300">
+            <div class="font-medium">${
+              patientDetails.get(session.id_paciente)?.nome ||
+              "Paciente não encontrado"
+            }</div>
+          </td>
+          <td class="p-2 dark:text-gray-300">${formatDateInPortuguese(session.data)}</td>
+          <td class="p-2 dark:text-gray-300">${formatCurrency(
+            Number(session.valor) || 0
+          )}</td>
+          <td class="p-2">
+            <span class="rounded px-2 py-1 text-xs ${
+              session.pago
+                ? "bg-green-100 text-green-800"
+                : "bg-yellow-100 text-yellow-800"
+            }">
+              ${session.pago ? "Pago" : "Pendente"}
+            </span>
+          </td>
+          <td class="p-2">
+            <div class="flex items-center justify-end gap-2 whitespace-nowrap">
+              <button data-id="${
+                session.id
+              }" title="${session.pago ? "Clique para marcar como pendente" : "Clique para marcar como pago"}" class="toggle-pago inline-flex min-h-10 items-center justify-center rounded ${
+                session.pago ? "bg-yellow-400" : "bg-green-500"
+              } px-3 py-2 text-sm text-white transition ${
+                session.pago
+                  ? "hover:bg-yellow-500"
+                  : "hover:bg-green-600"
+              }">
+                ${session.pago ? "Marcar pendente" : "Marcar como pago"}
+              </button>
+              <button data-id="${session.id}" class="edit-btn inline-flex min-h-10 items-center justify-center rounded bg-yellow-400 px-3 py-2 text-sm text-gray-900 transition hover:bg-yellow-500">Editar</button>
+              <button data-id="${session.id}" class="del-btn inline-flex min-h-10 items-center justify-center rounded bg-red-500 px-3 py-2 text-sm text-white transition hover:bg-red-600">Excluir</button>
+            </div>
+          </td>
+        </tr>
+      `,
         )
         .join("");
+
       attachRowListeners(items);
     }
 
-    (window as any).togglePaymentStatus = async (id: string, currentStatus: boolean) => {
-      try {
-        await fetchWithAuthAndLoading(`${collectionBase}/${id}`, {
-          method: "PUT",
-          body: JSON.stringify({pago: !currentStatus}),
-        });
-        loadSessions(currentPage);
-      } catch {
-        alert("Erro ao atualizar pagamento");
-      }
-    };
-
-    function attachRowListeners(items: SessionItem[]) {
-      document.querySelectorAll(".edit-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
+    function attachRowListeners(items: Sessao[]) {
+      // Toggle payment status
+      document.querySelectorAll(".toggle-pago").forEach((btn) => {
+        btn.addEventListener("click", async () => {
           const id = btn.getAttribute("data-id");
-          const record = items.find((i: SessionItem) => i.id === id);
-          if (!record) return;
-
-          byId("session-id").value = record.id;
-          byId("id_paciente").value = record.id_paciente;
-          byId("data").value = isoToInputDate(record.data);
-          byId("valor").value = formatCurrencyInput(
-            Number(record.valor) || 0,
-          );
-          byId("pago").checked = record.pago;
-
-          toggleForm(true);
+          if (!id) return;
+          
+          // Find the session to get current status
+          const session = items.find(s => s.id === id);
+          if (!session) return;
+          
+          try {
+            // Toggle the payment status
+            await SessionService.togglePaymentStatus(id, session.pago);
+            loadSessions(currentPage);
+          } catch (err) {
+            console.error(err);
+            alert("Erro ao atualizar status de pagamento.");
+          }
         });
       });
 
+      // Edit session
+      document.querySelectorAll(".edit-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const id = btn.getAttribute("data-id");
+          const session = items.find((s) => s.id === id);
+          if (!session) return;
+
+          byId("session-id").value = session.id || "";
+          byId("id_paciente").value = session.id_paciente || "";
+          byId("data").value = formatDateForInput(session.data);
+          (byId("valor") as HTMLInputElement).value = formatCurrency(
+            Number(session.valor) || 0
+          );
+          (byId("pago") as HTMLInputElement).checked = session.pago || false;
+
+          toggleForm(true);
+          scrollToElement(formContainerId);
+        });
+      });
+
+      // Delete session
       document.querySelectorAll(".del-btn").forEach((btn) => {
         btn.addEventListener("click", async () => {
-          if (!confirm("Tem certeza que deseja excluir esta sessão?")) return;
           const id = btn.getAttribute("data-id");
+          if (!id || !confirm("Deseja realmente excluir esta sessão?")) return;
+
           try {
-            await fetchWithAuthAndLoading(`${collectionBase}/${id}`, {method: "DELETE"});
+            await SessionService.deleteSession(id);
             loadSessions(currentPage);
-          } catch {
-            alert("Erro ao excluir sessão");
+          } catch (err) {
+            console.error(err);
+            alert("Erro ao excluir sessão.");
           }
         });
       });
@@ -571,24 +466,24 @@ const metadata = {
     function updatePerPageButtons() {
       document.querySelectorAll(".per-page-btn").forEach((btn) => {
         const isActive = Number(btn.getAttribute("data-per-page")) === perPage;
-        btn.classList.toggle("bg-green-600", isActive);
+        btn.classList.toggle("bg-blue-600", isActive);
         btn.classList.toggle("text-white", isActive);
-        btn.classList.toggle("border-green-600", isActive);
+        btn.classList.toggle("border-blue-600", isActive);
       });
     }
 
     function updatePaginationControls() {
       const prevBtn = byId("prev-page-btn");
       const nextBtn = byId("next-page-btn");
-      const pageIndicator = byId("page-indicator");
+      const indicator = byId("page-indicator");
 
       const view = getPaginationView(currentPage, totalPages);
-      if (prevBtn) prevBtn.disabled = !view.canPrev;
-      if (nextBtn) nextBtn.disabled = !view.canNext;
-      if (pageIndicator) pageIndicator.textContent = view.indicator;
+      if (prevBtn) (prevBtn as HTMLButtonElement).disabled = !view.canPrev;
+      if (nextBtn) (nextBtn as HTMLButtonElement).disabled = !view.canNext;
+      if (indicator) indicator.textContent = view.indicator;
     }
 
-    function updateSessionCount() {
+    function updateSessionsCount() {
       const countEl = byId("sessions-count");
       if (countEl) countEl.textContent = String(totalItems);
     }
