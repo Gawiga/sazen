@@ -30,6 +30,17 @@ describe("Core pages content", () => {
     }
   });
 
+  it("sessoes should toggle payment in status label and not show legacy action buttons", () => {
+    const sessoes = readPage("sessoes.astro");
+
+    expect(sessoes).toContain("status-toggle");
+    expect(sessoes).toContain(
+      "Clique para alternar o status entre Pago e Pendente",
+    );
+    expect(sessoes).not.toContain("Marcar como pago");
+    expect(sessoes).not.toContain("Marcar pendente");
+  });
+
   it("dashboard and index should still exist with navigation to core flow", () => {
     const dashboard = readPage("dashboard.astro");
     const index = readPage("index.astro");

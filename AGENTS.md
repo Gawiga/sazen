@@ -282,3 +282,23 @@ Se precisar que eu gere um resumo ainda mais estruturado (ex.: tabelas com rotas
   - `npm run test:unit -- --run` ✅ (127/127)
 - Ferramentas:
   - `.prettierignore` atualizado com `.agents` para evitar lint/format em skills externas instaladas pelo Smithery.
+
+## Atualização Sessões + Auth (Fevereiro 2026)
+
+- `src/pages/sessoes.astro`:
+  - Corrigida condição de corrida no carregamento inicial: pacientes agora carregam primeiro, e sessões só carregam após pacientes concluídos.
+  - Estado `patientsLoaded` introduzido para bloquear paginação/listagem antes do mapa de pacientes estar pronto.
+  - Status voltou ao comportamento anterior: toggle clicando na label da coluna `Status`.
+  - Removidos botões de ação `Marcar como pago` / `Marcar pendente` da coluna Ações.
+  - Label de status recebeu `tooltip` com instrução de uso.
+  - Banner `Dica` atualizado para refletir o toggle na label.
+
+- Autenticação (`nextAuth`):
+  - Decisão: **não adotar NextAuth** neste projeto.
+  - Motivo técnico: app em Astro (não Next.js), com autenticação já integrada ao PocketBase por endpoints em `src/pages/api/auth/*`, cookie `httpOnly` e fluxo de token já coberto por testes.
+  - Diretriz: manter e evoluir o fluxo PocketBase atual (hardening, rotação/revogação de token) sem migrar framework de auth.
+
+- Qualidade:
+  - `npm run fix` ✅
+  - `npm run check` ✅
+  - `npm run test:unit -- --run` ✅ (128/128)

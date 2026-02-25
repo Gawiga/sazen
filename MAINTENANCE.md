@@ -234,3 +234,29 @@ Rodar: `npm run test:unit -- --run`
 - `src/lib/pocketbase.ts`: guard para `localStorage.getItem` em ambiente de testes.
 - `src/lib/auth.ts`: guards para `localStorage.setItem/removeItem`.
 - `.prettierignore`: adicionado `.agents` para excluir skills externas instaladas via Smithery.
+
+## Atualização Sessões e Autenticação (Fevereiro 2026)
+
+### Sessões
+
+- O carregamento inicial foi serializado:
+  1. Carrega pacientes (`SessionService.getAllPatients()`)
+  2. Só depois carrega sessões (`SessionService.getSessions()`)
+- Adicionado guard `patientsLoaded` para evitar render/paginação antes do mapa de pacientes estar pronto.
+- Coluna `Status` voltou a ser o ponto único de toggle (`Pago`/`Pendente`) com tooltip.
+- Removidos botões de alternância de status da coluna de ações.
+- Banner de dica ajustado para o novo/antigo comportamento esperado (clique na label de status).
+
+### Autenticação
+
+- Avaliação feita para `nextAuth`: **não necessário** neste projeto.
+- Razões:
+  - Stack é Astro + PocketBase; `nextAuth` é orientado ao ecossistema Next.js.
+  - Fluxo atual já cobre login/signup/logout/user/refresh em `src/pages/api/auth/*`.
+  - Cookie `httpOnly` + header Authorization já implementados e testados.
+
+### Validação
+
+- `npm run fix` passou.
+- `npm run check` passou sem warnings.
+- `npm run test:unit -- --run` passou com `128` testes.

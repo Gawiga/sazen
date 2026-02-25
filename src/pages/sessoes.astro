@@ -94,7 +94,7 @@ const metadata = {
     </div>
 
     <div class="mb-4 rounded bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-      <strong>💡 Dica:</strong> Clique em "Marcar como pago" (ou "Marcar pendente") para alternar o status da sessão. Use "Editar" para modificar dados da sessão ou "Excluir" para removê-la.
+      <strong>Dica:</strong> Clique na label da coluna "Status" para alternar entre "Pago" e "Pendente". Passe o mouse sobre a label para ver essa dica rapidamente. Use "Editar" para modificar dados da sessão ou "Excluir" para removê-la.
     </div>
 
     <div
@@ -185,11 +185,13 @@ const metadata = {
     let perPage = 20;
     let totalPages = 1;
     let totalItems = 0;
+    let patientsLoaded = false;
 
     const byId = (id: string) => getFormElement(id);
 
     async function loadSessions(page = 1) {
       const body = byId("sessions-body");
+      if (!patientsLoaded) return;
       try {
         const data = await SessionService.getSessions(page, perPage);
 
@@ -224,9 +226,15 @@ const metadata = {
       attachCurrencyMask(valorInput);
 
       try {
-        await Promise.all([loadPatientsForSelect(), loadSessions()]);
+        await loadPatientsForSelect();
+        await loadSessions();
       } catch (err) {
         console.error("Falha ao carregar dados iniciais:", err);
+        const body = byId("sessions-body");
+        if (body) {
+          body.innerHTML =
+            '<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao carregar pacientes para as sessões.</td></tr>';
+        }
       }
 
       byId("id_paciente")?.addEventListener("change", (e) => {
@@ -292,13 +300,10 @@ const metadata = {
     }
 
     async function loadPatientsForSelect() {
-      try {
-        const items = await SessionService.getAllPatients();
-        patientDetails = new Map(items.map((p) => [p.id, p]));
-        sortPatientsForSelect();
-      } catch (err) {
-        console.error("Erro ao carregar pacientes:", err);
-      }
+      const items = await SessionService.getAllPatients();
+      patientDetails = new Map(items.map((p) => [p.id, p]));
+      patientsLoaded = true;
+      sortPatientsForSelect();
     }
 
     function sortPatientsByName(items: PacienteOption[]) {
@@ -348,27 +353,20 @@ const metadata = {
             Number(session.valor) || 0
           )}</td>
           <td class="p-2">
-            <span class="rounded px-2 py-1 text-xs ${
+            <button
+              type="button"
+              data-id="${session.id}"
+              title="Clique para alternar o status entre Pago e Pendente"
+              class="status-toggle rounded px-2 py-1 text-xs transition hover:opacity-80 ${
               session.pago
                 ? "bg-green-100 text-green-800"
                 : "bg-yellow-100 text-yellow-800"
             }">
               ${session.pago ? "Pago" : "Pendente"}
-            </span>
+            </button>
           </td>
           <td class="p-2">
             <div class="flex items-center justify-end gap-2 whitespace-nowrap">
-              <button data-id="${
-                session.id
-              }" title="${session.pago ? "Clique para marcar como pendente" : "Clique para marcar como pago"}" class="toggle-pago inline-flex min-h-10 items-center justify-center rounded ${
-                session.pago ? "bg-yellow-400" : "bg-green-500"
-              } px-3 py-2 text-sm text-white transition ${
-                session.pago
-                  ? "hover:bg-yellow-500"
-                  : "hover:bg-green-600"
-              }">
-                ${session.pago ? "Marcar pendente" : "Marcar como pago"}
-              </button>
               <button data-id="${session.id}" class="edit-btn inline-flex min-h-10 items-center justify-center rounded bg-yellow-400 px-3 py-2 text-sm text-gray-900 transition hover:bg-yellow-500">Editar</button>
               <button data-id="${session.id}" class="del-btn inline-flex min-h-10 items-center justify-center rounded bg-red-500 px-3 py-2 text-sm text-white transition hover:bg-red-600">Excluir</button>
             </div>
@@ -382,8 +380,8 @@ const metadata = {
     }
 
     function attachRowListeners(items: Sessao[]) {
-      // Toggle payment status
-      document.querySelectorAll(".toggle-pago").forEach((btn) => {
+      // Toggle payment status through the label in the Status column
+      document.querySelectorAll(".status-toggle").forEach((btn) => {
         btn.addEventListener("click", async () => {
           const id = btn.getAttribute("data-id");
           if (!id) return;
@@ -443,6 +441,7 @@ const metadata = {
     function attachPerPageListeners() {
       document.querySelectorAll(".per-page-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
+          if (!patientsLoaded) return;
           perPage = getPerPageValue(btn.getAttribute("data-per-page"), 20);
           currentPage = 1;
           updatePerPageButtons();
@@ -453,11 +452,13 @@ const metadata = {
 
     function attachPaginationListeners() {
       byId("prev-page-btn")?.addEventListener("click", () => {
+        if (!patientsLoaded) return;
         if (currentPage <= 1) return;
         loadSessions(currentPage - 1);
       });
 
       byId("next-page-btn")?.addEventListener("click", () => {
+        if (!patientsLoaded) return;
         if (currentPage >= totalPages) return;
         loadSessions(currentPage + 1);
       });

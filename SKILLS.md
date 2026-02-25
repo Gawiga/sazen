@@ -44,3 +44,13 @@ Diretriz prática para este código:
 
 - `npm run check` deve ignorar formatação dos artefatos de skills externas.
 - `.prettierignore` já inclui `.agents` para evitar ruído em CI/local.
+
+## Aplicação das Skills nesta mudança (Fevereiro 2026)
+
+- `whamp-pocketbase`:
+  - Reforçada diretriz de consistência de identidade no frontend: listagens dependentes de relação (`sessões` -> `pacientes`) não devem renderizar antes dos dados relacionais.
+  - Mantida decisão de autenticação por PocketBase nativo no backend Astro (`src/pages/api/auth/*`).
+
+- `tech-leads-club-perf-astro`:
+  - Mudança de comportamento feita sem adicionar scripts extras nem regressão de render inicial.
+  - Preservado padrão de UX leve (tooltip em label e dica textual) sem custo estrutural.
