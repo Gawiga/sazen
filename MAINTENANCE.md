@@ -63,3 +63,24 @@
    - `npm run fix`
    - `npm run test:unit`
 4. Registrar no `AGENTS.md` apenas o que muda regra/fluxo.
+
+## Atualização de UX e bugfix (Fevereiro 2026)
+
+### Sessões
+
+- Bug corrigido: ao apagar o filtro por nome, a lista volta a mostrar todas as sessões da página atual.
+- Estrutura da coluna principal mudou para leitura rápida:
+  - Nome do paciente
+  - Data resumida com dia da semana
+  - Valor da sessão
+  - Status de pagamento
+
+### Pacientes
+
+- Linha com expansão de detalhes ao clicar no nome (toggle inline).
+- Mantido menu de ações independente na coluna `Ações`.
+
+### Regressão a monitorar
+
+- Reset de filtro em sessões após ações de editar/excluir/toggle pagamento.
+- Expansão de detalhes em pacientes sem interferir no menu de ações.

@@ -95,20 +95,6 @@ const metadata = {
       </form>
     </div>
 
-    <div
-      id="sessions-info-banner"
-      class="mb-4 flex items-start justify-between gap-3 rounded bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-      <p>
-        <strong>Dica:</strong> Use o filtro por nome para localizar sessões por paciente e o menu de ações (botão com barras) para editar, excluir ou alternar o status de pagamento.
-      </p>
-      <button
-        id="close-sessions-banner"
-        type="button"
-        class="inline-flex h-6 w-6 items-center justify-center rounded border border-blue-300 text-blue-700 transition hover:bg-blue-100 dark:border-blue-700 dark:text-blue-200 dark:hover:bg-blue-800"
-        aria-label="Fechar dica">
-        ×
-      </button>
-    </div>
 
     <div
       class="overflow-x-auto rounded border bg-white p-3 shadow dark:border-gray-800 dark:bg-gray-900 sm:p-4">
@@ -152,7 +138,7 @@ const metadata = {
         <thead>
           <tr
             class="border-b text-sm text-gray-600 dark:border-gray-700 dark:text-gray-400">
-            <th class="p-3">Data</th>
+            <th class="p-3">Paciente</th>
             <th class="p-3 text-right">Ações</th>
           </tr>
         </thead>
@@ -372,11 +358,15 @@ const metadata = {
           (session) => `
         <tr class="border-t transition hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800">
           <td class="p-2 dark:text-gray-300">
-            <div class="font-medium">${formatSessionDateShort(session.data)}</div>
-            <div class="text-xs text-gray-500">${
+            <div class="font-semibold text-gray-900 dark:text-gray-100">${
               patientDetails.get(session.id_paciente)?.nome ||
               "Paciente não encontrado"
             }</div>
+            <div class="text-xs text-gray-500">${formatSessionDateDetailed(session.data)}</div>
+            <div class="text-xs text-gray-500">Valor Sessão: ${formatCurrency(
+              Number(session.valor) || 0,
+            )}</div>
+            <div class="text-xs text-gray-500">Pagamento: ${session.pago ? "Pago" : "Pendente"}</div>
           </td>
           <td class="p-2 text-right">
             <details class="row-actions-menu relative inline-block text-left">
@@ -509,7 +499,13 @@ const metadata = {
     function attachSessionFilterListener() {
       const input = byId("session-name-filter") as HTMLInputElement | null;
       input?.addEventListener("input", () => {
+        const previousQuery = sessionNameFilter.trim();
         sessionNameFilter = input.value;
+        if (sessionNameFilter.trim() === "" && previousQuery !== "") {
+          loadSessions(currentPage);
+          return;
+        }
+
         applySessionFilter();
       });
     }
@@ -576,6 +572,23 @@ const metadata = {
       const minutes = String(date.getMinutes()).padStart(2, "0");
 
       return `${day}/${month} às ${hours}h${minutes}`;
+    }
+
+    function formatSessionDateDetailed(dateString: string): string {
+      const date = new Date(dateString);
+      if (Number.isNaN(date.getTime())) return dateString;
+
+      const weekdays = [
+        "Domingo",
+        "Segunda",
+        "Terça",
+        "Quarta",
+        "Quinta",
+        "Sexta",
+        "Sábado",
+      ];
+
+      return `${weekdays[date.getDay()]} - ${formatSessionDateShort(dateString)}`;
     }
 
     function attachBannerListeners() {
