@@ -1,0 +1,69 @@
+---
+// Componente de Loading com spinner animado e fadding
+---
+
+<div
+  id="loading-overlay"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 opacity-0 transition-opacity duration-200 backdrop-blur-sm"
+  style="pointer-events: none; visibility: hidden">
+  <div class="rounded-lg bg-white p-8 shadow-2xl dark:bg-gray-900">
+    <!-- SVG Spinner -->
+    <svg
+      class="mx-auto h-12 w-12 animate-spin text-blue-600"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"
+      ></circle>
+      <path
+        class="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      ></path>
+    </svg>
+    <p class="mt-4 text-center text-gray-700 dark:text-gray-300">Carregando...</p>
+  </div>
+</div>
+
+<style>
+  #loading-overlay {
+    --tw-bg-opacity: 0.3;
+    --tw-backdrop-blur: blur(4px);
+  }
+
+  #loading-overlay.show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  #loading-overlay.hide {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  // Função global para controlar o loading com fadding
+  window.showLoading = function () {
+    const overlay = document.getElementById("loading-overlay");
+    if (overlay) {
+      overlay.classList.add("show");
+      overlay.classList.remove("hide");
+    }
+  };
+
+  window.hideLoading = function () {
+    const overlay = document.getElementById("loading-overlay");
+    if (overlay) {
+      overlay.classList.add("hide");
+      overlay.classList.remove("show");
+      // Aguardar animação terminar antes de esconder completamente
+      setTimeout(() => {
+        overlay.classList.remove("hide");
+      }, 200);
+    }
+  };
+</script>
+

@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "skills": {
+    "tech-leads-club-perf-astro": {
+      "source": "smithery/ai",
+      "sourceType": "well-known",
+      "computedHash": "74db4188021bcfebf6adb41cf518bcd2414e4c0215ea109bbea6176ea42baec7"
+    },
+    "whamp-pocketbase": {
+      "source": "smithery/ai",
+      "sourceType": "well-known",
+      "computedHash": "cc2f05dbba6227e6e0808ad73b8d8f3d771ab2d90e3873b02a3d348e49530fc3"
+    }
+  }
+}

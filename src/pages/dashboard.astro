@@ -1,5 +1,8 @@
 ---
 import PageLayout from "~/layouts/PageLayout.astro";
+import Loading from "~/components/widgets/Loading.astro";
+import UserMenu from "~/components/auth/UserMenu.astro";
+import Button from "~/components/ui/Button.astro";
 
 const metadata = {
   title: "Dashboard",
@@ -8,17 +11,36 @@ const metadata = {
 ---
 
 <PageLayout metadata={metadata}>
+  <Loading />
   <section class="mx-auto max-w-5xl px-4 py-8 sm:py-10">
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <h1 class="text-3xl font-bold text-gray-900 dark:text-white sm:text-4xl">Dashboard</h1>
-      <div id="user-menu-container"></div>
+      <UserMenu />
     </div>
 
     <nav class="mb-8">
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <a href="/pacientes" class="inline-flex min-h-11 items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">Pacientes</a>
-        <a href="/sessoes" class="inline-flex min-h-11 items-center justify-center rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700">Sessões</a>
-        <a href="/relatorios" class="inline-flex min-h-11 items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700">Relatórios</a>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Button href="/pacientes" variant="primary" class="min-h-11 rounded-md px-4 py-2">
+          Pacientes
+        </Button>
+        <Button
+          href="/sessoes"
+          variant="secondary"
+          class="min-h-11 rounded-md border-green-600 bg-green-600 px-4 py-2 text-white hover:border-green-700 hover:bg-green-700 dark:text-white">
+          Sessões
+        </Button>
+        <Button
+          href="/relatorios-faturamento"
+          variant="secondary"
+          class="min-h-11 rounded-md border-indigo-600 bg-indigo-600 px-4 py-2 text-white hover:border-indigo-700 hover:bg-indigo-700 dark:text-white">
+          Faturamento
+        </Button>
+        <Button
+          href="/relatorios-valores-receber"
+          variant="secondary"
+          class="min-h-11 rounded-md border-cyan-600 bg-cyan-600 px-4 py-2 text-white hover:border-cyan-700 hover:bg-cyan-700 dark:text-white">
+          Valores a Receber
+        </Button>
       </div>
     </nav>
 
@@ -28,76 +50,3 @@ const metadata = {
     </div>
   </section>
 </PageLayout>
-
-<script is:inline>
-  async function loadUserInfo() {
-    try {
-      const response = await fetch('/api/auth/user');
-      const data = await response.json();
-
-      let user = data.user?.record || data.user;
-
-      if (!user?.name) {
-        const pbAuth = localStorage.getItem('pb_auth');
-        if (pbAuth) {
-          const authData = JSON.parse(pbAuth);
-          user = authData.model || authData.record;
-        }
-      }
-
-      if (user) {
-        const container = document.getElementById('user-menu-container');
-        if (container) {
-          container.innerHTML = `
-            <div class="flex items-center gap-2 sm:gap-3">
-              <div class="hidden sm:block">
-                <p class="text-xs text-gray-500 dark:text-gray-400">
-                  ${user.email || ''}
-                </p>
-              </div>
-              <div class="text-right">
-                <p class="text-sm font-medium text-gray-900 dark:text-white">
-                  Olá ${user.name || 'Usuário'}
-                </p>
-              </div>
-              <button
-                id="logout-btn"
-                class="inline-flex min-h-10 items-center justify-center rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-              >
-                Sair
-              </button>
-            </div>
-          `;
-
-          const logoutBtn = document.getElementById('logout-btn');
-          if (logoutBtn) {
-            logoutBtn.addEventListener('click', handleLogout);
-          }
-        }
-      } else {
-        window.location.href = '/login';
-      }
-    } catch (error) {
-      console.error('Error loading user info:', error);
-      window.location.href = '/login';
-    }
-  }
-
-  async function handleLogout() {
-    try {
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-      });
-
-      if (response.ok) {
-        localStorage.removeItem('pb_auth');
-        window.location.href = '/';
-      }
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  }
-
-  document.addEventListener('astro:page-load', loadUserInfo);
-  loadUserInfo();
-</script>

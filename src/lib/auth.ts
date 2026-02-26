@@ -30,13 +30,18 @@ export class AuthService {
 
       // Store auth data in localStorage for persistence
       if (typeof window !== "undefined") {
-        localStorage.setItem(
-          "pb_auth",
-          JSON.stringify({
-            token: this.pb.authStore.token,
-            record: this.pb.authStore.record,
-          }),
-        );
+        const storage = globalThis.localStorage as
+          | Pick<Storage, "setItem">
+          | undefined;
+        if (storage && typeof storage.setItem === "function") {
+          storage.setItem(
+            "pb_auth",
+            JSON.stringify({
+              token: this.pb.authStore.token,
+              record: this.pb.authStore.record,
+            }),
+          );
+        }
       }
 
       return {
@@ -61,7 +66,12 @@ export class AuthService {
       this.pb.authStore.clear();
 
       if (typeof window !== "undefined") {
-        localStorage.removeItem("pb_auth");
+        const storage = globalThis.localStorage as
+          | Pick<Storage, "removeItem">
+          | undefined;
+        if (storage && typeof storage.removeItem === "function") {
+          storage.removeItem("pb_auth");
+        }
       }
 
       return {

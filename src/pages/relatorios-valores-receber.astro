@@ -1,0 +1,286 @@
+---
+import PageLayout from "~/layouts/PageLayout.astro";
+import Loading from "~/components/widgets/Loading.astro";
+
+const metadata = {
+  title: "Relatórios - Valores a Receber",
+  description: "Visualização do relatório de valores a receber",
+};
+---
+
+<PageLayout metadata={metadata}>
+  <Loading />
+  <section class="mx-auto max-w-5xl px-4 py-8 sm:py-10">
+    <div class="mb-6">
+      <a
+        href="/dashboard"
+        class="mb-3 inline-flex items-center text-sm text-gray-600 hover:underline dark:text-gray-400"
+        >← Voltar ao Dashboard</a
+      >
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">
+        Valores a Receber
+      </h1>
+      <p class="text-sm text-gray-600 dark:text-gray-400">
+        Lista de valores pendentes por paciente.
+      </p>
+    </div>
+
+    <div
+      id="receber-info-banner"
+      class="mb-4 flex items-start justify-between gap-3 rounded bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+      <p>
+        <strong>Dica:</strong> Use o filtro por nome para localizar pacientes rapidamente.
+      </p>
+      <button
+        id="close-receber-banner"
+        type="button"
+        class="inline-flex h-6 w-6 items-center justify-center rounded border border-blue-300 text-blue-700 transition hover:bg-blue-100 dark:border-blue-700 dark:text-blue-200 dark:hover:bg-blue-800"
+        aria-label="Fechar dica">
+        ×
+      </button>
+    </div>
+
+    <div class="overflow-x-auto rounded border bg-white p-3 shadow dark:border-gray-800 dark:bg-gray-900 sm:p-4">
+      <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div class="text-sm text-gray-600 dark:text-gray-400">
+          Exibindo <span id="receber-count">0</span> registros
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-gray-600 dark:text-gray-400">Por página:</span>
+          <button type="button" class="per-page-btn rounded border px-3 py-1 text-sm" data-per-page="20">20</button>
+          <button type="button" class="per-page-btn rounded border px-3 py-1 text-sm" data-per-page="50">50</button>
+          <button type="button" class="per-page-btn rounded border px-3 py-1 text-sm" data-per-page="100">100</button>
+        </div>
+      </div>
+
+      <table class="w-full table-auto text-left">
+        <thead>
+          <tr class="border-b text-sm text-gray-600 dark:border-gray-700 dark:text-gray-400">
+            <th class="p-2">
+              <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <span>Nome</span>
+                <input
+                  id="name-filter"
+                  type="text"
+                  placeholder="Filtrar nome"
+                  class="w-full rounded border bg-white px-2 py-1 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white sm:w-56"
+                />
+              </div>
+            </th>
+            <th class="p-2">Mês</th>
+            <th class="p-2">Total</th>
+          </tr>
+        </thead>
+        <tbody id="receber-body" class="align-top text-sm">
+          <tr>
+            <td colspan="3" class="p-4 text-center text-sm text-gray-500">Carregando...</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="mt-4 flex items-center justify-between gap-3">
+        <button
+          id="prev-page-btn"
+          type="button"
+          class="rounded border px-3 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50">
+          Anterior
+        </button>
+        <span id="page-indicator" class="text-sm text-gray-600 dark:text-gray-400">Página 1 de 1</span>
+        <button
+          id="next-page-btn"
+          type="button"
+          class="rounded border px-3 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50">
+          Próxima
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    import { UIService } from "~/services/uiService";
+    import { getPaginationView, getPerPageValue } from "~/services/paginationService";
+
+    type ReportItem = {
+      nome?: string;
+      mes?: string | number;
+      mes_ano?: string;
+      data?: string;
+      total?: number | string;
+    };
+
+    const byId = (id: string): HTMLElement | null => document.getElementById(id);
+
+    let currentPage = 1;
+    let perPage = 20;
+    let totalPages = 1;
+    let totalItems = 0;
+    let nameFilter = "";
+    let items: ReportItem[] = [];
+    const currencyFormatter = new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+
+    async function loadData(page = 1) {
+      const body = byId("receber-body");
+      try {
+        const data = await UIService.get<{
+          page: number;
+          perPage: number;
+          totalPages: number;
+          totalItems: number;
+          items: ReportItem[];
+        }>(`/api/reports?collection=valores_receber&page=${page}&perPage=${perPage}`);
+
+        currentPage = data.page;
+        totalPages = data.totalPages;
+        totalItems = data.totalItems;
+        items = data.items;
+
+        render();
+        updatePaginationControls();
+        updateCount();
+      } catch (err) {
+        console.error(err);
+        if (body) {
+          body.innerHTML =
+            '<tr><td colspan="3" class="p-4 text-center text-red-500">Erro ao carregar relatório.</td></tr>';
+        }
+      }
+    }
+
+    function render() {
+      const body = byId("receber-body");
+      if (!body) return;
+
+      const query = nameFilter.trim().toLowerCase();
+      const filtered = !query
+        ? items
+        : items.filter((item) => String(item.nome || "").toLowerCase().includes(query));
+
+      if (!filtered.length) {
+        body.innerHTML =
+          '<tr><td colspan="3" class="p-4 text-center text-gray-500">Nenhum registro encontrado.</td></tr>';
+        return;
+      }
+
+      body.innerHTML = filtered
+        .map(
+          (item) => `
+            <tr class="border-t transition hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800">
+              <td class="p-2 dark:text-gray-300">${item.nome ?? "-"}</td>
+              <td class="p-2 dark:text-gray-300">${getMonthLabel(item)}</td>
+              <td class="p-2 font-medium dark:text-white">${currencyFormatter.format(Number(item.total) || 0)}</td>
+            </tr>
+          `,
+        )
+        .join("");
+    }
+
+    function getMonthLabel(item: ReportItem): string {
+      if (item.mes_ano) return String(item.mes_ano);
+      if (item.mes !== undefined && item.mes !== null && String(item.mes).trim()) {
+        return String(item.mes);
+      }
+
+      if (item.data) {
+        const date = new Date(item.data);
+        if (!Number.isNaN(date.getTime())) {
+          return new Intl.DateTimeFormat("pt-BR", {
+            month: "short",
+            year: "numeric",
+          })
+            .format(date)
+            .replace(".", "");
+        }
+      }
+
+      return "-";
+    }
+
+    function attachFilterListener() {
+      const input = byId("name-filter") as HTMLInputElement | null;
+      input?.addEventListener("input", () => {
+        nameFilter = input.value;
+        render();
+      });
+    }
+
+    function attachPerPageListeners() {
+      document.querySelectorAll(".per-page-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          perPage = getPerPageValue(btn.getAttribute("data-per-page"), 20);
+          currentPage = 1;
+          updatePerPageButtons();
+          loadData(currentPage);
+        });
+      });
+    }
+
+    function attachPaginationListeners() {
+      byId("prev-page-btn")?.addEventListener("click", () => {
+        if (currentPage <= 1) return;
+        loadData(currentPage - 1);
+      });
+
+      byId("next-page-btn")?.addEventListener("click", () => {
+        if (currentPage >= totalPages) return;
+        loadData(currentPage + 1);
+      });
+    }
+
+    function updatePerPageButtons() {
+      document.querySelectorAll(".per-page-btn").forEach((btn) => {
+        const isActive = Number(btn.getAttribute("data-per-page")) === perPage;
+        btn.classList.toggle("bg-blue-600", isActive);
+        btn.classList.toggle("text-white", isActive);
+        btn.classList.toggle("border-blue-600", isActive);
+      });
+    }
+
+    function updatePaginationControls() {
+      const prevBtn = byId("prev-page-btn") as HTMLButtonElement | null;
+      const nextBtn = byId("next-page-btn") as HTMLButtonElement | null;
+      const indicator = byId("page-indicator");
+
+      const view = getPaginationView(currentPage, totalPages);
+      if (prevBtn) prevBtn.disabled = !view.canPrev;
+      if (nextBtn) nextBtn.disabled = !view.canNext;
+      if (indicator) indicator.textContent = view.indicator;
+    }
+
+    function updateCount() {
+      const countEl = byId("receber-count");
+      if (countEl) countEl.textContent = String(totalItems);
+    }
+
+    function attachBannerListeners() {
+      byId("close-receber-banner")?.addEventListener("click", () => {
+        byId("receber-info-banner")?.classList.add("hidden");
+      });
+    }
+
+    async function init() {
+      const pbAuth = localStorage.getItem("pb_auth");
+      if (!pbAuth) {
+        window.location.href = "/login";
+        return;
+      }
+
+      attachFilterListener();
+      attachPerPageListeners();
+      attachPaginationListeners();
+      attachBannerListeners();
+      updatePerPageButtons();
+      updatePaginationControls();
+      await loadData();
+    }
+
+    document.addEventListener("astro:page-load", init);
+    if (document.readyState === "complete") {
+      init();
+    } else {
+      document.addEventListener("DOMContentLoaded", init);
+    }
+  </script>
+</PageLayout>

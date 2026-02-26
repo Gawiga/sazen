@@ -1,0 +1,263 @@
+---
+import Layout from '~/layouts/PageLayout.astro';
+---
+
+<Layout>
+  <style>
+    /* Estilo para o efeito de "brilho" (fade-in dourado) */
+    @keyframes highlight {
+      0% {
+        background-color: #fef3c7;
+      }
+      100% {
+        background-color: transparent;
+      }
+    }
+    .new-row-highlight {
+      animation: highlight 3s ease-out;
+    }
+    /* Efeito de hover na lixeira */
+    .btn-delete {
+      color: #9ca3af;
+      transition: all 0.2s;
+    }
+    .btn-delete:hover {
+      color: #ef4444;
+      transform: scale(1.1);
+    }
+  </style>
+
+  <div class="max-w-5xl mx-auto p-4">
+    <h1 class="text-2xl font-bold mb-6">Gerenciador de Autores</h1>
+
+    <div class="mb-4">
+      <label for="filtro-autor" class="block mb-2 font-medium text-gray-700">Filtrar por Autor:</label>
+      <input
+        type="text"
+        id="filtro-autor"
+        placeholder="Digite o nome do autor..."
+        class="w-full p-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 outline-none"
+      />
+    </div>
+
+    <table class="w-full border-collapse border border-gray-300 mb-12 shadow-sm rounded-lg overflow-hidden">
+      <thead>
+        <tr class="border-b-2 border-gray-300 bg-gray-50">
+          <th class="p-2.5 text-left">ID</th>
+          <th class="p-2.5 text-left">Autor</th>
+          <th class="p-2.5 text-left">Sort</th>
+          <th class="p-2.5 text-left">Data de Inclusão</th>
+          <th class="p-2.5 text-center">Ações</th>
+        </tr>
+      </thead>
+      <tbody id="tabela-autores">
+        <tr>
+          <td colspan="5" class="p-4 text-center text-gray-500 italic">Carregando autores...</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <hr class="mb-12 border-gray-300" />
+
+    <h2 class="text-xl font-bold mb-6">Adicionar Nova Frase</h2>
+
+    <form id="form-frase" class="flex flex-col gap-4 max-w-md p-6 border border-gray-200 rounded-xl shadow-md bg-white">
+      <div>
+        <label for="id" class="block mb-1 font-medium">ID:</label>
+        <input
+          type="text"
+          id="id"
+          name="id"
+          required
+          class="w-full p-2 border border-gray-300 rounded outline-none focus:border-blue-500"
+          placeholder="Ex: 123"
+        />
+      </div>
+      <div>
+        <label for="sort" class="block mb-1 font-medium">Sort (Frase):</label>
+        <input
+          type="text"
+          id="sort"
+          name="sort"
+          required
+          class="w-full p-2 border border-gray-300 rounded outline-none focus:border-blue-500"
+          placeholder="Ex: Penso, logo existo"
+        />
+      </div>
+      <div>
+        <label for="autor" class="block mb-1 font-medium">Autor:</label>
+        <input
+          type="text"
+          id="autor"
+          name="autor"
+          required
+          class="w-full p-2 border border-gray-300 rounded outline-none focus:border-blue-500"
+          placeholder="Ex: Descartes"
+        />
+      </div>
+      <button
+        type="submit"
+        id="btn-enviar"
+        class="p-3 bg-blue-600 text-white font-bold rounded-lg cursor-pointer hover:bg-blue-700 disabled:bg-gray-400 transition-all"
+      >
+        Enviar Frase
+      </button>
+    </form>
+  </div>
+</Layout>
+
+<script>
+  const form = document.getElementById('form-frase') as HTMLFormElement | null;
+  const tabelaCorpo = document.getElementById('tabela-autores');
+  const inputFiltro = document.getElementById('filtro-autor') as HTMLInputElement | null;
+
+  let dadosOriginais: Array<Record<string, unknown>> = [];
+
+  // --- GET: Buscar e Renderizar ---
+  async function carregarAutores(highlightId = '') {
+    try {
+      const res = await fetch('/lambda-testes/lambda');
+      const rawData = await res.json();
+
+      const arrayData = Array.isArray(rawData) ? rawData : [];
+      const filtered = arrayData.filter((item: unknown) => {
+        if (item && typeof item === 'object') {
+          const record = item as Record<string, unknown>;
+          return Boolean(record['autor'] && record['id']);
+        }
+        return false;
+      }) as Array<Record<string, unknown>>;
+
+      const uniqueByAutor = Array.from(new Map(filtered.map((item) => [String(item['autor'] || ''), item])).values());
+      dadosOriginais = uniqueByAutor;
+
+      renderizarTabela(dadosOriginais, highlightId);
+    } catch {
+      if (tabelaCorpo)
+        tabelaCorpo.innerHTML =
+          '<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao carregar dados.</td></tr>';
+    }
+  }
+
+  function renderizarTabela(dados: Array<Record<string, unknown>>, highlightId = '') {
+    if (!tabelaCorpo) return;
+
+    if (dados.length === 0) {
+      tabelaCorpo.innerHTML =
+        '<tr><td colspan="5" class="p-4 text-center text-gray-500">Nenhum resultado encontrado.</td></tr>';
+      return;
+    }
+
+    tabelaCorpo.innerHTML = dados
+      .map((item) => {
+        const isNew = String(item['id']) === String(highlightId);
+        return `
+        <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors ${isNew ? 'new-row-highlight' : ''}">
+          <td class="p-2.5 text-gray-600">${String(item['id'] ?? '')}</td>
+          <td class="p-2.5 font-semibold text-gray-800">${String(item['autor'] ?? '')}</td>
+          <td class="p-2.5 text-gray-700">${String(item['sort'] ?? '')}</td>
+          <td class="p-2.5 text-sm text-gray-500">${String(item['data-inclusao'] ?? '-')}</td>
+          <td class="p-2.5 text-center">
+            <button class="btn-delete p-1" onclick="window.deletarFrase('${String(item['id'] ?? '')}', '${String(item['sort'] ?? '')}')" title="Excluir">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </td>
+        </tr>
+      `;
+      })
+      .join('');
+  }
+
+  (window as unknown as { deletarFrase?: (id: string, sort: string) => Promise<void> }).deletarFrase = async (
+    id: string,
+    sort: string
+  ) => {
+    if (!confirm(`Deseja excluir a frase "${sort}"?`)) return;
+
+    try {
+      const response = await fetch('/lambda-testes/lambda', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        // Enviamos ID e SORT juntos
+        body: JSON.stringify({
+          id: id,
+          sort: sort,
+        }),
+      });
+
+      if (response.ok) {
+        alert('🗑️ Excluído com sucesso!');
+        await carregarAutores();
+      } else {
+        const errorText = await response.text();
+        alert('❌ Erro na AWS: ' + errorText);
+      }
+    } catch {
+      alert('❌ Erro de conexão.');
+    }
+  };
+
+  // --- Lógica do Filtro ---
+  inputFiltro?.addEventListener('input', (e) => {
+    const termo = (e.target as HTMLInputElement).value.toLowerCase();
+    const filtrados = dadosOriginais.filter((item) =>
+      String(item['autor'] ?? '')
+        .toLowerCase()
+        .includes(termo)
+    );
+    renderizarTabela(filtrados);
+  });
+
+  // --- POST: Enviar ---
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btn-enviar') as HTMLButtonElement;
+    const originalText = btn.innerText;
+
+    btn.innerText = 'Processando...';
+    btn.disabled = true;
+
+    const formData = new FormData(form!);
+    const currentId = String(formData.get('id') ?? '');
+    const payload = {
+      id: currentId,
+      sort: formData.get('sort'),
+      autor: formData.get('autor'),
+      'data-inclusao': new Date().toISOString().split('T')[0],
+    };
+
+    try {
+      const response = await fetch('/lambda-testes/lambda', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        (form as HTMLFormElement).reset();
+        btn.innerText = '✅ Sucesso! Atualizando...';
+        btn.style.backgroundColor = '#16a34a';
+
+        setTimeout(async () => {
+          await carregarAutores(currentId);
+          btn.innerText = originalText;
+          btn.style.backgroundColor = '';
+          btn.disabled = false;
+          if (inputFiltro) inputFiltro.value = '';
+        }, 2000);
+      } else {
+        alert('Erro ao salvar frase.');
+        btn.disabled = false;
+        btn.innerText = originalText;
+      }
+    } catch {
+      alert('Erro de conexão.');
+      btn.disabled = false;
+      btn.innerText = originalText;
+    }
+  });
+
+  carregarAutores();
+</script>

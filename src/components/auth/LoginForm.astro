@@ -37,7 +37,6 @@
   </div>
 
   <div id="error-message" class="hidden text-red-600 text-sm dark:text-red-400"></div>
-  <div id="loading" class="hidden text-gray-600 text-sm dark:text-gray-400">Conectando...</div>
 
   <button
     type="submit"
@@ -50,7 +49,6 @@
 <script>
   const form = document.getElementById('login-form') as HTMLFormElement;
   const errorDiv = document.getElementById('error-message') as HTMLDivElement;
-  const loadingDiv = document.getElementById('loading') as HTMLDivElement;
 
   if (form) {
     form.addEventListener('submit', async (e) => {
@@ -60,7 +58,7 @@
       const password = (form.elements.namedItem('password') as HTMLInputElement).value;
 
       errorDiv.classList.add('hidden');
-      loadingDiv.classList.remove('hidden');
+      window.showLoading?.();
 
       try {
         // Fetch to server API endpoint for login
@@ -94,7 +92,7 @@
         errorDiv.textContent = error instanceof Error ? error.message : 'Erro ao fazer login';
         errorDiv.classList.remove('hidden');
       } finally {
-        loadingDiv.classList.add('hidden');
+        window.hideLoading?.();
       }
     });
   }

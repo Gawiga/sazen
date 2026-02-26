@@ -1,5 +1,6 @@
 ---
 import PageLayout from "~/layouts/PageLayout.astro";
+import Loading from "~/components/widgets/Loading.astro";
 
 const metadata = {
   title: "Pacientes",
@@ -8,6 +9,7 @@ const metadata = {
 ---
 
 <PageLayout metadata={metadata}>
+  <Loading />
   <section class="mx-auto max-w-5xl px-4 py-8 sm:py-10">
     <a
       href="/dashboard"
@@ -29,6 +31,9 @@ const metadata = {
     <div
       id="form-container"
       class="mb-6 hidden rounded border bg-white p-4 shadow dark:border-gray-800 dark:bg-gray-900 sm:p-6">
+      <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+        Preencha os dados do paciente. Os campos marcados com <span class="font-bold">*</span> são obrigatórios.
+      </p>
       <form id="patient-form" class="space-y-4">
         <input type="hidden" id="patient-id" />
 
@@ -145,9 +150,39 @@ const metadata = {
     </div>
 
     <div class="overflow-x-auto rounded border bg-white p-3 shadow dark:border-gray-800 dark:bg-gray-900 sm:p-4">
+      <div
+        id="patients-info-banner"
+        class="mb-4 flex items-start justify-between gap-3 rounded bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+        <p>
+          <strong>Dica:</strong> Use o menu de ações (botão com barras) na coluna "Ações" para editar ou excluir um paciente.
+        </p>
+        <button
+          id="close-patients-banner"
+          type="button"
+          class="inline-flex h-6 w-6 items-center justify-center rounded border border-blue-300 text-blue-700 transition hover:bg-blue-100 dark:border-blue-700 dark:text-blue-200 dark:hover:bg-blue-800"
+          aria-label="Fechar dica">
+          ×
+        </button>
+      </div>
+
       <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div class="text-sm text-gray-600 dark:text-gray-400">
           Exibindo <span id="patients-count">0</span> pacientes
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-gray-600 dark:text-gray-400">Status:</span>
+          <button
+            type="button"
+            class="status-filter-btn rounded border px-3 py-1 text-sm"
+            data-status="ativo">Ativo</button>
+          <button
+            type="button"
+            class="status-filter-btn rounded border px-3 py-1 text-sm"
+            data-status="inativo">Inativo</button>
+          <button
+            type="button"
+            class="status-filter-btn rounded border px-3 py-1 text-sm"
+            data-status="todos">Todos</button>
         </div>
         <div class="flex items-center gap-2">
           <span class="text-sm text-gray-600 dark:text-gray-400">Por página:</span>
@@ -170,15 +205,12 @@ const metadata = {
         <thead>
           <tr class="border-b text-sm text-gray-600 dark:border-gray-700 dark:text-gray-400">
             <th class="p-2">Nome</th>
-            <th class="p-2">Contato</th>
-            <th class="p-2">Valor</th>
-            <th class="p-2">Status</th>
             <th class="p-2 text-right">Ações</th>
           </tr>
         </thead>
         <tbody id="patients-body" class="align-top text-sm">
           <tr>
-            <td colspan="5" class="p-4 text-center text-sm text-gray-500"
+            <td colspan="2" class="p-4 text-center text-sm text-gray-500"
               >Carregando...</td
             >
           </tr>
@@ -205,111 +237,50 @@ const metadata = {
 
   <script>
     import {
-      buildPaginationParams,
       getPaginationView,
       getPerPageValue,
-      normalizePaginationData,
     } from "~/services/paginationService";
+    import { PatientService } from "~/services/patientService";
+    import { scrollToElement } from "~/services/uiService";
+    import {
+      formatCurrency,
+      parseCurrency,
+      formatDateForInput,
+      attachCurrencyMask,
+      getFormElement,
+      toggleElement,
+    } from "~/utils/formatting";
+    import type { Paciente } from "~/types/api";
 
-    const collectionBase = "/api/pacientes";
-    
-    type PacienteItem = {
-      id: string;
-      nome?: string;
-      email?: string;
-      contato?: string;
-      endereco?: string;
-      data_nascimento?: string;
-      data_inicio?: string;
-      valor_sessao?: number | string;
-      ativo?: boolean;
-    };
-    
-    type ScriptElement = HTMLElement & {
-      value?: string;
-      checked?: boolean;
-      disabled?: boolean;
-      reset?: () => void;
-      dataset?: DOMStringMap;
-    };
-    
+    const formContainerId = "form-container";
+
     let currentPage = 1;
     let perPage = 20;
     let totalPages = 1;
     let totalItems = 0;
-    
-    const byId = (id: string): ScriptElement =>
-      document.getElementById(id) as ScriptElement;
+    let statusFilter: "ativo" | "inativo" | "todos" = "ativo";
 
-    function getTokenFromLocalStorage(): string | null {
-      const tokenStr = localStorage.getItem("pb_auth");
-      if (!tokenStr) return null;
+    const byId = (id: string) => getFormElement(id);
 
+    async function loadPatients(page = 1) {
+      const body = byId("patients-body");
       try {
-        const parsed = JSON.parse(tokenStr);
-        return parsed?.token || null;
-      } catch {
-        return tokenStr;
-      }
-    }
+        const data = await PatientService.getPatients(page, perPage, statusFilter);
 
-    function fetchWithAuth(url: string, options: RequestInit = {}) {
-      const token = getTokenFromLocalStorage();
-      const headers = new Headers(options.headers ?? {});
-      headers.set("Content-Type", "application/json");
-      if (token) headers.set("Authorization", `Bearer ${token}`);
-      return fetch(url, {...options, headers});
-    }
+        currentPage = data.page;
+        totalPages = data.totalPages;
+        totalItems = data.totalItems;
 
-    function formatDateForInput(dateString: string): string {
-      if (!dateString) return "";
-      return dateString.split(" ")[0];
-    }
-
-    function parseCurrencyInput(value: string | number): number {
-      if (!value) return 0;
-      const normalized = String(value)
-        .replace(/\s/g, "")
-        .replace("R$", "")
-        .replace(/\./g, "")
-        .replace(",", ".")
-        .replace(/[^\d.-]/g, "");
-      const parsed = Number(normalized);
-      return Number.isFinite(parsed) ? parsed : 0;
-    }
-
-    function formatCurrencyInput(value: string | number): string {
-      const number = Number(value);
-      if (!Number.isFinite(number)) return "";
-      return `R$ ${number.toLocaleString("pt-BR", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}`;
-    }
-
-    function attachCurrencyMask(input: HTMLInputElement | null) {
-      if (!input) return;
-
-      input.addEventListener("input", () => {
-        input.value = input.value.replace(/[^\d,.-]/g, "");
-      });
-
-      input.addEventListener("focus", () => {
-        const numeric = parseCurrencyInput(input.value);
-        if (!numeric) {
-          input.value = "";
-          return;
+        render(data.items);
+        updatePaginationControls();
+        updatePatientsCount();
+      } catch (err) {
+        console.error(err);
+        if (body) {
+          body.innerHTML =
+            '<tr><td colspan="2" class="p-4 text-center text-red-500">Erro ao carregar dados.</td></tr>';
         }
-
-        input.value = Number.isInteger(numeric)
-          ? String(numeric)
-          : String(numeric).replace(".", ",");
-      });
-
-      input.addEventListener("blur", () => {
-        if (!input.value.trim()) return;
-        input.value = formatCurrencyInput(parseCurrencyInput(input.value));
-      });
+      }
     }
 
     async function init() {
@@ -322,9 +293,12 @@ const metadata = {
       attachCurrencyMask(valueInput as HTMLInputElement);
       setupUIListeners(form as HTMLFormElement);
       attachPerPageListeners();
+      attachStatusFilterListeners();
       attachPaginationListeners();
       updatePerPageButtons();
+      updateStatusFilterButtons();
       updatePaginationControls();
+      attachBannerListeners();
       loadPatients();
     }
 
@@ -334,42 +308,40 @@ const metadata = {
         form.reset();
         byId("ativo").checked = true;
         toggleForm(true);
+        scrollToElement(formContainerId);
       });
 
-      document
-        .getElementById("cancel-btn")
-        ?.addEventListener("click", () => toggleForm(false));
+      document.getElementById("cancel-btn")?.addEventListener("click", () => toggleForm(false));
 
       form.addEventListener("submit", async (ev: Event) => {
         ev.preventDefault();
 
-        const id = byId("patient-id").value;
+        const id = byId("patient-id").value || undefined;
         const dataNasc = byId("data_nascimento").value;
         const dataInicio = byId("data_inicio").value;
 
-        const payload: Record<string, unknown> = {
+        const payload: Partial<Paciente> = {
           nome: byId("nome").value,
           email: byId("email").value,
           contato: byId("contato").value,
           endereco: byId("endereco").value,
-          valor_sessao: parseCurrencyInput(
-            byId("valor_sessao").value || "",
-          ),
+          valor_sessao: parseCurrency(byId("valor_sessao").value || ""),
           ativo: byId("ativo").checked,
         };
 
-        if (dataNasc) payload.data_nascimento = `${dataNasc} 12:00:00.000Z`;
-        if (dataInicio) payload.data_inicio = `${dataInicio} 12:00:00.000Z`;
+        if (dataNasc) {
+          payload.data_nascimento = `${dataNasc} 12:00:00.000Z`;
+        }
+        if (dataInicio) {
+          payload.data_inicio = `${dataInicio} 12:00:00.000Z`;
+        }
 
         try {
-          const url = id ? `${collectionBase}/${id}` : collectionBase;
-          const res = await fetchWithAuth(url, {
-            method: id ? "PUT" : "POST",
-            body: JSON.stringify(payload),
-          });
-
-          if (!res.ok) throw new Error("Erro ao salvar");
-
+          if (id) {
+            await PatientService.updatePatient(id, payload);
+          } else {
+            await PatientService.createPatient(payload);
+          }
           toggleForm(false);
           loadPatients(currentPage);
         } catch (err) {
@@ -379,57 +351,56 @@ const metadata = {
       });
     }
 
-    async function loadPatients(page = 1) {
-      const body = byId("patients-body");
-      try {
-        const params = buildPaginationParams(page, perPage);
-        const res = await fetchWithAuth(`${collectionBase}?${params.toString()}`);
-        const data = await res.json();
-        const normalized = normalizePaginationData(data, page, perPage);
-        currentPage = normalized.page;
-        totalPages = normalized.totalPages;
-        totalItems = normalized.totalItems;
-        render(normalized.items as PacienteItem[]);
-        updatePaginationControls();
-        updatePatientsCount();
-      } catch (err) {
-        console.error(err);
-        if (body)
-          body.innerHTML =
-            '<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao carregar dados.</td></tr>';
-      }
-    }
 
-    function render(items: PacienteItem[]) {
+
+    function render(items: Paciente[]) {
       const body = byId("patients-body");
       if (!body) return;
 
       if (!items.length) {
         body.innerHTML =
-          '<tr><td colspan="5" class="p-4 text-center text-gray-500">Nenhum paciente cadastrado.</td></tr>';
+          '<tr><td colspan="2" class="p-4 text-center text-gray-500">Nenhum paciente cadastrado.</td></tr>';
         return;
       }
 
-      body.innerHTML = items
+      // Ordenar: pacientes ativos por nome, depois inativos por nome
+      const sortedItems = [...items].sort((a, b) => {
+        // Se um está ativo e outro não, o ativo vem primeiro
+        if (a.ativo !== b.ativo) {
+          return a.ativo ? -1 : 1;
+        }
+        // Se ambos têm o mesmo status, ordenar por nome
+        const nameA = (a.nome || "").toLowerCase();
+        const nameB = (b.nome || "").toLowerCase();
+        return nameA.localeCompare(nameB, "pt-BR");
+      });
+
+      body.innerHTML = sortedItems
         .map(
-          (it: PacienteItem) => `
+          (it) => `
         <tr class="border-t transition hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800">
           <td class="p-2 dark:text-gray-300">
             <div class="font-medium">${it.nome || ""}</div>
             <div class="text-xs text-gray-500">${it.email || ""}</div>
           </td>
-          <td class="p-2 dark:text-gray-300">${it.contato || ""}</td>
-          <td class="p-2 dark:text-gray-300">${formatCurrencyInput(Number(it.valor_sessao) || 0)}</td>
-          <td class="p-2">
-            <span class="rounded px-2 py-1 text-xs ${it.ativo ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}">
-              ${it.ativo ? "Ativo" : "Inativo"}
-            </span>
-          </td>
-          <td class="p-2">
-            <div class="flex items-center justify-end gap-2 whitespace-nowrap">
-              <button data-id="${it.id}" class="edit-btn inline-flex min-h-10 items-center justify-center rounded bg-yellow-400 px-3 py-2 text-sm text-gray-900 transition hover:bg-yellow-500">Editar</button>
-              <button data-id="${it.id}" class="del-btn inline-flex min-h-10 items-center justify-center rounded bg-red-500 px-3 py-2 text-sm text-white transition hover:bg-red-600">Excluir</button>
-            </div>
+          <td class="p-2 text-right">
+            <details class="row-actions-menu relative inline-block text-left">
+              <summary
+                class="inline-flex min-h-10 min-w-10 cursor-pointer list-none items-center justify-center rounded border border-gray-300 bg-white px-2 py-2 text-gray-700 transition hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                aria-label="Abrir ações do paciente ${it.nome || ""}"
+                title="Abrir ações">
+                <span class="sr-only">Abrir ações</span>
+                <span class="inline-flex flex-col gap-1" aria-hidden="true">
+                  <span class="block h-0.5 w-4 rounded bg-current"></span>
+                  <span class="block h-0.5 w-4 rounded bg-current"></span>
+                  <span class="block h-0.5 w-4 rounded bg-current"></span>
+                </span>
+              </summary>
+              <div class="absolute right-0 z-10 mt-1 w-44 rounded border bg-white p-1 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                <button data-id="${it.id}" class="edit-btn block w-full rounded px-3 py-2 text-left text-sm text-gray-800 transition hover:bg-yellow-100 dark:text-gray-200 dark:hover:bg-gray-700">Editar</button>
+                <button data-id="${it.id}" class="del-btn block w-full rounded px-3 py-2 text-left text-sm text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-gray-700">Excluir</button>
+              </div>
+            </details>
           </td>
         </tr>
       `,
@@ -439,31 +410,27 @@ const metadata = {
       attachRowListeners(items);
     }
 
-    function attachRowListeners(items: PacienteItem[]) {
+    function attachRowListeners(items: Paciente[]) {
       document.querySelectorAll(".edit-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
           const id = btn.getAttribute("data-id");
-          const record = items.find((i: PacienteItem) => i.id === id);
+          const record = items.find((i) => i.id === id);
           if (!record) return;
 
-          byId("patient-id").value = record.id;
+          byId("patient-id").value = record.id || "";
           byId("nome").value = record.nome || "";
           byId("email").value = record.email || "";
           byId("contato").value = record.contato || "";
           byId("endereco").value = record.endereco || "";
-          byId("valor_sessao").value = formatCurrencyInput(
-            Number(record.valor_sessao) || 0,
-          );
+          byId("valor_sessao").value = formatCurrency(Number(record.valor_sessao) || 0);
 
-          byId("data_nascimento").value = formatDateForInput(
-            record.data_nascimento || "",
-          );
-          byId("data_inicio").value = formatDateForInput(
-            record.data_inicio || "",
-          );
+          byId("data_nascimento").value = formatDateForInput(record.data_nascimento || "");
+          byId("data_inicio").value = formatDateForInput(record.data_inicio || "");
           byId("ativo").checked = record.ativo !== false;
 
           toggleForm(true);
+          scrollToElement(formContainerId);
+          (btn.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open");
         });
       });
 
@@ -473,10 +440,9 @@ const metadata = {
           if (!confirm("Deseja realmente excluir este paciente?")) return;
 
           try {
-            const res = await fetchWithAuth(`${collectionBase}/${id}`, {
-              method: "DELETE",
-            });
-            if (res.ok) loadPatients(currentPage);
+            await PatientService.deletePatient(id || "");
+            loadPatients(currentPage);
+            (btn.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open");
           } catch (err) {
             console.error(err);
             alert("Erro ao excluir paciente.");
@@ -486,9 +452,7 @@ const metadata = {
     }
 
     function toggleForm(show: boolean) {
-      document
-        .getElementById("form-container")
-        ?.classList.toggle("hidden", !show);
+      toggleElement(formContainerId, show);
     }
 
     function attachPerPageListeners() {
@@ -497,6 +461,23 @@ const metadata = {
           perPage = getPerPageValue(btn.getAttribute("data-per-page"), 20);
           currentPage = 1;
           updatePerPageButtons();
+          loadPatients(currentPage);
+        });
+      });
+    }
+
+    function attachStatusFilterListeners() {
+      document.querySelectorAll(".status-filter-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const selected = btn.getAttribute("data-status");
+          if (selected === "ativo" || selected === "inativo" || selected === "todos") {
+            statusFilter = selected;
+          } else {
+            statusFilter = "ativo";
+          }
+
+          currentPage = 1;
+          updateStatusFilterButtons();
           loadPatients(currentPage);
         });
       });
@@ -523,6 +504,15 @@ const metadata = {
       });
     }
 
+    function updateStatusFilterButtons() {
+      document.querySelectorAll(".status-filter-btn").forEach((btn) => {
+        const isActive = btn.getAttribute("data-status") === statusFilter;
+        btn.classList.toggle("bg-blue-600", isActive);
+        btn.classList.toggle("text-white", isActive);
+        btn.classList.toggle("border-blue-600", isActive);
+      });
+    }
+
     function updatePaginationControls() {
       const prevBtn = byId("prev-page-btn");
       const nextBtn = byId("next-page-btn");
@@ -537,6 +527,12 @@ const metadata = {
     function updatePatientsCount() {
       const countEl = byId("patients-count");
       if (countEl) countEl.textContent = String(totalItems);
+    }
+
+    function attachBannerListeners() {
+      byId("close-patients-banner")?.addEventListener("click", () => {
+        byId("patients-info-banner")?.classList.add("hidden");
+      });
     }
 
     document.addEventListener("astro:page-load", init);
