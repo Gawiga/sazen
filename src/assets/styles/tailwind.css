@@ -50,8 +50,8 @@
 
 .lilac #header.scroll > div:first-child,
 #header.scroll.lilac > div:first-child {
-  @apply bg-page md:bg-[#f5e8ffeb] border-b border-violet-300/60;
-  box-shadow: 0 0.375rem 1.5rem 0 rgb(147 51 234 / 18%);
+  @apply bg-page md:bg-[#130d22e6] border-b border-violet-500/40;
+  box-shadow: 0 0.375rem 1.5rem 0 rgb(139 92 246 / 18%);
 }
 /* #header.scroll > div:last-child {
   @apply py-3;

@@ -108,3 +108,34 @@
 
 - `tests/unit/theme-mode.test.ts` valida suporte ao tema lilás no script e estilos.
 - `tests/unit/pages-core.test.ts` valida padrão do botão de voltar ao dashboard nas páginas principais.
+
+## Atualização de manutenção: tema lilás e bug de sessão (Fevereiro 2026)
+
+### Tema lilás
+
+- `lilac` agora é um tema escuro alternativo, não um tema claro.
+- Manter coerência:
+  - base escura (`--aw-color-bg-page` escuro)
+  - contraste de texto alto
+  - destaques em roxo/lilás
+
+Arquivos relevantes:
+
+- `src/components/CustomStyles.astro`
+- `src/assets/styles/tailwind.css`
+
+### Sessão ao navegar para dashboard
+
+- Causa principal tratada no menu de usuário: busca de usuário sem header auth + redirect imediato em falha.
+- Ajuste implementado:
+  - envio de Authorization + credentials include
+  - sem redirect automático para `/login` dentro do UserMenu quando não há payload de usuário
+
+Arquivo relevante:
+
+- `src/components/auth/UserMenu.astro`
+
+### Testes de regressão
+
+- `tests/unit/user-menu.test.ts`
+- `tests/unit/theme-mode.test.ts`

@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 describe("Theme mode support", () => {
-  it("should support lilac mode in color scripts and styles", () => {
+  it("should support lilac mode in color scripts and dark-like purple styles", () => {
     const applyColorMode = readFileSync(
       join(process.cwd(), "src/components/common/ApplyColorMode.astro"),
       "utf-8",
@@ -24,6 +24,7 @@ describe("Theme mode support", () => {
     expect(basicScripts).toContain("localStorage.theme = nextTheme");
 
     expect(customStyles).toContain(".lilac {");
-    expect(customStyles).toContain("--aw-color-primary: rgb(147 51 234)");
+    expect(customStyles).toContain("--aw-color-primary: rgb(168 85 247)");
+    expect(customStyles).toContain("--aw-color-bg-page: rgb(19 13 34)");
   });
 });
