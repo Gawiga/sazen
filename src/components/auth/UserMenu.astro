@@ -33,6 +33,17 @@ const email = typeof user?.email === "string" ? user.email : "";
 </div>
 
 <script>
+  function getTokenFromLocalStorage() {
+    const rawAuth = localStorage.getItem("pb_auth");
+    if (!rawAuth) return null;
+    try {
+      const parsed = JSON.parse(rawAuth);
+      return typeof parsed?.token === "string" ? parsed.token : null;
+    } catch {
+      return typeof rawAuth === "string" ? rawAuth : null;
+    }
+  }
+
   function getUserFromLocalStorage() {
     const rawAuth = localStorage.getItem("pb_auth");
     if (!rawAuth) return null;
@@ -46,9 +57,23 @@ const email = typeof user?.email === "string" ? user.email : "";
 
   async function fetchCurrentUser() {
     try {
-      const response = await fetch("/api/auth/user");
+      const token = getTokenFromLocalStorage();
+      const headers = new Headers();
+      if (token) {
+        headers.set("Authorization", `Bearer ${token}`);
+      }
+
+      const response = await fetch("/api/auth/user", {
+        method: "GET",
+        headers,
+        credentials: "include",
+      });
+
+      if (!response.ok) return null;
       const data = await response.json();
-      return data?.user?.record || data?.user || null;
+      const payload = data?.user?.payload || data?.user?.record || data?.user || null;
+      if (!payload || typeof payload !== "object") return null;
+      return payload;
     } catch {
       return null;
     }
@@ -81,7 +106,6 @@ const email = typeof user?.email === "string" ? user.email : "";
     const user = fetchedUser || fallbackUser;
 
     if (!user) {
-      window.location.href = "/login";
       return;
     }
 

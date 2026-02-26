@@ -113,3 +113,19 @@ Guia rápido para agentes manterem o projeto Astro + PocketBase com baixo acopla
 - Testes adicionados/ajustados:
   - `tests/unit/theme-mode.test.ts`
   - `tests/unit/pages-core.test.ts` (botão de retorno acessível e validações relacionadas)
+
+## Atualização Tema Lilás Escuro + Estabilidade de Sessão (Fevereiro 2026)
+
+- Tema `lilac` foi ajustado para visual escuro (base dark) com acentos roxo/lilás:
+  - Fundo escuro e tipografia clara
+  - Botões primários e destaques em tons lilás
+  - Header sticky lilás escuro
+
+- Correção de sessão ao voltar para dashboard:
+  - `src/components/auth/UserMenu.astro` agora chama `/api/auth/user` com `Authorization: Bearer <token>` quando disponível e `credentials: include`.
+  - Removido redirect agressivo para `/login` quando a leitura de usuário falha pontualmente no menu.
+  - Resultado: navegação por "Voltar ao Dashboard" não deve mais derrubar sessão por falha transitória de hidratação/auth do menu.
+
+- Testes adicionados/ajustados:
+  - `tests/unit/user-menu.test.ts`
+  - `tests/unit/theme-mode.test.ts`
