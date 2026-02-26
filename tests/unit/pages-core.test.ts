@@ -57,6 +57,12 @@ describe("Core pages content", () => {
     expect(pacientes).toContain('<th class="p-2">Nome</th>');
     expect(pacientes).toContain('<th class="p-2 text-right">Ações</th>');
     expect(pacientes).toContain("row-actions-menu");
+    expect(pacientes).toContain("patient-toggle");
+    expect(pacientes).toContain("patient-details-");
+    expect(pacientes).toContain("formatPatientDateShort");
+    expect(pacientes).toContain("Endereço:");
+    expect(pacientes).toContain("Telefone:");
+    expect(pacientes).toContain("Valor Sessão:");
     expect(pacientes).not.toContain('<th class="p-2">Contato</th>');
     expect(pacientes).not.toContain('<th class="p-2">Valor</th>');
     expect(pacientes).not.toContain('<th class="p-2">Status</th>');
@@ -65,16 +71,20 @@ describe("Core pages content", () => {
   it("sessoes should use compact table with date/actions and menu-based row actions", () => {
     const sessoes = readPage("sessoes.astro");
 
-    expect(sessoes).toContain('<th class="p-3">Data</th>');
+    expect(sessoes).toContain('<th class="p-3">Paciente</th>');
     expect(sessoes).toContain('<th class="p-3 text-right">Ações</th>');
     expect(sessoes).toContain('id="session-name-filter"');
     expect(sessoes).toContain("applySessionFilter");
-    expect(sessoes).toContain("formatSessionDateShort");
+    expect(sessoes).toContain("formatSessionDateDetailed");
+    expect(sessoes).toContain("Valor Sessão:");
+    expect(sessoes).toContain("Pagamento:");
+    expect(sessoes).toContain(
+      'if (sessionNameFilter.trim() === "" && previousQuery !== "")',
+    );
+    expect(sessoes).toContain("loadSessions(currentPage)");
     expect(sessoes).toContain("row-actions-menu");
     expect(sessoes).toContain("status-toggle");
-    expect(sessoes).not.toContain('<th class="p-3">Paciente</th>');
-    expect(sessoes).not.toContain('<th class="p-3">Valor</th>');
-    expect(sessoes).not.toContain('<th class="p-3 text-center">Pagamento</th>');
+    expect(sessoes).not.toContain('<th class="p-3">Data</th>');
   });
 
   it("relatorios valores a receber should expose month column", () => {

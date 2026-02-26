@@ -76,3 +76,20 @@ Guia rápido para agentes manterem o projeto Astro + PocketBase com baixo acopla
 2. Alterou rotas de navegação? atualizar `tests/unit/navigation.test.ts`.
 3. Alterou serviço/API? criar/ajustar teste unitário correspondente.
 4. Rodar `check`, `fix`, `test:unit` antes de concluir.
+
+## Atualização Sessões + Pacientes (Fevereiro 2026)
+
+- Sessões (`src/pages/sessoes.astro`):
+  - Correção do filtro por nome: ao limpar o input, a lista recarrega a página atual (`loadSessions(currentPage)`) para restaurar todos os registros.
+  - Coluna principal agora prioriza paciente e contexto da sessão no formato:
+    - Nome do paciente
+    - `DiaSemana - dd/mm às HHhmm`
+    - `Valor Sessão: R$ ...`
+    - `Pagamento: Pago|Pendente`
+
+- Pacientes (`src/pages/pacientes.astro`):
+  - Nome da linha virou toggle de detalhes (`patient-toggle`) com expansão inline (`patient-details-*`).
+  - Detalhes exibidos: endereço, telefone, email, nascimento, início, valor sessão e status.
+
+- Testes atualizados:
+  - `tests/unit/pages-core.test.ts` cobre reset do filtro em sessões e toggle de detalhes em pacientes.
