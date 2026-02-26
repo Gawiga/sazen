@@ -1,60 +1,117 @@
 ---
-// Importe a tipagem correta do seu arquivo auth.d.ts
-// Ajuste o caminho '../types/auth' conforme a estrutura das suas pastas
-// import type { PBUser } from '../types/auth';
-
 interface Props {
   user?: Record<string, unknown> | null;
 }
 
-const {user} = Astro.props;
-
-// Lógica de exibição:
-// 1. Tenta mostrar o "name" (Raquel)
-// 2. Se não tiver nome, tenta "username" (caso você adicione no futuro)
-// 3. Se não tiver nenhum, fica vazio (ou poderia por "Sem nome")
-const displayName = user?.name || user?.username || "Visitante";
+const { user = null } = Astro.props;
+const displayName =
+  (typeof user?.name === "string" && user.name) ||
+  (typeof user?.username === "string" && user.username) ||
+  "Usuário";
+const email = typeof user?.email === "string" ? user.email : "";
 ---
 
-{
-  user && (
-    <div class="flex items-center space-x-4">
-      <div class="text-right">
-        <p class="text-sm font-medium text-gray-900 dark:text-white">
-          {user.email}
-        </p>
-        <p class="text-xs text-gray-500 dark:text-gray-400 capitalize">
-          {displayName ?? "Sem nome"}
-        </p>
-      </div>
-
-      <button
-        id="logout-btn"
-        class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-        Sair
-      </button>
-    </div>
-  )
-}
+<div
+  data-user-menu
+  class:list={[
+    "flex items-center gap-2 sm:gap-3",
+    !user && "hidden",
+  ]}>
+  <div class="hidden sm:block">
+    <p data-user-email class="text-xs text-gray-500 dark:text-gray-400">{email}</p>
+  </div>
+  <div class="text-right">
+    <p data-user-greeting class="text-sm font-medium text-gray-900 dark:text-white">
+      Olá {displayName}
+    </p>
+  </div>
+  <button
+    data-logout-btn
+    class="inline-flex min-h-10 items-center justify-center rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">
+    Sair
+  </button>
+</div>
 
 <script>
-  // O script permanece o mesmo
-  const logoutBtn = document.getElementById("logout-btn");
+  function getUserFromLocalStorage() {
+    const rawAuth = localStorage.getItem("pb_auth");
+    if (!rawAuth) return null;
+    try {
+      const parsed = JSON.parse(rawAuth);
+      return parsed?.model || parsed?.record || null;
+    } catch {
+      return null;
+    }
+  }
 
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", async () => {
-      try {
-        const response = await fetch("/api/auth/logout", {
-          method: "POST",
-        });
+  async function fetchCurrentUser() {
+    try {
+      const response = await fetch("/api/auth/user");
+      const data = await response.json();
+      return data?.user?.record || data?.user || null;
+    } catch {
+      return null;
+    }
+  }
 
-        if (response.ok) {
-          localStorage.removeItem("pb_auth");
-          window.location.href = "/";
-        }
-      } catch (error) {
-        console.error("Logout error:", error);
+  async function handleLogout() {
+    try {
+      window.showLoading?.();
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+      });
+
+      if (response.ok) {
+        localStorage.removeItem("pb_auth");
+        window.location.href = "/";
       }
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      window.hideLoading?.();
+    }
+  }
+
+  async function initUserMenus() {
+    const userMenus = document.querySelectorAll("[data-user-menu]");
+    if (!userMenus.length) return;
+
+    const fetchedUser = await fetchCurrentUser();
+    const fallbackUser = getUserFromLocalStorage();
+    const user = fetchedUser || fallbackUser;
+
+    if (!user) {
+      window.location.href = "/login";
+      return;
+    }
+
+    userMenus.forEach((menu) => {
+      const userEmail = menu.querySelector("[data-user-email]");
+      const userGreeting = menu.querySelector("[data-user-greeting]");
+      const logoutBtn = menu.querySelector("[data-logout-btn]");
+
+      if (userEmail) {
+        userEmail.textContent = typeof user.email === "string" ? user.email : "";
+      }
+      if (userGreeting) {
+        const name =
+          (typeof user.name === "string" && user.name) ||
+          (typeof user.username === "string" && user.username) ||
+          "Usuário";
+        userGreeting.textContent = `Olá ${name}`;
+      }
+      if (logoutBtn) {
+        logoutBtn.addEventListener("click", handleLogout);
+      }
+
+      menu.classList.remove("hidden");
     });
+  }
+
+  document.addEventListener("astro:page-load", initUserMenus);
+  if (document.readyState === "complete") {
+    initUserMenus();
+  } else {
+    document.addEventListener("DOMContentLoaded", initUserMenus);
   }
 </script>

@@ -16,7 +16,7 @@ describe("PatientService (client)", () => {
     vi.clearAllMocks();
   });
 
-  it("getPatients should call API with page/perPage", async () => {
+  it("getPatients should call API with page/perPage and default active status", async () => {
     vi.mocked(UIService.get).mockResolvedValueOnce({
       page: 1,
       perPage: 20,
@@ -28,7 +28,23 @@ describe("PatientService (client)", () => {
     await PatientService.getPatients(1, 20);
 
     expect(UIService.get).toHaveBeenCalledWith(
-      "/api/pacientes?page=1&perPage=20",
+      "/api/pacientes?page=1&perPage=20&status=ativo",
+    );
+  });
+
+  it("getPatients should allow custom status filter", async () => {
+    vi.mocked(UIService.get).mockResolvedValueOnce({
+      page: 1,
+      perPage: 20,
+      totalPages: 1,
+      totalItems: 0,
+      items: [],
+    });
+
+    await PatientService.getPatients(1, 20, "todos");
+
+    expect(UIService.get).toHaveBeenCalledWith(
+      "/api/pacientes?page=1&perPage=20&status=todos",
     );
   });
 

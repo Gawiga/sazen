@@ -84,9 +84,38 @@ describe("pacientesService", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(getListMock).toHaveBeenCalledWith(1, 20, { sort: "-created" });
+    expect(getListMock).toHaveBeenCalledWith(1, 20, {
+      sort: "-created",
+      filter: "ativo = true",
+    });
     expect(body.perPage).toBe(20);
     expect(body.items).toHaveLength(2);
+  });
+
+  it("lista pacientes com filtros de status (inativo/todos)", async () => {
+    getTokenFromRequestMock.mockReturnValue("jwt_token");
+    getListMock.mockResolvedValue({
+      page: 1,
+      perPage: 20,
+      totalPages: 1,
+      totalItems: 0,
+      items: [],
+    });
+
+    await listPacientes(
+      new Request("https://example.com/api/pacientes?status=inativo"),
+      {},
+    );
+    expect(getListMock).toHaveBeenLastCalledWith(1, 20, {
+      sort: "-created",
+      filter: "ativo = false",
+    });
+
+    await listPacientes(
+      new Request("https://example.com/api/pacientes?status=todos"),
+      {},
+    );
+    expect(getListMock).toHaveBeenLastCalledWith(1, 20, { sort: "-created" });
   });
 
   it("injeta owner no create usando user.id do token", async () => {

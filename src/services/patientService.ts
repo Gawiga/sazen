@@ -6,8 +6,9 @@ export class PatientService {
   static async getPatients(
     page: number,
     perPage: number,
+    status: "ativo" | "inativo" | "todos" = "ativo",
   ): Promise<PaginatedResponse<Paciente>> {
-    const url = `/api/pacientes?page=${page}&perPage=${perPage}`;
+    const url = `/api/pacientes?page=${page}&perPage=${perPage}&status=${status}`;
     return UIService.get<PaginatedResponse<Paciente>>(url);
   }
 

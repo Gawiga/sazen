@@ -6,7 +6,6 @@ const metadata = {
   title: "Sessões",
   description: "Cadastro e gerenciamento de sessões",
 };
-
 ---
 
 <PageLayout metadata={metadata}>
@@ -17,8 +16,11 @@ const metadata = {
       class="mb-3 inline-flex items-center text-sm text-gray-600 hover:underline dark:text-gray-400">
       ← Voltar ao Dashboard
     </a>
-    <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">Sessões</h1>
+    <div
+      class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">
+        Sessões
+      </h1>
       <button
         id="new-btn"
         class="inline-flex min-h-11 items-center justify-center rounded bg-green-600 px-4 py-2 text-white transition hover:bg-green-700"
@@ -93,30 +95,56 @@ const metadata = {
       </form>
     </div>
 
-    <div class="mb-4 rounded bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-      <strong>Dica:</strong> Clique na label da coluna "Status" para alternar entre "Pago" e "Pendente". Passe o mouse sobre a label para ver essa dica rapidamente. Use "Editar" para modificar dados da sessão ou "Excluir" para removê-la.
+    <div
+      id="sessions-info-banner"
+      class="mb-4 flex items-start justify-between gap-3 rounded bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+      <p>
+        <strong>Dica:</strong> Use o filtro por nome para localizar sessões por paciente e o menu de ações (botão com barras) para editar, excluir ou alternar o status de pagamento.
+      </p>
+      <button
+        id="close-sessions-banner"
+        type="button"
+        class="inline-flex h-6 w-6 items-center justify-center rounded border border-blue-300 text-blue-700 transition hover:bg-blue-100 dark:border-blue-700 dark:text-blue-200 dark:hover:bg-blue-800"
+        aria-label="Fechar dica">
+        ×
+      </button>
     </div>
 
     <div
       class="overflow-x-auto rounded border bg-white p-3 shadow dark:border-gray-800 dark:bg-gray-900 sm:p-4">
-      <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div
+        class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div class="text-sm text-gray-600 dark:text-gray-400">
           Exibindo <span id="sessions-count">0</span> sessões
         </div>
         <div class="flex items-center gap-2">
-          <span class="text-sm text-gray-600 dark:text-gray-400">Por página:</span>
+          <span class="text-sm text-gray-600 dark:text-gray-400">Paciente:</span>
+          <input
+            id="session-name-filter"
+            type="text"
+            placeholder="Filtrar por nome"
+            class="w-40 rounded border bg-white px-2 py-1 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white sm:w-56"
+          />
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-gray-600 dark:text-gray-400"
+            >Por página:</span
+          >
           <button
             type="button"
             class="per-page-btn rounded border px-3 py-1 text-sm"
-            data-per-page="20">20</button>
+            data-per-page="20">20</button
+          >
           <button
             type="button"
             class="per-page-btn rounded border px-3 py-1 text-sm"
-            data-per-page="50">50</button>
+            data-per-page="50">50</button
+          >
           <button
             type="button"
             class="per-page-btn rounded border px-3 py-1 text-sm"
-            data-per-page="100">100</button>
+            data-per-page="100">100</button
+          >
         </div>
       </div>
 
@@ -124,16 +152,13 @@ const metadata = {
         <thead>
           <tr
             class="border-b text-sm text-gray-600 dark:border-gray-700 dark:text-gray-400">
-            <th class="p-3">Paciente</th>
             <th class="p-3">Data</th>
-            <th class="p-3">Valor</th>
-            <th class="p-3 text-center">Status</th>
             <th class="p-3 text-right">Ações</th>
           </tr>
         </thead>
         <tbody id="sessions-body" class="align-top text-sm">
           <tr
-            ><td colspan="5" class="p-4 text-center text-gray-500"
+            ><td colspan="2" class="p-4 text-center text-gray-500"
               >Carregando sessões...</td
             ></tr
           >
@@ -147,8 +172,9 @@ const metadata = {
           class="rounded border px-3 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50">
           Anterior
         </button>
-        <span id="page-indicator" class="text-sm text-gray-600 dark:text-gray-400"
-          >Página 1 de 1</span
+        <span
+          id="page-indicator"
+          class="text-sm text-gray-600 dark:text-gray-400">Página 1 de 1</span
         >
         <button
           id="next-page-btn"
@@ -165,18 +191,17 @@ const metadata = {
       getPaginationView,
       getPerPageValue,
     } from "~/services/paginationService";
-    import { SessionService } from "~/services/sessionService";
-    import { scrollToElement } from "~/services/uiService";
+    import {SessionService} from "~/services/sessionService";
+    import {scrollToElement} from "~/services/uiService";
     import {
       formatCurrency,
       parseCurrency,
       formatDateForInput,
-      formatDateInPortuguese,
       attachCurrencyMask,
       getFormElement,
       toggleElement,
     } from "~/utils/formatting";
-    import type { Sessao, PacienteOption } from "~/types/api";
+    import type {Sessao, PacienteOption} from "~/types/api";
 
     const formContainerId = "form-container";
 
@@ -186,6 +211,8 @@ const metadata = {
     let totalPages = 1;
     let totalItems = 0;
     let patientsLoaded = false;
+    let sessionNameFilter = "";
+    let loadedSessions: Sessao[] = [];
 
     const byId = (id: string) => getFormElement(id);
 
@@ -198,15 +225,15 @@ const metadata = {
         currentPage = data.page;
         totalPages = data.totalPages;
         totalItems = data.totalItems;
+        loadedSessions = data.items;
 
-        renderSessions(data.items);
+        applySessionFilter();
         updatePaginationControls();
-        updateSessionsCount();
       } catch (err) {
         console.error(err);
         if (body) {
           body.innerHTML =
-            '<tr><td colspan="6" class="p-4 text-center text-red-500">Erro ao carregar dados.</td></tr>';
+            '<tr><td colspan="2" class="p-4 text-center text-red-500">Erro ao carregar dados.</td></tr>';
         }
       }
     }
@@ -233,7 +260,7 @@ const metadata = {
         const body = byId("sessions-body");
         if (body) {
           body.innerHTML =
-            '<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao carregar pacientes para as sessões.</td></tr>';
+            '<tr><td colspan="2" class="p-4 text-center text-red-500">Erro ao carregar pacientes para as sessões.</td></tr>';
         }
       }
 
@@ -244,7 +271,7 @@ const metadata = {
 
         if (!sessionId && patientId && patientDetails.has(patientId)) {
           const value = patientDetails.get(patientId)?.valor_sessao || 0;
-          (valorInput).value = formatCurrency(value);
+          valorInput.value = formatCurrency(value);
         }
       });
 
@@ -262,10 +289,12 @@ const metadata = {
       byId("cancel-btn")?.addEventListener("click", () => toggleForm(false));
 
       form.addEventListener("submit", handleFormSubmit);
+      attachSessionFilterListener();
       attachPerPageListeners();
       attachPaginationListeners();
       updatePerPageButtons();
       updatePaginationControls();
+      attachBannerListeners();
     }
 
     async function handleFormSubmit(ev: Event) {
@@ -334,7 +363,7 @@ const metadata = {
 
       if (!items.length) {
         body.innerHTML =
-          '<tr><td colspan="6" class="p-4 text-center text-gray-500">Nenhuma sessão registrada.</td></tr>';
+          '<tr><td colspan="2" class="p-4 text-center text-gray-500">Nenhuma sessão registrada.</td></tr>';
         return;
       }
 
@@ -343,33 +372,41 @@ const metadata = {
           (session) => `
         <tr class="border-t transition hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800">
           <td class="p-2 dark:text-gray-300">
-            <div class="font-medium">${
+            <div class="font-medium">${formatSessionDateShort(session.data)}</div>
+            <div class="text-xs text-gray-500">${
               patientDetails.get(session.id_paciente)?.nome ||
               "Paciente não encontrado"
             }</div>
           </td>
-          <td class="p-2 dark:text-gray-300">${formatDateInPortuguese(session.data)}</td>
-          <td class="p-2 dark:text-gray-300">${formatCurrency(
-            Number(session.valor) || 0
-          )}</td>
-          <td class="p-2">
-            <button
-              type="button"
-              data-id="${session.id}"
-              title="Clique para alternar o status entre Pago e Pendente"
-              class="status-toggle rounded px-2 py-1 text-xs transition hover:opacity-80 ${
-              session.pago
-                ? "bg-green-100 text-green-800"
-                : "bg-yellow-100 text-yellow-800"
-            }">
-              ${session.pago ? "Pago" : "Pendente"}
-            </button>
-          </td>
-          <td class="p-2">
-            <div class="flex items-center justify-end gap-2 whitespace-nowrap">
-              <button data-id="${session.id}" class="edit-btn inline-flex min-h-10 items-center justify-center rounded bg-yellow-400 px-3 py-2 text-sm text-gray-900 transition hover:bg-yellow-500">Editar</button>
-              <button data-id="${session.id}" class="del-btn inline-flex min-h-10 items-center justify-center rounded bg-red-500 px-3 py-2 text-sm text-white transition hover:bg-red-600">Excluir</button>
-            </div>
+          <td class="p-2 text-right">
+            <details class="row-actions-menu relative inline-block text-left">
+              <summary
+                class="inline-flex min-h-10 min-w-10 cursor-pointer list-none items-center justify-center rounded border border-gray-300 bg-white px-2 py-2 text-gray-700 transition hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                aria-label="Abrir ações da sessão"
+                title="Abrir ações">
+                <span class="sr-only">Abrir ações</span>
+                <span class="inline-flex flex-col gap-1" aria-hidden="true">
+                  <span class="block h-0.5 w-4 rounded bg-current"></span>
+                  <span class="block h-0.5 w-4 rounded bg-current"></span>
+                  <span class="block h-0.5 w-4 rounded bg-current"></span>
+                </span>
+              </summary>
+              <div class="absolute right-0 z-10 mt-1 w-52 rounded border bg-white p-1 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                <button
+                  type="button"
+                  data-id="${session.id}"
+                  title="Clique para alternar o status entre Pago e Pendente"
+                  class="status-toggle block w-full rounded px-3 py-2 text-left text-sm transition hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                    session.pago
+                      ? "text-green-700 dark:text-green-400"
+                      : "text-yellow-700 dark:text-yellow-400"
+                  }">
+                  ${session.pago ? "Marcar como pendente" : "Marcar como pago"}
+                </button>
+                <button data-id="${session.id}" class="edit-btn block w-full rounded px-3 py-2 text-left text-sm text-gray-800 transition hover:bg-yellow-100 dark:text-gray-200 dark:hover:bg-gray-700">Editar</button>
+                <button data-id="${session.id}" class="del-btn block w-full rounded px-3 py-2 text-left text-sm text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-gray-700">Excluir</button>
+              </div>
+            </details>
           </td>
         </tr>
       `,
@@ -379,21 +416,38 @@ const metadata = {
       attachRowListeners(items);
     }
 
+    function applySessionFilter() {
+      const query = sessionNameFilter.trim().toLowerCase();
+      const filtered = !query
+        ? loadedSessions
+        : loadedSessions.filter((session) => {
+            const patientName =
+              patientDetails.get(session.id_paciente)?.nome ||
+              patientDetails.get(session.id_paciente)?.email ||
+              "";
+            return patientName.toLowerCase().includes(query);
+          });
+
+      renderSessions(filtered);
+      updateSessionsCount(filtered.length);
+    }
+
     function attachRowListeners(items: Sessao[]) {
       // Toggle payment status through the label in the Status column
       document.querySelectorAll(".status-toggle").forEach((btn) => {
         btn.addEventListener("click", async () => {
           const id = btn.getAttribute("data-id");
           if (!id) return;
-          
+
           // Find the session to get current status
-          const session = items.find(s => s.id === id);
+          const session = items.find((s) => s.id === id);
           if (!session) return;
-          
+
           try {
             // Toggle the payment status
             await SessionService.togglePaymentStatus(id, session.pago);
             loadSessions(currentPage);
+            (btn.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open");
           } catch (err) {
             console.error(err);
             alert("Erro ao atualizar status de pagamento.");
@@ -412,12 +466,13 @@ const metadata = {
           byId("id_paciente").value = session.id_paciente || "";
           byId("data").value = formatDateForInput(session.data);
           (byId("valor") as HTMLInputElement).value = formatCurrency(
-            Number(session.valor) || 0
+            Number(session.valor) || 0,
           );
           (byId("pago") as HTMLInputElement).checked = session.pago || false;
 
           toggleForm(true);
           scrollToElement(formContainerId);
+          (btn.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open");
         });
       });
 
@@ -430,6 +485,7 @@ const metadata = {
           try {
             await SessionService.deleteSession(id);
             loadSessions(currentPage);
+            (btn.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open");
           } catch (err) {
             console.error(err);
             alert("Erro ao excluir sessão.");
@@ -447,6 +503,14 @@ const metadata = {
           updatePerPageButtons();
           loadSessions(currentPage);
         });
+      });
+    }
+
+    function attachSessionFilterListener() {
+      const input = byId("session-name-filter") as HTMLInputElement | null;
+      input?.addEventListener("input", () => {
+        sessionNameFilter = input.value;
+        applySessionFilter();
       });
     }
 
@@ -484,9 +548,40 @@ const metadata = {
       if (indicator) indicator.textContent = view.indicator;
     }
 
-    function updateSessionsCount() {
+    function updateSessionsCount(filteredCount = loadedSessions.length) {
       const countEl = byId("sessions-count");
-      if (countEl) countEl.textContent = String(totalItems);
+      if (!countEl) return;
+
+      if (sessionNameFilter.trim()) {
+        countEl.textContent = `${filteredCount} de ${totalItems}`;
+        return;
+      }
+
+      countEl.textContent = String(totalItems);
+    }
+
+    function formatSessionDateShort(dateString: string): string {
+      const date = new Date(dateString);
+      if (Number.isNaN(date.getTime())) return dateString;
+
+      const month = new Intl.DateTimeFormat("pt-BR", {
+        month: "short",
+      })
+        .format(date)
+        .replace(".", "")
+        .toLowerCase();
+
+      const day = String(date.getDate()).padStart(2, "0");
+      const hours = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+
+      return `${day}/${month} às ${hours}h${minutes}`;
+    }
+
+    function attachBannerListeners() {
+      byId("close-sessions-banner")?.addEventListener("click", () => {
+        byId("sessions-info-banner")?.classList.add("hidden");
+      });
     }
 
     document.addEventListener("astro:page-load", init);

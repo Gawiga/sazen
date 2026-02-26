@@ -24,7 +24,15 @@ export const headerData = {
       links: [
         {
           text: "Relatórios",
-          href: getPermalink("/relatorios"), // URL corrigida conforme o módulo trabalhado
+          href: getPermalink("/relatorios"),
+        },
+        {
+          text: "Faturamento Mensal",
+          href: getPermalink("/relatorios-faturamento"),
+        },
+        {
+          text: "Valores a Receber",
+          href: getPermalink("/relatorios-valores-receber"),
         },
       ],
     },
@@ -52,6 +60,14 @@ export const footerData = {
       title: "Suporte",
       links: [
         { text: "Relatórios", href: getPermalink("/relatorios") },
+        {
+          text: "Faturamento Mensal",
+          href: getPermalink("/relatorios-faturamento"),
+        },
+        {
+          text: "Valores a Receber",
+          href: getPermalink("/relatorios-valores-receber"),
+        },
         { text: "Termos de Uso", href: getPermalink("/terms") },
       ],
     },

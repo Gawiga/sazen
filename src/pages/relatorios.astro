@@ -1,15 +1,13 @@
 ---
 import PageLayout from "~/layouts/PageLayout.astro";
-import Loading from "~/components/widgets/Loading.astro";
 
 const metadata = {
   title: "Relatórios",
-  description: "Visualização de relatórios",
+  description: "Selecione o tipo de relatório",
 };
 ---
 
 <PageLayout metadata={metadata}>
-  <Loading />
   <section class="mx-auto max-w-5xl px-4 py-8 sm:py-10">
     <div class="mb-6">
       <a
@@ -21,369 +19,51 @@ const metadata = {
         Relatórios
       </h1>
       <p class="text-sm text-gray-600 dark:text-gray-400">
-        Visualize faturamento e valores a receber
+        Escolha qual relatório deseja visualizar.
       </p>
     </div>
 
-    <div class="space-y-6">
-      <div class="rounded-lg border bg-white p-4 shadow dark:border-gray-800 dark:bg-gray-900 sm:p-6">
-        <div class="mb-4 rounded bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-          <strong>ℹ️ Informação:</strong> Esta tabela exibe o resumo mensal do faturamento. Você pode escolher quantos registros deseja exibir por página (20, 50 ou 100).
-        </div>
-        <div class="mb-4">
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-            Faturamento Mensal
-          </h2>
-          <p class="text-sm text-gray-600 dark:text-gray-400">
-            Resumo mensal do faturamento
-          </p>
-        </div>
+    <div
+      id="reports-info-banner"
+      class="mb-4 flex items-start justify-between gap-3 rounded bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+      <p>
+        <strong>Informação:</strong> Os relatórios foram separados para facilitar leitura e manutenção. Use os atalhos abaixo para abrir o relatório desejado.
+      </p>
+      <button
+        id="close-reports-banner"
+        type="button"
+        class="inline-flex h-6 w-6 items-center justify-center rounded border border-blue-300 text-blue-700 transition hover:bg-blue-100 dark:border-blue-700 dark:text-blue-200 dark:hover:bg-blue-800"
+        aria-label="Fechar informação">
+        ×
+      </button>
+    </div>
 
-        <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div class="text-sm text-gray-600 dark:text-gray-400">
-            Exibindo <span id="fatur-count">0</span> registros
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="text-sm text-gray-600 dark:text-gray-400">Por página:</span>
-            <button type="button" class="fatur-per-page-btn rounded border px-3 py-1 text-sm" data-per-page="20">20</button>
-            <button type="button" class="fatur-per-page-btn rounded border px-3 py-1 text-sm" data-per-page="50">50</button>
-            <button type="button" class="fatur-per-page-btn rounded border px-3 py-1 text-sm" data-per-page="100">100</button>
-          </div>
-        </div>
-
-        <div class="overflow-auto">
-          <table class="min-w-full text-sm">
-            <thead class="border-b bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
-              <tr>
-                <th class="px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Mês/Ano</th>
-                <th class="px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Total</th>
-              </tr>
-            </thead>
-            <tbody id="body-fatur" class="divide-y divide-gray-100 dark:divide-gray-800">
-              <tr><td colspan="2" class="p-4 text-center text-gray-500">Carregando...</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="mt-4 flex items-center justify-between gap-3">
-          <button id="prev-fatur" type="button" class="rounded border px-3 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50">Anterior</button>
-          <span id="page-ind-fatur" class="text-sm text-gray-600 dark:text-gray-400">Página 1 de 1</span>
-          <button id="next-fatur" type="button" class="rounded border px-3 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50">Próxima</button>
-        </div>
-      </div>
-
-      <div class="rounded-lg border bg-white p-4 shadow dark:border-gray-800 dark:bg-gray-900 sm:p-6">
-        <div class="mb-4 rounded bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-          <strong>ℹ️ Informação:</strong> Esta tabela exibe os valores pendentes de recebimento por paciente. Você pode filtrar e buscar por nome na caixa de pesquisa acima.
-        </div>
-        <div class="mb-4">
-          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-            Valores a Receber
-          </h2>
-          <p class="text-sm text-gray-600 dark:text-gray-400">
-            Lista de valores pendentes por paciente
-          </p>
-        </div>
-
-        <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div class="text-sm text-gray-600 dark:text-gray-400">
-            Exibindo <span id="rec-count">0</span> registros
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="text-sm text-gray-600 dark:text-gray-400">Por página:</span>
-            <button type="button" class="rec-per-page-btn rounded border px-3 py-1 text-sm" data-per-page="20">20</button>
-            <button type="button" class="rec-per-page-btn rounded border px-3 py-1 text-sm" data-per-page="50">50</button>
-            <button type="button" class="rec-per-page-btn rounded border px-3 py-1 text-sm" data-per-page="100">100</button>
-          </div>
-        </div>
-
-        <div class="overflow-auto">
-          <table class="min-w-full text-sm">
-            <thead class="border-b bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
-              <tr>
-                <th class="px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-400">
-                  <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <span>Nome</span>
-                    <input
-                      id="name-filter-rec"
-                      type="text"
-                      placeholder="Filtrar nome"
-                      class="w-full rounded border px-2 py-1 text-sm dark:border-gray-700 dark:bg-gray-900 sm:w-56"
-                    />
-                  </div>
-                </th>
-                <th class="px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-400">Total</th>
-              </tr>
-            </thead>
-            <tbody id="body-rec" class="divide-y divide-gray-100 dark:divide-gray-800">
-              <tr><td colspan="2" class="p-4 text-center text-gray-500">Carregando...</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="mt-4 flex items-center justify-between gap-3">
-          <button id="prev-rec" type="button" class="rounded border px-3 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50">Anterior</button>
-          <span id="page-ind-rec" class="text-sm text-gray-600 dark:text-gray-400">Página 1 de 1</span>
-          <button id="next-rec" type="button" class="rounded border px-3 py-1 text-sm disabled:cursor-not-allowed disabled:opacity-50">Próxima</button>
-        </div>
-      </div>
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <a
+        href="/relatorios-faturamento"
+        class="inline-flex min-h-11 items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-white transition hover:bg-indigo-700">
+        Faturamento Mensal
+      </a>
+      <a
+        href="/relatorios-valores-receber"
+        class="inline-flex min-h-11 items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700">
+        Valores a Receber
+      </a>
     </div>
   </section>
 
   <script>
-    import {
-      getPaginationView,
-      getPerPageValue,
-    } from "~/services/paginationService";
-    import { UIService } from "~/services/uiService";
-    import { formatCurrency } from "~/utils/formatting";
-    import type { RelatorioData } from "~/types/api";
-
-    const endpoint = "/api/reports";
-    const byId = (id: string) => document.getElementById(id) as HTMLElement;
-
-    let fatur: RelatorioData[] = [];
-    let receber: RelatorioData[] = [];
-    let filteredReceber: RelatorioData[] = [];
-
-    let pageF = 1;
-    let perPageF = 20;
-    let totalPagesF = 1;
-    let totalItemsF = 0;
-
-    let pageR = 1;
-    let perPageR = 20;
-    let totalPagesR = 1;
-    let totalItemsR = 0;
-
-    let nameFilter = "";
-
-    async function loadF() {
-      const body = byId("body-fatur");
-      try {
-        const url = `${endpoint}?collection=faturamento_mensal&page=${pageF}&perPage=${perPageF}`;
-        const data = await UIService.get<{ page: number; perPage: number; totalPages: number; totalItems: number; items: RelatorioData[] }>(url);
-
-        fatur = data.items;
-        totalItemsF = data.totalItems;
-        totalPagesF = data.totalPages;
-        pageF = data.page;
-
-        renderF();
-        updatePaginationF();
-        updateCount("fatur-count", totalItemsF);
-      } catch (err) {
-        console.error("load reports fatur", err);
-        if (body) {
-          body.innerHTML =
-            '<tr><td colspan="2" class="p-4 text-center text-red-500">Erro ao carregar faturamento</td></tr>';
-        }
-      }
-    }
-
-    async function loadR() {
-      const body = byId("body-rec");
-      try {
-        const url = `${endpoint}?collection=valores_receber&page=${pageR}&perPage=${perPageR}`;
-        const data = await UIService.get<{ page: number; perPage: number; totalPages: number; totalItems: number; items: RelatorioData[] }>(url);
-
-        receber = data.items;
-        totalItemsR = data.totalItems;
-        totalPagesR = data.totalPages;
-        pageR = data.page;
-
-        applyFrontFilter();
-        updatePaginationR();
-        updateCount("rec-count", totalItemsR);
-      } catch (err) {
-        console.error("load reports receber", err);
-        if (body) {
-          body.innerHTML =
-            '<tr><td colspan="2" class="p-4 text-center text-red-500">Erro ao carregar valores a receber</td></tr>';
-        }
-      }
-    }
-
-    function applyFrontFilter() {
-      const q = nameFilter.trim().toLowerCase();
-      if (!q) {
-        filteredReceber = [...receber];
-      } else {
-        filteredReceber = receber.filter((it: RelatorioData) =>
-          String(it?.nome || "").toLowerCase().includes(q),
-        );
-      }
-
-      renderR();
-    }
-
-    function renderF() {
-      const body = byId("body-fatur");
-      if (!body) return;
-
-      if (!fatur.length) {
-        body.innerHTML =
-          '<tr><td colspan="2" class="p-4 text-center text-gray-500">Nenhum registro</td></tr>';
-        return;
-      }
-
-      body.innerHTML = fatur
-        .map(
-          (it: RelatorioData) => `
-      <tr class="border-t dark:border-gray-800">
-        <td class="px-4 py-2 dark:text-gray-300">${it.mes_ano ?? ""}</td>
-        <td class="px-4 py-2 font-medium dark:text-white">${formatCurrency(Number(it.total) || 0)}</td>
-      </tr>
-    `,
-        )
-        .join("");
-    }
-
-    function renderR() {
-      const body = byId("body-rec");
-      if (!body) return;
-
-      if (!filteredReceber.length) {
-        body.innerHTML =
-          '<tr><td colspan="2" class="p-4 text-center text-gray-500">Nenhum registro</td></tr>';
-        return;
-      }
-
-      body.innerHTML = filteredReceber
-        .map(
-          (it: RelatorioData) => `
-      <tr class="border-t dark:border-gray-800">
-        <td class="px-4 py-2 dark:text-gray-300">${it.nome ?? ""}</td>
-        <td class="px-4 py-2 font-medium dark:text-white">${formatCurrency(Number(it.total) || 0)}</td>
-      </tr>
-    `,
-        )
-        .join("");
-    }
-
-    function updatePaginationF() {
-      const prev = byId("prev-fatur");
-      const next = byId("next-fatur");
-      const indicator = byId("page-ind-fatur");
-
-      const view = getPaginationView(pageF, totalPagesF);
-      if (prev) (prev as HTMLButtonElement).disabled = !view.canPrev;
-      if (next) (next as HTMLButtonElement).disabled = !view.canNext;
-      if (indicator) indicator.textContent = view.indicator;
-    }
-
-    function updatePaginationR() {
-      const prev = byId("prev-rec");
-      const next = byId("next-rec");
-      const indicator = byId("page-ind-rec");
-
-      const view = getPaginationView(pageR, totalPagesR);
-      if (prev) (prev as HTMLButtonElement).disabled = !view.canPrev;
-      if (next) (next as HTMLButtonElement).disabled = !view.canNext;
-      if (indicator) indicator.textContent = view.indicator;
-    }
-
-    function updateCount(id: string, value: number) {
-      const element = byId(id);
-      if (element) element.textContent = String(value);
-    }
-
-    function updatePerPageButtons(groupSelector: string, value: number, activeClasses: Record<string, boolean>) {
-      document.querySelectorAll(groupSelector).forEach((btn) => {
-        const isActive = Number(btn.getAttribute("data-per-page")) === value;
-        Object.entries(activeClasses).forEach(([className, enabled]) => {
-          btn.classList.toggle(className, isActive && enabled);
-        });
-      });
-    }
-
-    function setupEventListeners() {
-      document.querySelectorAll(".fatur-per-page-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          perPageF = getPerPageValue(btn.getAttribute("data-per-page"), 20);
-          pageF = 1;
-          updatePerPageButtons(".fatur-per-page-btn", perPageF, {
-            "bg-blue-600": true,
-            "text-white": true,
-            "border-blue-600": true,
-          });
-          loadF();
-        });
-      });
-
-      document.querySelectorAll(".rec-per-page-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          perPageR = getPerPageValue(btn.getAttribute("data-per-page"), 20);
-          pageR = 1;
-          updatePerPageButtons(".rec-per-page-btn", perPageR, {
-            "bg-blue-600": true,
-            "text-white": true,
-            "border-blue-600": true,
-          });
-          loadR();
-        });
-      });
-
-      byId("prev-fatur")?.addEventListener("click", () => {
-        if (pageF <= 1) return;
-        pageF -= 1;
-        loadF();
-      });
-
-      byId("next-fatur")?.addEventListener("click", () => {
-        if (pageF >= totalPagesF) return;
-        pageF += 1;
-        loadF();
-      });
-
-      byId("prev-rec")?.addEventListener("click", () => {
-        if (pageR <= 1) return;
-        pageR -= 1;
-        loadR();
-      });
-
-      byId("next-rec")?.addEventListener("click", () => {
-        if (pageR >= totalPagesR) return;
-        pageR += 1;
-        loadR();
-      });
-
-      byId("name-filter-rec")?.addEventListener("input", (e: Event) => {
-        const target = e.target as HTMLInputElement | null;
-        nameFilter = target?.value || "";
-        applyFrontFilter();
-      });
-    }
-
-    async function init() {
-      const pbAuth = localStorage.getItem("pb_auth");
-      if (!pbAuth) {
-        window.location.href = "/login";
-        return;
-      }
-
-      const pageNode = byId("body-fatur");
-      if (!pageNode || pageNode.dataset.initialized) return;
-      pageNode.dataset.initialized = "true";
-
-      setupEventListeners();
-      updatePerPageButtons(".fatur-per-page-btn", perPageF, {
-        "bg-blue-600": true,
-        "text-white": true,
-        "border-blue-600": true,
-      });
-      updatePerPageButtons(".rec-per-page-btn", perPageR, {
-        "bg-blue-600": true,
-        "text-white": true,
-        "border-blue-600": true,
-      });
-
-      await Promise.all([loadF(), loadR()]);
+    function init() {
+      const closeBtn = document.getElementById("close-reports-banner");
+      const banner = document.getElementById("reports-info-banner");
+      closeBtn?.addEventListener("click", () => banner?.classList.add("hidden"));
     }
 
     document.addEventListener("astro:page-load", init);
     if (document.readyState === "complete") {
       init();
+    } else {
+      document.addEventListener("DOMContentLoaded", init);
     }
   </script>
 </PageLayout>

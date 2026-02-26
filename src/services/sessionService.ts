@@ -11,7 +11,7 @@ export class SessionService {
 
       // Carregar todas as páginas de pacientes
       while (true) {
-        const url = `/api/pacientes?page=${page}&perPage=${perPage}`;
+        const url = `/api/pacientes?page=${page}&perPage=${perPage}&status=todos`;
         const data = await UIService.get<PaginatedResponse<PacienteOption>>(
           url,
           {

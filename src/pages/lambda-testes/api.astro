@@ -116,7 +116,7 @@ import Layout from '~/layouts/PageLayout.astro';
   // --- GET: Buscar e Renderizar ---
   async function carregarAutores(highlightId = '') {
     try {
-      const res = await fetch('/api/lambda');
+      const res = await fetch('/lambda-testes/lambda');
       const rawData = await res.json();
 
       const arrayData = Array.isArray(rawData) ? rawData : [];
@@ -177,7 +177,7 @@ import Layout from '~/layouts/PageLayout.astro';
     if (!confirm(`Deseja excluir a frase "${sort}"?`)) return;
 
     try {
-      const response = await fetch('/api/lambda', {
+      const response = await fetch('/lambda-testes/lambda', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         // Enviamos ID e SORT juntos
@@ -229,7 +229,7 @@ import Layout from '~/layouts/PageLayout.astro';
     };
 
     try {
-      const response = await fetch('/api/lambda', {
+      const response = await fetch('/lambda-testes/lambda', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

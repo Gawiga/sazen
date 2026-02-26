@@ -60,6 +60,13 @@ function parsePagination(url: URL) {
   };
 }
 
+function parseStatusFilter(url: URL): "ativo" | "inativo" | "todos" {
+  const status = (url.searchParams.get("status") || "ativo").toLowerCase();
+  if (status === "inativo") return "inativo";
+  if (status === "todos") return "todos";
+  return "ativo";
+}
+
 export async function listPacientes(
   request: Request,
   cookies: CookiesLike,
@@ -68,10 +75,19 @@ export async function listPacientes(
     const auth = getTokenOrUnauthorized(request, cookies);
     if (auth.response) return auth.response;
 
-    const { page, perPage } = parsePagination(new URL(request.url));
+    const url = new URL(request.url);
+    const { page, perPage } = parsePagination(url);
+    const status = parseStatusFilter(url);
+    const filter =
+      status === "todos"
+        ? undefined
+        : status === "ativo"
+          ? "ativo = true"
+          : "ativo = false";
     const pb = getPb(auth.token);
     const list = await pb.collection("paciente").getList(page, perPage, {
       sort: "-created",
+      ...(filter ? { filter } : {}),
     });
 
     return new Response(

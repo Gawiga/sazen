@@ -40,14 +40,14 @@ describe("SessionService (client)", () => {
 
     expect(UIService.get).toHaveBeenNthCalledWith(
       1,
-      "/api/pacientes?page=1&perPage=100",
+      "/api/pacientes?page=1&perPage=100&status=todos",
       {
         showLoading: true,
       },
     );
     expect(UIService.get).toHaveBeenNthCalledWith(
       2,
-      "/api/pacientes?page=2&perPage=100",
+      "/api/pacientes?page=2&perPage=100&status=todos",
       {
         showLoading: false,
       },
