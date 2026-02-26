@@ -93,3 +93,23 @@ Guia rápido para agentes manterem o projeto Astro + PocketBase com baixo acopla
 
 - Testes atualizados:
   - `tests/unit/pages-core.test.ts` cobre reset do filtro em sessões e toggle de detalhes em pacientes.
+
+## Atualização de Navegação Mobile + Tema Lilás (Fevereiro 2026)
+
+- Navegação de retorno ao dashboard foi padronizada para botão mobile-first com alvo de toque maior:
+  - `src/pages/pacientes.astro`
+  - `src/pages/sessoes.astro`
+  - `src/pages/relatorios-faturamento.astro`
+  - `src/pages/relatorios-valores-receber.astro`
+
+- Novo tema global `lilac` implementado no projeto:
+  - `src/components/common/ApplyColorMode.astro` reconhece/aplica `lilac`
+  - `src/components/common/BasicScripts.astro` agora cicla tema em: `light -> dark -> lilac -> light`
+  - `src/components/CustomStyles.astro` define tokens e aparência lilás
+  - `src/assets/styles/tailwind.css` ajusta header sticky no modo lilás
+
+- `src/components/common/ToggleTheme.astro` atualizado para refletir alternância de três temas.
+
+- Testes adicionados/ajustados:
+  - `tests/unit/theme-mode.test.ts`
+  - `tests/unit/pages-core.test.ts` (botão de retorno acessível e validações relacionadas)

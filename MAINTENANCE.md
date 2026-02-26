@@ -84,3 +84,27 @@
 
 - Reset de filtro em sessões após ações de editar/excluir/toggle pagamento.
 - Expansão de detalhes em pacientes sem interferir no menu de ações.
+
+## Atualização de tema e acessibilidade mobile (Fevereiro 2026)
+
+### Botão de retorno
+
+- Em páginas do dashboard, o antigo link textual `← Voltar ao Dashboard` foi substituído por botão acessível com:
+  - `min-h-11` (área de toque adequada)
+  - `aria-label="Voltar ao Dashboard"`
+
+### Tema `lilac`
+
+- Tema adicional disponível via `localStorage.theme = "lilac"`.
+- Fluxo de alternância no botão de tema:
+  - `light -> dark -> lilac -> light`
+- Arquivos chave:
+  - `src/components/common/ApplyColorMode.astro`
+  - `src/components/common/BasicScripts.astro`
+  - `src/components/CustomStyles.astro`
+  - `src/assets/styles/tailwind.css`
+
+### Testes
+
+- `tests/unit/theme-mode.test.ts` valida suporte ao tema lilás no script e estilos.
+- `tests/unit/pages-core.test.ts` valida padrão do botão de voltar ao dashboard nas páginas principais.

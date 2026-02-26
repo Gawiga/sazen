@@ -41,11 +41,17 @@ describe("Core pages content", () => {
   it("info banners should be closable in pacientes/sessoes/relatorios", () => {
     const pacientes = readPage("pacientes.astro");
     const sessoes = readPage("sessoes.astro");
-    const relatorios = readPage("relatorios.astro");
+    const relatoriosFaturamento = readPage("relatorios-faturamento.astro");
+    const relatoriosValoresReceber = readPage(
+      "relatorios-valores-receber.astro",
+    );
 
     expect(pacientes).toContain("close-patients-banner");
     expect(sessoes).toContain("close-sessions-banner");
-    expect(relatorios).toContain("close-reports-banner");
+    expect(relatoriosFaturamento).toContain('aria-label="Voltar ao Dashboard"');
+    expect(relatoriosValoresReceber).toContain(
+      'aria-label="Voltar ao Dashboard"',
+    );
   });
 
   it("pacientes should default to active filter and hide status column", () => {
@@ -100,10 +106,26 @@ describe("Core pages content", () => {
   it("dashboard and index should still exist with navigation to core flow", () => {
     const dashboard = readPage("dashboard.astro");
     const index = readPage("index.astro");
+    const pacientes = readPage("pacientes.astro");
+    const sessoes = readPage("sessoes.astro");
+    const relatoriosFaturamento = readPage("relatorios-faturamento.astro");
+    const relatoriosValoresReceber = readPage(
+      "relatorios-valores-receber.astro",
+    );
 
     expect(dashboard).toContain("Dashboard");
     expect(dashboard).toContain('href="/relatorios-faturamento"');
     expect(dashboard).toContain('href="/relatorios-valores-receber"');
+    for (const page of [
+      pacientes,
+      sessoes,
+      relatoriosFaturamento,
+      relatoriosValoresReceber,
+    ]) {
+      expect(page).toContain('aria-label="Voltar ao Dashboard"');
+      expect(page).toContain("Voltar ao Dashboard");
+      expect(page).not.toContain("← Voltar ao Dashboard");
+    }
     expect(index).toContain('href="/login"');
     expect(index).toContain('href="/dashboard"');
   });

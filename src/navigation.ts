@@ -23,10 +23,6 @@ export const headerData = {
       text: "Financeiro",
       links: [
         {
-          text: "Relatórios",
-          href: getPermalink("/relatorios"),
-        },
-        {
           text: "Faturamento Mensal",
           href: getPermalink("/relatorios-faturamento"),
         },
