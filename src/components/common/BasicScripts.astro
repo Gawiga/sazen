@@ -10,21 +10,22 @@ import { UI } from 'astrowind:config';
   window.basic_script = true;
 
   function applyTheme(theme) {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    document.documentElement.classList.remove('dark', 'lilac');
+    if (theme === 'dark') document.documentElement.classList.add('dark');
+    if (theme === 'lilac') document.documentElement.classList.add('lilac');
   }
 
   const initTheme = function () {
     if ((defaultTheme && defaultTheme.endsWith(':only')) || (!localStorage.theme && defaultTheme !== 'system')) {
-      applyTheme(defaultTheme.replace(':only', ''));
+      const lockedTheme = defaultTheme.replace(':only', '');
+      applyTheme(lockedTheme === 'lilac' ? 'lilac' : lockedTheme);
     } else if (
       localStorage.theme === 'dark' ||
       (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
     ) {
       applyTheme('dark');
+    } else if (localStorage.theme === 'lilac') {
+      applyTheme('lilac');
     } else {
       applyTheme('light');
     }
@@ -70,9 +71,14 @@ import { UI } from 'astrowind:config';
       }
 
       Observer.removeAnimationDelay();
-
-      document.documentElement.classList.toggle('dark');
-      localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+      const currentTheme = document.documentElement.classList.contains('dark')
+        ? 'dark'
+        : document.documentElement.classList.contains('lilac')
+          ? 'lilac'
+          : 'light';
+      const nextTheme = currentTheme === 'light' ? 'dark' : currentTheme === 'dark' ? 'lilac' : 'light';
+      applyTheme(nextTheme);
+      localStorage.theme = nextTheme;
     });
 
     attachEvent('[data-aw-social-share]', 'click', function (_, elem) {

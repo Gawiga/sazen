@@ -60,4 +60,60 @@ import '@fontsource-variable/inter';
       color: snow;
     }
   }
+
+  .lilac {
+    --aw-font-sans: 'Inter Variable';
+    --aw-font-serif: 'Inter Variable';
+    --aw-font-heading: 'Inter Variable';
+
+    --aw-color-primary: rgb(147 51 234);
+    --aw-color-secondary: rgb(126 34 206);
+    --aw-color-accent: rgb(168 85 247);
+
+    --aw-color-text-heading: rgb(46 16 101);
+    --aw-color-text-default: rgb(59 7 100);
+    --aw-color-text-muted: rgb(88 28 135 / 72%);
+    --aw-color-bg-page: rgb(250 245 255);
+
+    ::selection {
+      background-color: rgb(233 213 255);
+      color: rgb(59 7 100);
+    }
+  }
+
+  .lilac body {
+    background: linear-gradient(180deg, rgb(250 245 255) 0%, rgb(243 232 255) 100%);
+  }
+
+  .lilac .bg-white {
+    background-color: rgb(250 245 255);
+  }
+
+  .lilac .border-gray-300,
+  .lilac .border-gray-200 {
+    border-color: rgb(216 180 254);
+  }
+
+  .lilac .text-gray-900,
+  .lilac .text-gray-800,
+  .lilac .text-gray-700,
+  .lilac .text-gray-600 {
+    color: rgb(76 29 149);
+  }
+
+  .lilac .bg-blue-600,
+  .lilac .bg-green-600,
+  .lilac .bg-indigo-600,
+  .lilac .bg-cyan-600 {
+    background-color: rgb(147 51 234);
+    border-color: rgb(147 51 234);
+  }
+
+  .lilac .hover\:bg-blue-700:hover,
+  .lilac .hover\:bg-green-700:hover,
+  .lilac .hover\:bg-indigo-700:hover,
+  .lilac .hover\:bg-cyan-700:hover {
+    background-color: rgb(126 34 206);
+    border-color: rgb(126 34 206);
+  }
 </style>
