@@ -363,7 +363,19 @@ const metadata = {
         return;
       }
 
-      body.innerHTML = items
+      // Ordenar: pacientes ativos por nome, depois inativos por nome
+      const sortedItems = [...items].sort((a, b) => {
+        // Se um está ativo e outro não, o ativo vem primeiro
+        if (a.ativo !== b.ativo) {
+          return a.ativo ? -1 : 1;
+        }
+        // Se ambos têm o mesmo status, ordenar por nome
+        const nameA = (a.nome || "").toLowerCase();
+        const nameB = (b.nome || "").toLowerCase();
+        return nameA.localeCompare(nameB, "pt-BR");
+      });
+
+      body.innerHTML = sortedItems
         .map(
           (it) => `
         <tr class="border-t transition hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800">
