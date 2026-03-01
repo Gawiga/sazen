@@ -15,13 +15,35 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   }
 
   try {
-    const { email, password } = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid JSON payload" }), {
+        status: 400,
+      });
+    }
 
-    if (!email || !password) {
+    const { email, password } = (body ?? {}) as {
+      email?: unknown;
+      password?: unknown;
+    };
+
+    const normalizedEmail =
+      typeof email === "string" ? email.trim().toLowerCase() : "";
+    const normalizedPassword = typeof password === "string" ? password : "";
+
+    if (!normalizedEmail || !normalizedPassword) {
       return new Response(
         JSON.stringify({ error: "Email and password are required" }),
         { status: 400 },
       );
+    }
+
+    if (normalizedEmail.length > 254 || normalizedPassword.length > 256) {
+      return new Response(JSON.stringify({ error: "Invalid credentials" }), {
+        status: 400,
+      });
     }
 
     const pb = new PocketBase(POCKETBASE_URL);
@@ -29,7 +51,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     // Authenticate with PocketBase
     await pb
       .collection(POCKETBASE_COLLECTION)
-      .authWithPassword(email, password);
+      .authWithPassword(normalizedEmail, normalizedPassword);
 
     // Store token in HTTP-only cookie. Use secure cookies only in production (localhost won't accept secure cookies).
     cookies.set("pb_auth", pb.authStore.token, {
@@ -46,16 +68,25 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         token: pb.authStore.token,
         record: pb.authStore.record,
       }),
-      { status: 200 },
+      {
+        status: 200,
+        headers: { "Cache-Control": "no-store" },
+      },
     );
   } catch (error) {
-    console.error("Login error:", error);
+    console.error(
+      "Login error:",
+      error instanceof Error ? error.message : error,
+    );
     return new Response(
       JSON.stringify({
         success: false,
-        error: error instanceof Error ? error.message : "Authentication failed",
+        error: "Invalid credentials",
       }),
-      { status: 401 },
+      {
+        status: 401,
+        headers: { "Cache-Control": "no-store" },
+      },
     );
   }
 };

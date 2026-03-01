@@ -14,4 +14,15 @@ describe("UserMenu auth behavior", () => {
     expect(userMenu).toContain('credentials: "include"');
     expect(userMenu).not.toContain('window.location.href = "/login"');
   });
+
+  it("should support nome/email fallback and merge fetched user with local fallback", () => {
+    const userMenu = readFileSync(
+      join(process.cwd(), "src/components/auth/UserMenu.astro"),
+      "utf-8",
+    );
+
+    expect(userMenu).toContain('typeof user.nome === "string"');
+    expect(userMenu).toContain('typeof user.email === "string"');
+    expect(userMenu).toContain("? { ...fallbackUser, ...fetchedUser }");
+  });
 });

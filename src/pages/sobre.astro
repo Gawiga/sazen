@@ -1,0 +1,120 @@
+---
+import Features2 from '~/components/widgets/Features2.astro';
+import Features3 from '~/components/widgets/Features3.astro';
+import Hero from '~/components/widgets/Hero.astro';
+import Stats from '~/components/widgets/Stats.astro';
+import Steps2 from '~/components/widgets/Steps2.astro';
+import Layout from '~/layouts/PageLayout.astro';
+
+const metadata = {
+  title: 'Sobre Nós',
+};
+---
+
+<Layout metadata={metadata}>
+  <!-- Hero Widget ******************* -->
+
+  <Hero
+    tagline="Sobre o Sazen"
+    image={{
+      src: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
+      alt: 'Imagem ilustrativa de consultório saudável',
+    }}
+  >
+    <Fragment slot="title">
+      Transformando a gestão de <br />
+      <span class="text-accent dark:text-white"> Pacientes e Sessões</span>
+    </Fragment>
+
+    <Fragment slot="subtitle">
+      O Sazen foi desenvolvido para simplificar o seu dia a dia. Uma plataforma completa para gerenciar seus pacientes, registrar sessões, organizar relatórios e otimizar o tempo para focar no que realmente importa: o cuidado com o paciente.
+    </Fragment>
+  </Hero>
+
+  <!-- Stats Widget ****************** -->
+
+  <Stats
+    title="Nossa plataforma em números"
+    stats={[
+      { title: 'Pacientes', amount: '+500' },
+      { title: 'Sessões', amount: '+2000' },
+      { title: 'Relatórios', amount: '+1500' },
+      { title: 'Profissionais', amount: '+50' },
+    ]}
+  />
+
+  <!-- Features3 Widget ************** -->
+
+  <Features3
+    title="Principais Recursos"
+    subtitle="Descubra o que o Sazen pode fazer pelo seu consultório ou clínica."
+    columns={3}
+    isBeforeContent={true}
+    items={[
+      {
+        title: 'Gestão de Pacientes',
+        description:
+          'Mantenha o histórico completo, dados cadastrais e evolução de cada paciente em um único lugar seguro e organizado.',
+        icon: 'tabler:users',
+      },
+      {
+        title: 'Controle de Sessões',
+        description:
+          'Agende, registre e acompanhe as sessões de forma prática, garantindo que nenhum detalhe do atendimento seja extraído.',
+        icon: 'tabler:calendar-event',
+      },
+      {
+        title: 'Relatórios Detalhados',
+        description:
+          'Gere relatórios automaticamente baseados no histórico de sessões para auxiliar na tomada de decisões e avaliações.',
+        icon: 'tabler:report',
+      },
+    ]}
+  />
+
+  <!-- Steps2 Widget ****************** -->
+
+  <Steps2
+    title="Nossos Valores"
+    subtitle="Construímos o Sazen com foco na qualidade, segurança e no bem-estar dos profissionais de saúde e seus pacientes."
+    items={[
+      {
+        title: 'Segurança de Dados',
+        description:
+          'A privacidade e a proteção dos dados sensíveis dos seus pacientes são a nossa prioridade número um. Promovemos rigoroso controle de acesso.',
+      },
+      {
+        title: 'Simplicidade na Rotina',
+        description:
+          'Um sistema não precisa ser complexo. Priorizamos uma interface intuitiva para que sua gestão clínica fique mais leve e ágil.',
+      },
+      {
+        title: 'Inovação e Cuidado',
+        description:
+          'Estamos sempre buscando melhorar a plataforma, integrando as melhores práticas tecnológicas ao atendimento à saúde humanizado.',
+      },
+    ]}
+  />
+
+  <!-- Features2 Widget ************** -->
+
+  <Features2
+    title="Suporte Técnico"
+    tagline="Precisa de Ajuda?"
+    columns={2}
+    items={[
+      {
+        title: 'Chat Online',
+        description:
+          'Nossa equipe está pronta para ajudar com qualquer dúvida diretamente através da plataforma.',
+        icon: 'tabler:messages',
+      },
+      {
+        title: 'E-mail',
+        description:
+          'Envie suas sugestões, dúvidas ou feedbacks para nosso e-mail de suporte (suporte@sazen.app).',
+        icon: 'tabler:mail',
+      },
+    ]}
+  />
+</Layout>
