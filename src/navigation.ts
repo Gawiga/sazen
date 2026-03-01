@@ -64,11 +64,10 @@ export const footerData = {
           text: "Valores a Receber",
           href: getPermalink("/relatorios-valores-receber"),
         },
-        { text: "Termos de Uso", href: getPermalink("/terms") },
       ],
     },
   ],
-  secondaryLinks: [{ text: "Privacidade", href: getPermalink("/privacy") }],
+  secondaryLinks: [{ text: "Sobre", href: getPermalink("/sobre") }],
   socialLinks: [
     { ariaLabel: "Instagram", icon: "tabler:brand-instagram", href: "#" },
     { ariaLabel: "RSS", icon: "tabler:rss", href: getAsset("/rss.xml") },

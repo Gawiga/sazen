@@ -129,3 +129,29 @@ Guia rápido para agentes manterem o projeto Astro + PocketBase com baixo acopla
 - Testes adicionados/ajustados:
   - `tests/unit/user-menu.test.ts`
   - `tests/unit/theme-mode.test.ts`
+
+## Atualização Dashboard + Hardening Auth (Março 2026)
+
+- Dashboard/UserMenu (`src/components/auth/UserMenu.astro`):
+  - Correção do nome exibido: fallback expandido para `name`, `username`, `nome` e `email`.
+  - Quando `/api/auth/user` retorna payload parcial, o menu agora faz merge com o fallback de `localStorage` (`pb_auth`) para evitar regressão para `Usuário`.
+
+- Segurança de autenticação:
+  - `src/pages/api/auth/user.ts`:
+    - removida validação JWT apenas por decode local.
+    - validação/token refresh agora via PocketBase (`authRefresh`) antes de retornar usuário.
+    - cookie `pb_auth` é renovado somente após validação no backend.
+    - falhas retornam `401 Unauthorized` + limpeza de cookie para estado inválido.
+  - `src/pages/api/auth/refresh.ts`:
+    - refresh agora obrigatório via `authRefresh` no PocketBase.
+    - removido comportamento inseguro de aceitar token apenas por expiração local.
+  - `src/pages/api/auth/login.ts`:
+    - sanitização básica de entrada (JSON inválido, normalização de email, limites de tamanho).
+    - erro de login padronizado para `Invalid credentials` (evita vazamento de detalhe interno).
+    - respostas com `Cache-Control: no-store`.
+
+- Testes adicionados/ajustados:
+  - `tests/unit/auth-routes.test.ts`:
+    - cobre `/api/auth/login`, `/api/auth/user`, `/api/auth/refresh` com mocks do PocketBase.
+  - `tests/unit/user-menu.test.ts`:
+    - cobre fallback de nome (`nome/email`) e merge de usuário remoto/local.

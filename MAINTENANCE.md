@@ -139,3 +139,48 @@ Arquivo relevante:
 
 - `tests/unit/user-menu.test.ts`
 - `tests/unit/theme-mode.test.ts`
+
+## Atualização de manutenção: dashboard e segurança de auth (Março 2026)
+
+### Nome no dashboard (UserMenu)
+
+- A renderização do nome não deve depender apenas de `name/username`.
+- Ordem atual de fallback:
+  - `name`
+  - `username`
+  - `nome`
+  - `email`
+  - `Usuário` (último recurso)
+- Se `/api/auth/user` voltar payload parcial, combinar dados remotos com `pb_auth` do `localStorage` para preservar identidade visual estável.
+
+Arquivo relevante:
+
+- `src/components/auth/UserMenu.astro`
+
+### Segurança no login e sessão
+
+- Não aceitar token apenas com decode local de JWT para endpoints críticos.
+- `user` e `refresh` devem validar token no PocketBase via `authRefresh`.
+- Em falha de validação:
+  - retornar `401`
+  - limpar cookie `pb_auth`
+- Login:
+  - validar JSON de entrada
+  - normalizar email
+  - limitar tamanho de campos
+  - resposta de erro genérica (`Invalid credentials`)
+  - usar `Cache-Control: no-store`
+
+Arquivos relevantes:
+
+- `src/pages/api/auth/login.ts`
+- `src/pages/api/auth/user.ts`
+- `src/pages/api/auth/refresh.ts`
+
+### Testes adicionados
+
+- `tests/unit/auth-routes.test.ts`:
+  - valida normalização/entrada de login
+  - valida `authRefresh` obrigatório em `user` e `refresh`
+- `tests/unit/user-menu.test.ts`:
+  - valida fallback de nome (`nome/email`) e merge remoto/local

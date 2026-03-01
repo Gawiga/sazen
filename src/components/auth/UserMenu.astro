@@ -4,10 +4,26 @@ interface Props {
 }
 
 const { user = null } = Astro.props;
+function resolveDisplayName(source: Record<string, unknown> | null): string {
+  if (!source) return "Usuário";
+
+  const candidates = [
+    source.name,
+    source.username,
+    source.nome,
+    source.email,
+  ];
+
+  for (const value of candidates) {
+    if (typeof value === "string" && value.trim().length > 0) {
+      return value.trim();
+    }
+  }
+
+  return "Usuário";
+}
 const displayName =
-  (typeof user?.name === "string" && user.name) ||
-  (typeof user?.username === "string" && user.username) ||
-  "Usuário";
+  resolveDisplayName((user as Record<string, unknown> | null) ?? null);
 const email = typeof user?.email === "string" ? user.email : "";
 ---
 
@@ -103,7 +119,10 @@ const email = typeof user?.email === "string" ? user.email : "";
 
     const fetchedUser = await fetchCurrentUser();
     const fallbackUser = getUserFromLocalStorage();
-    const user = fetchedUser || fallbackUser;
+    const user =
+      fetchedUser && fallbackUser
+        ? { ...fallbackUser, ...fetchedUser }
+        : fetchedUser || fallbackUser;
 
     if (!user) {
       return;
@@ -121,6 +140,8 @@ const email = typeof user?.email === "string" ? user.email : "";
         const name =
           (typeof user.name === "string" && user.name) ||
           (typeof user.username === "string" && user.username) ||
+          (typeof user.nome === "string" && user.nome) ||
+          (typeof user.email === "string" && user.email) ||
           "Usuário";
         userGreeting.textContent = `Olá ${name}`;
       }

@@ -1,10 +1,11 @@
 import type { APIRoute } from "astro";
 import PocketBase from "pocketbase";
-import { decodeJwt } from "~/lib/jwt-helper";
 
 const POCKETBASE_URL =
   import.meta.env.PUBLIC_POCKETBASE_URL ||
   "https://gawiga-server.bonito-dace.ts.net/";
+const POCKETBASE_COLLECTION =
+  import.meta.env.PUBLIC_POCKETBASE_COLLECTION || "users";
 
 export const POST: APIRoute = async ({ cookies }) => {
   try {
@@ -18,26 +19,20 @@ export const POST: APIRoute = async ({ cookies }) => {
       });
     }
 
-    // Validate current token
-    const { valid } = decodeJwt(token);
-    if (!valid) {
-      cookies.delete("pb_auth", { path: "/" });
-      return new Response(JSON.stringify({ error: "Token expired" }), {
-        status: 401,
-      });
-    }
-
-    // Try to refresh the token using PocketBase
+    // Validate and refresh token using PocketBase backend.
     const pb = new PocketBase(POCKETBASE_URL);
-    pb.authStore.save(token); // Restore the token
+    pb.authStore.save(token);
 
     try {
-      // PocketBase refresh method would go here
-      // For now, return the existing token as it's still valid
-      // In production, implement token refresh if PocketBase supports it
+      await pb.collection(POCKETBASE_COLLECTION).authRefresh();
+      const refreshedToken = pb.authStore.token;
+
+      if (!refreshedToken) {
+        throw new Error("Token refresh failed");
+      }
 
       // Update cookie with new expiration
-      cookies.set("pb_auth", token, {
+      cookies.set("pb_auth", refreshedToken, {
         httpOnly: true,
         secure: import.meta.env.PROD === true,
         sameSite: "lax",
@@ -48,7 +43,7 @@ export const POST: APIRoute = async ({ cookies }) => {
       return new Response(
         JSON.stringify({
           success: true,
-          token: pb.authStore.token,
+          token: refreshedToken,
         }),
         { status: 200 },
       );
