@@ -15,9 +15,9 @@ Manter o projeto Astro + PocketBase simples, seguro e com baixo acoplamento.
 
 ## Serviços (domínio)
 
-- Facades únicas:
-  - `src/services/patientsService.ts`
-  - `src/services/sessionsService.ts`
+- Serviços canônicos:
+  - `src/services/pacienteService.ts`
+  - `src/services/sessaoService.ts`
 - Relatórios:
   - `src/services/reportService.ts`
 - Base HTTP/auth client:

@@ -1,6 +1,7 @@
 ---
 import PageLayout from "~/layouts/PageLayout.astro";
 import Loading from "~/components/widgets/Loading.astro";
+import NameFilter from "~/components/common/NameFilter.astro";
 
 const metadata = {
   title: "Sessões",
@@ -104,15 +105,13 @@ const metadata = {
         <div class="text-sm text-gray-600 dark:text-gray-400">
           Exibindo <span id="sessions-count">0</span> sessões
         </div>
-        <div class="flex items-center gap-2">
-          <span class="text-sm text-gray-600 dark:text-gray-400">Paciente:</span>
-          <input
-            id="session-name-filter"
-            type="text"
-            placeholder="Filtrar por nome"
-            class="w-40 rounded border bg-white px-2 py-1 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white sm:w-56"
-          />
-        </div>
+        <NameFilter
+          label="Paciente:"
+          inputId="session-name-filter"
+          clearButtonId="clear-session-name-filter"
+          placeholder="Filtrar por nome"
+          inputWidthClass="w-40 sm:w-56"
+        />
         <div class="flex items-center gap-2">
           <span class="text-sm text-gray-600 dark:text-gray-400"
             >Por página:</span
@@ -416,7 +415,7 @@ const metadata = {
     }
 
     function applySessionFilter() {
-      const query = sessionNameFilter.trim().toLowerCase();
+      const query = normalizeText(sessionNameFilter);
       const filtered = !query
         ? loadedSessions
         : loadedSessions.filter((session) => {
@@ -424,7 +423,7 @@ const metadata = {
               patientDetails.get(session.id_paciente)?.nome ||
               patientDetails.get(session.id_paciente)?.email ||
               "";
-            return patientName.toLowerCase().includes(query);
+            return normalizeText(patientName).includes(query);
           });
 
       renderSessions(filtered);
@@ -507,16 +506,26 @@ const metadata = {
 
     function attachSessionFilterListener() {
       const input = byId("session-name-filter") as HTMLInputElement | null;
-      input?.addEventListener("input", () => {
-        const previousQuery = sessionNameFilter.trim();
+      if (!input || input.dataset.bound === "true") return;
+      input.dataset.bound = "true";
+
+      input.addEventListener("input", () => {
         sessionNameFilter = input.value;
-        if (sessionNameFilter.trim() === "" && previousQuery !== "") {
+        if (sessionNameFilter.trim() === "") {
           loadSessions(currentPage);
           return;
         }
 
         applySessionFilter();
       });
+    }
+
+    function normalizeText(value: string): string {
+      return value
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "")
+        .trim()
+        .toLowerCase();
     }
 
     function attachPaginationListeners() {

@@ -16,3 +16,4 @@ export type {
   PaginationConfig,
   AuthFetchOptions,
 } from "./shared";
+export type { AuthLoginPayload, AuthSignupPayload, AuthUser } from "./auth";

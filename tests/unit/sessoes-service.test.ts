@@ -55,7 +55,9 @@ vi.mock("../../src/lib/jwt-helper", () => ({
   decodeJwt: decodeJwtMock,
 }));
 
-import {
+import { SessaoService } from "../../src/services/sessaoService";
+
+const {
   createSessao,
   deleteSessao,
   getSessaoById,
@@ -64,7 +66,7 @@ import {
   paySingleSessaoFromPreview,
   payAllPendingSessoesByMonth,
   updateSessao,
-} from "../../src/services/sessoesService";
+} = SessaoService;
 
 describe("sessoesService", () => {
   beforeEach(() => {

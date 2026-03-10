@@ -1,6 +1,7 @@
 ---
 import PageLayout from "~/layouts/PageLayout.astro";
 import Loading from "~/components/widgets/Loading.astro";
+import NameFilter from "~/components/common/NameFilter.astro";
 
 const metadata = {
   title: "Relatórios - Valores a Receber",
@@ -34,6 +35,13 @@ const metadata = {
         <div class="text-sm text-gray-600 dark:text-gray-400">
           Exibindo <span id="receber-count">0</span> registros
         </div>
+        <NameFilter
+          label="Nome:"
+          inputId="name-filter"
+          clearButtonId="clear-receber-name-filter"
+          placeholder="Filtrar nome"
+          inputWidthClass="w-44 sm:w-56"
+        />
         <div class="flex items-center gap-2">
           <span class="text-sm text-gray-600 dark:text-gray-400">Por página:</span>
           <button type="button" class="per-page-btn rounded border px-3 py-1 text-sm" data-per-page="20">20</button>
@@ -45,17 +53,7 @@ const metadata = {
       <table class="w-full table-auto text-left">
         <thead>
           <tr class="border-b text-sm text-gray-600 dark:border-gray-700 dark:text-gray-400">
-            <th class="p-2">
-              <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <span>Nome</span>
-                <input
-                  id="name-filter"
-                  type="text"
-                  placeholder="Filtrar nome"
-                  class="w-full rounded border bg-white px-2 py-1 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white sm:w-56"
-                />
-              </div>
-            </th>
+            <th class="p-2">Nome</th>
             <th class="p-2">Mês</th>
             <th class="p-2">Total</th>
           </tr>
@@ -487,7 +485,6 @@ const metadata = {
 
         render();
         updatePaginationControls();
-        updateCount();
       } catch (err) {
         console.error(err);
         if (body) {
@@ -501,14 +498,18 @@ const metadata = {
       const body = byId("receber-body");
       if (!body) return;
 
-      const query = nameFilter.trim().toLowerCase();
+      const query = nameFilter.trim();
+      const normalizedQuery = normalizeText(query);
       const filtered = !query
         ? items
-        : items.filter((item) => getRowLabel(item).toLowerCase().includes(query));
+        : items.filter((item) =>
+            normalizeText(getRowLabel(item)).includes(normalizedQuery),
+          );
 
       if (!filtered.length) {
         body.innerHTML =
           '<tr><td colspan="3" class="p-4 text-center text-gray-500">Nenhum registro encontrado.</td></tr>';
+        updateCount(0);
         return;
       }
 
@@ -557,6 +558,7 @@ const metadata = {
         .join("");
 
       attachRowListeners();
+      updateCount(filtered.length);
     }
 
     function attachRowListeners() {
@@ -597,6 +599,10 @@ const metadata = {
 
       input?.addEventListener("input", () => {
         nameFilter = input.value;
+        if (nameFilter.trim() === "") {
+          loadData(currentPage);
+          return;
+        }
         render();
       });
     }
@@ -687,9 +693,24 @@ const metadata = {
       if (indicator) indicator.textContent = view.indicator;
     }
 
-    function updateCount() {
+    function updateCount(filteredCount = items.length) {
       const countEl = byId("receber-count");
-      if (countEl) countEl.textContent = String(totalItems);
+      if (!countEl) return;
+
+      if (nameFilter.trim()) {
+        countEl.textContent = `${filteredCount} de ${totalItems}`;
+        return;
+      }
+
+      countEl.textContent = String(totalItems);
+    }
+
+    function normalizeText(value: string): string {
+      return value
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "")
+        .trim()
+        .toLowerCase();
     }
 
     function attachBannerListeners() {

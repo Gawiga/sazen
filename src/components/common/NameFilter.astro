@@ -1,0 +1,80 @@
+---
+interface Props {
+  label?: string;
+  inputId: string;
+  clearButtonId: string;
+  placeholder?: string;
+  inputWidthClass?: string;
+}
+
+const {
+  label = "Nome:",
+  inputId,
+  clearButtonId,
+  placeholder = "Filtrar por nome",
+  inputWidthClass = "w-full sm:w-56",
+} = Astro.props;
+---
+
+<div
+  class="flex items-center gap-2"
+  data-name-filter-root
+  data-name-filter-input-id={inputId}
+  data-name-filter-clear-id={clearButtonId}>
+  <span class="text-sm text-gray-600 dark:text-gray-400">{label}</span>
+  <div class={`relative ${inputWidthClass}`}>
+    <input
+      id={inputId}
+      type="text"
+      placeholder={placeholder}
+      class="w-full rounded border bg-white py-1 pl-2 pr-16 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+    />
+    <button
+      id={clearButtonId}
+      type="button"
+      class="absolute inset-y-0 right-1 hidden rounded px-2 text-xs font-medium text-gray-600 transition hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+      aria-label="Limpar filtro de nome">
+      Limpar
+    </button>
+  </div>
+</div>
+
+<script is:inline>
+  function initNameFilters() {
+    document.querySelectorAll("[data-name-filter-root]").forEach((root) => {
+      if (root.getAttribute("data-name-filter-bound") === "true") return;
+      root.setAttribute("data-name-filter-bound", "true");
+
+      const inputId = root.getAttribute("data-name-filter-input-id");
+      const clearId = root.getAttribute("data-name-filter-clear-id");
+      if (!inputId || !clearId) return;
+
+      const input = document.getElementById(inputId);
+      const clearButton = document.getElementById(clearId);
+      if (!(input instanceof HTMLInputElement)) return;
+      if (!(clearButton instanceof HTMLButtonElement)) return;
+
+      const syncClearButton = () => {
+        clearButton.classList.toggle("hidden", input.value.trim() === "");
+      };
+
+      syncClearButton();
+      input.addEventListener("input", syncClearButton);
+
+      clearButton.addEventListener("click", () => {
+        if (!input.value) return;
+        input.value = "";
+        syncClearButton();
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.focus();
+      });
+    });
+  }
+
+  document.addEventListener("astro:page-load", initNameFilters);
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initNameFilters);
+  } else {
+    initNameFilters();
+  }
+</script>

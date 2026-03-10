@@ -5,6 +5,7 @@
 - Páginas: `dashboard`, `pacientes`, `sessoes`, `relatorios-*`
 - APIs em `src/pages/api/**`
 - Serviços por domínio em `src/services/**`
+  - canônicos: `pacienteService.ts` e `sessaoService.ts`
 
 ## Operações sensíveis
 

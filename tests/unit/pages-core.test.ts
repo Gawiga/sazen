@@ -65,6 +65,8 @@ describe("Core pages content", () => {
     expect(pacientes).toContain("row-actions-menu");
     expect(pacientes).toContain("patient-toggle");
     expect(pacientes).toContain("patient-details-");
+    expect(pacientes).toContain('inputId="patient-name-filter"');
+    expect(pacientes).toContain('clearButtonId="clear-patient-name-filter"');
     expect(pacientes).toContain("formatPatientDateShort");
     expect(pacientes).toContain("Endereço:");
     expect(pacientes).toContain("Telefone:");
@@ -79,14 +81,13 @@ describe("Core pages content", () => {
 
     expect(sessoes).toContain('<th class="p-3">Paciente</th>');
     expect(sessoes).toContain('<th class="p-3 text-right">Ações</th>');
-    expect(sessoes).toContain('id="session-name-filter"');
+    expect(sessoes).toContain('inputId="session-name-filter"');
+    expect(sessoes).toContain('clearButtonId="clear-session-name-filter"');
     expect(sessoes).toContain("applySessionFilter");
     expect(sessoes).toContain("formatSessionDateDetailed");
     expect(sessoes).toContain("Valor Sessão:");
     expect(sessoes).toContain("Pagamento:");
-    expect(sessoes).toContain(
-      'if (sessionNameFilter.trim() === "" && previousQuery !== "")',
-    );
+    expect(sessoes).toContain('if (sessionNameFilter.trim() === "")');
     expect(sessoes).toContain("loadSessions(currentPage)");
     expect(sessoes).toContain("row-actions-menu");
     expect(sessoes).toContain("status-toggle");
@@ -103,6 +104,10 @@ describe("Core pages content", () => {
     );
 
     expect(relatoriosValoresReceber).toContain('<th class="p-2">Mês</th>');
+    expect(relatoriosValoresReceber).toContain('inputId="name-filter"');
+    expect(relatoriosValoresReceber).toContain(
+      'clearButtonId="clear-receber-name-filter"',
+    );
     expect(relatoriosValoresReceber).toContain("getMonthLabel");
     expect(relatoriosValoresReceber).toContain(
       "SessaoService.getPendingSessionsPreview",
@@ -113,6 +118,17 @@ describe("Core pages content", () => {
     expect(relatoriosValoresReceber).toContain('id="bulk-payment-modal"');
     expect(relatoriosValoresReceber).toContain("data-receber-row");
     expect(relatoriosValoresReceber).toContain('colspan="3"');
+  });
+
+  it("shared name filter component should dispatch input after clear button click", () => {
+    const component = readFileSync(
+      join(process.cwd(), "src/components/common/NameFilter.astro"),
+      "utf-8",
+    );
+
+    expect(component).toContain("data-name-filter-root");
+    expect(component).toContain('input.dispatchEvent(new Event("input"');
+    expect(component).toContain("clearButton.classList.toggle");
   });
 
   it("dashboard and index should still exist with navigation to core flow", () => {

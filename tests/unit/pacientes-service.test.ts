@@ -42,13 +42,15 @@ vi.mock("../../src/lib/jwt-helper", () => ({
   decodeJwt: decodeJwtMock,
 }));
 
-import {
+import { PacienteService } from "../../src/services/pacienteService";
+
+const {
   createPaciente,
   deletePaciente,
   getPacienteById,
   listPacientes,
   updatePaciente,
-} from "../../src/services/pacientesService";
+} = PacienteService;
 
 describe("pacientesService", () => {
   beforeEach(() => {

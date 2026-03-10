@@ -1,33 +1,13 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { APIRoute } from "astro";
-import PocketBase from "pocketbase";
-import { getTokenFromRequest } from "../../../lib/jwt-helper";
-
-const POCKETBASE_URL =
-  import.meta.env.PUBLIC_POCKETBASE_URL ||
-  "https://gawiga-server.bonito-dace.ts.net/";
+import type PocketBase from "pocketbase";
+import {
+  getErrorStatus,
+  getPb,
+  getTokenOrUnauthorized,
+  parsePagination,
+  unauthorizedResponse,
+} from "../../../services/sharedService";
 const MAX_FETCH_PER_PAGE = 100;
-
-function getPb(token?: string) {
-  const pb = new PocketBase(POCKETBASE_URL);
-  if (token) pb.authStore.save(token, {} as any);
-  return pb;
-}
-
-function parsePagination(url: URL) {
-  const pageRaw = Number.parseInt(url.searchParams.get("page") || "1", 10);
-  const perPageRaw = Number.parseInt(
-    url.searchParams.get("perPage") || "20",
-    10,
-  );
-
-  return {
-    page: Number.isNaN(pageRaw) ? 1 : Math.max(1, pageRaw),
-    perPage: Number.isNaN(perPageRaw)
-      ? 20
-      : Math.max(1, Math.min(100, perPageRaw)),
-  };
-}
 
 function toMonthKey(dateValue: string): string | null {
   if (!dateValue) return null;
@@ -181,30 +161,12 @@ async function getValoresReceberFromPendingSessions(
   };
 }
 
-function getErrorStatus(error: unknown): number | null {
-  if (!error || typeof error !== "object") return null;
-  const statusDirect = (error as { status?: unknown }).status;
-  if (typeof statusDirect === "number") return statusDirect;
-
-  const response = (error as { response?: { status?: unknown } }).response;
-  if (response && typeof response.status === "number") return response.status;
-
-  return null;
-}
-
-function unauthorizedResponse() {
-  return new Response(
-    JSON.stringify({ success: false, error: "Unauthorized" }),
-    { status: 401 },
-  );
-}
-
 export const GET: APIRoute = async ({ request, cookies }) => {
   try {
-    const token = getTokenFromRequest(request, cookies);
-    if (!token) return unauthorizedResponse();
+    const auth = getTokenOrUnauthorized(request, cookies);
+    if (auth.response) return auth.response;
 
-    const pb = getPb(token);
+    const pb = getPb(auth.token);
     const url = new URL(request.url);
     const collection = url.searchParams.get("collection");
     const { page, perPage } = parsePagination(url);

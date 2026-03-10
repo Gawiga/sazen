@@ -1,6 +1,7 @@
 ---
 import PageLayout from "~/layouts/PageLayout.astro";
 import Loading from "~/components/widgets/Loading.astro";
+import NameFilter from "~/components/common/NameFilter.astro";
 
 const metadata = {
   title: "Pacientes",
@@ -171,6 +172,13 @@ const metadata = {
             class="status-filter-btn rounded border px-3 py-1 text-sm"
             data-status="todos">Todos</button>
         </div>
+        <NameFilter
+          label="Nome:"
+          inputId="patient-name-filter"
+          clearButtonId="clear-patient-name-filter"
+          placeholder="Filtrar por nome"
+          inputWidthClass="w-44 sm:w-56"
+        />
         <div class="flex items-center gap-2">
           <span class="text-sm text-gray-600 dark:text-gray-400">Por página:</span>
           <button
@@ -246,6 +254,8 @@ const metadata = {
     let totalPages = 1;
     let totalItems = 0;
     let statusFilter: "ativo" | "inativo" | "todos" = "ativo";
+    let patientNameFilter = "";
+    let loadedPatients: Paciente[] = [];
 
     const byId = (id: string) => getFormElement(id);
 
@@ -257,10 +267,9 @@ const metadata = {
         currentPage = data.page;
         totalPages = data.totalPages;
         totalItems = data.totalItems;
-
-        render(data.items);
+        loadedPatients = data.items;
+        applyPatientFilter();
         updatePaginationControls();
-        updatePatientsCount();
       } catch (err) {
         console.error(err);
         if (body) {
@@ -281,12 +290,33 @@ const metadata = {
       setupUIListeners(form as HTMLFormElement);
       attachPerPageListeners();
       attachStatusFilterListeners();
+      attachPatientFilterListeners();
       attachPaginationListeners();
       updatePerPageButtons();
       updateStatusFilterButtons();
       updatePaginationControls();
       attachBannerListeners();
       loadPatients();
+    }
+
+    function normalizeText(value: string): string {
+      return value
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "")
+        .trim()
+        .toLowerCase();
+    }
+
+    function applyPatientFilter() {
+      const query = normalizeText(patientNameFilter);
+      const filtered = !query
+        ? loadedPatients
+        : loadedPatients.filter((patient) =>
+            normalizeText(patient.nome || "").includes(query),
+          );
+
+      render(filtered);
+      updatePatientsCount(filtered.length);
     }
 
     function setupUIListeners(form: HTMLFormElement) {
@@ -498,6 +528,21 @@ const metadata = {
       });
     }
 
+    function attachPatientFilterListeners() {
+      const input = byId("patient-name-filter") as HTMLInputElement | null;
+      if (!input || input.dataset.bound === "true") return;
+      input.dataset.bound = "true";
+
+      input.addEventListener("input", () => {
+        patientNameFilter = input.value;
+        if (patientNameFilter.trim() === "") {
+          loadPatients(currentPage);
+          return;
+        }
+        applyPatientFilter();
+      });
+    }
+
     function attachPaginationListeners() {
       byId("prev-page-btn")?.addEventListener("click", () => {
         if (currentPage <= 1) return;
@@ -539,9 +584,16 @@ const metadata = {
       if (indicator) indicator.textContent = view.indicator;
     }
 
-    function updatePatientsCount() {
+    function updatePatientsCount(filteredCount = loadedPatients.length) {
       const countEl = byId("patients-count");
-      if (countEl) countEl.textContent = String(totalItems);
+      if (!countEl) return;
+
+      if (patientNameFilter.trim()) {
+        countEl.textContent = `${filteredCount} de ${totalItems}`;
+        return;
+      }
+
+      countEl.textContent = String(totalItems);
     }
 
     function formatPatientDateShort(dateString: string) {
