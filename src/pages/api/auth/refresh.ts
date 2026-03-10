@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import PocketBase from "pocketbase";
+import { getTokenFromRequest } from "../../../lib/jwt-helper";
 
 const POCKETBASE_URL =
   import.meta.env.PUBLIC_POCKETBASE_URL ||
@@ -7,11 +8,9 @@ const POCKETBASE_URL =
 const POCKETBASE_COLLECTION =
   import.meta.env.PUBLIC_POCKETBASE_COLLECTION || "users";
 
-export const POST: APIRoute = async ({ cookies }) => {
+export const POST: APIRoute = async ({ request, cookies }) => {
   try {
-    // Try to get token from cookie
-    const authCookie = cookies.get("pb_auth");
-    const token = authCookie?.value;
+    const token = getTokenFromRequest(request, cookies);
 
     if (!token) {
       return new Response(JSON.stringify({ error: "No token found" }), {

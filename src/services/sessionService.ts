@@ -1,6 +1,13 @@
 // Serviço específico para operações com sessões
 import { UIService } from "./uiService";
-import type { Sessao, PacienteOption, PaginatedResponse } from "~/types/api";
+import type {
+  BulkPayOwnerMonthPayload,
+  PendingSessionPreviewItem,
+  PaySingleSessionPayload,
+  Sessao,
+} from "~/types/sessao";
+import type { PacienteOption } from "~/types/paciente";
+import type { PaginatedResponse } from "~/types/shared";
 
 export class SessionService {
   static async getAllPatients(): Promise<PacienteOption[]> {
@@ -66,5 +73,33 @@ export class SessionService {
     return UIService.put<Sessao>(`/api/sessoes/${id}`, {
       pago: !currentStatus,
     });
+  }
+
+  static async payAllPendingByMonth(
+    payload: BulkPayOwnerMonthPayload,
+  ): Promise<{ success: boolean; updatedCount: number }> {
+    return UIService.post<{ success: boolean; updatedCount: number }>(
+      "/api/sessoes/pay-all",
+      payload,
+    );
+  }
+
+  static async getPendingSessionsPreview(
+    payload: BulkPayOwnerMonthPayload,
+  ): Promise<{ success: boolean; items: PendingSessionPreviewItem[] }> {
+    return UIService.post<{
+      success: boolean;
+      items: PendingSessionPreviewItem[];
+    }>("/api/sessoes/pending-preview", payload);
+  }
+
+  static async paySingleSession(
+    payload: PaySingleSessionPayload,
+  ): Promise<{ success: boolean; updated: boolean }> {
+    return UIService.post<{ success: boolean; updated: boolean }>(
+      "/api/sessoes/pay-single",
+      payload,
+      { showLoading: false },
+    );
   }
 }

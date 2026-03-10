@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { PatientService } from "~/services/patientService";
+import { PacienteService } from "~/services/pacienteService";
 import { UIService } from "~/services/uiService";
 
 vi.mock("~/services/uiService", () => ({
@@ -11,7 +11,7 @@ vi.mock("~/services/uiService", () => ({
   },
 }));
 
-describe("PatientService (client)", () => {
+describe("PacienteService (client)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -25,7 +25,7 @@ describe("PatientService (client)", () => {
       items: [],
     });
 
-    await PatientService.getPatients(1, 20);
+    await PacienteService.getPatients(1, 20);
 
     expect(UIService.get).toHaveBeenCalledWith(
       "/api/pacientes?page=1&perPage=20&status=ativo",
@@ -41,7 +41,7 @@ describe("PatientService (client)", () => {
       items: [],
     });
 
-    await PatientService.getPatients(1, 20, "todos");
+    await PacienteService.getPatients(1, 20, "todos");
 
     expect(UIService.get).toHaveBeenCalledWith(
       "/api/pacientes?page=1&perPage=20&status=todos",
@@ -54,10 +54,10 @@ describe("PatientService (client)", () => {
     vi.mocked(UIService.delete).mockResolvedValueOnce(undefined);
     vi.mocked(UIService.get).mockResolvedValueOnce({ id: "p1", nome: "Ana 2" });
 
-    await PatientService.createPatient({ nome: "Ana" });
-    await PatientService.updatePatient("p1", { nome: "Ana 2" });
-    await PatientService.deletePatient("p1");
-    await PatientService.getPatient("p1");
+    await PacienteService.createPatient({ nome: "Ana" });
+    await PacienteService.updatePatient("p1", { nome: "Ana 2" });
+    await PacienteService.deletePatient("p1");
+    await PacienteService.getPatient("p1");
 
     expect(UIService.post).toHaveBeenCalledWith("/api/pacientes", {
       nome: "Ana",

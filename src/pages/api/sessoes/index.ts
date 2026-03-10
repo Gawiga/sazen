@@ -1,10 +1,10 @@
 import type { APIRoute } from "astro";
-import { createSessao, listSessoes } from "../../../services/sessoesService";
+import { SessaoService } from "../../../services/sessaoService";
 
 export const GET: APIRoute = async ({ request, cookies }) => {
-  return listSessoes(request, cookies);
+  return SessaoService.listSessoes(request, cookies);
 };
 
 export const POST: APIRoute = async ({ request, cookies }) => {
-  return createSessao(request, cookies);
+  return SessaoService.createSessao(request, cookies);
 };

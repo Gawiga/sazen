@@ -1,157 +1,58 @@
-# AGENT_HELPER
+# AGENTS
 
 ## Objetivo
 
-Guia rápido para agentes manterem o projeto Astro + PocketBase com baixo acoplamento e manutenção simples.
+Manter o projeto Astro + PocketBase simples, seguro e com baixo acoplamento.
 
-## Fluxo principal em produção
+## Fluxo principal
 
-- Login: `src/pages/login.astro`
-- Dashboard: `src/pages/dashboard.astro`
-- Módulos:
-  - `src/pages/pacientes.astro`
-  - `src/pages/sessoes.astro`
-  - `src/pages/relatorios.astro` (hub)
-  - `src/pages/relatorios-faturamento.astro`
-  - `src/pages/relatorios-valores-receber.astro`
+- `src/pages/login.astro`
+- `src/pages/dashboard.astro`
+- `src/pages/pacientes.astro`
+- `src/pages/sessoes.astro`
+- `src/pages/relatorios-faturamento.astro`
+- `src/pages/relatorios-valores-receber.astro`
 
-## APIs e serviços
+## Serviços (domínio)
 
-- Auth API: `src/pages/api/auth/*`
-- Pacientes API: `src/pages/api/pacientes/*` delega para `src/services/pacientesService.ts`
-- Sessões API: `src/pages/api/sessoes/*` delega para `src/services/sessoesService.ts`
-- Reports API: `src/pages/api/reports/index.ts`
-
-- Client services:
-  - `src/services/uiService.ts` (auth header, loading, retry 401 + refresh)
-  - `src/services/patientService.ts`
-  - `src/services/sessionService.ts`
-  - `src/services/paginationService.ts`
-
-## Padrões obrigatórios
-
-- Mobile-first nas páginas do dashboard.
-- Sem `fetchWithAuth` duplicado nas páginas: usar `UIService`.
-- Tipos em `src/types/api.ts`.
-- Helpers de formatação em `src/utils/formatting.ts`.
-- Filtros/paginação explícitos por query params (`page`, `perPage`, `sort`, `status`).
-
-## Regras funcionais atuais
-
-- Pacientes:
-  - filtro de status (`ativo` padrão, `inativo`, `todos`)
-  - tabela compacta com colunas `Nome` e `Ações`
-  - ações por menu compacto (`details/summary`)
-
-- Sessões:
-  - carrega pacientes antes de carregar sessões
-  - filtro frontend por nome do paciente (`#session-name-filter`)
-  - tabela compacta com colunas `Data` e `Ações`
-  - data curta: `dd/mmm às HHhmm` (ex.: `25/fev às 19h30`)
-  - ações por menu compacto com toggle de pagamento, editar e excluir
-
+- Facades únicas:
+  - `src/services/patientsService.ts`
+  - `src/services/sessionsService.ts`
 - Relatórios:
-  - separados em duas páginas dedicadas
-  - `relatorios-valores-receber` com filtro por nome e coluna `Mês`
+  - `src/services/reportService.ts`
+- Base HTTP/auth client:
+  - `src/services/uiService.ts`
 
-## Navegação
+## APIs
 
-- `src/navigation.ts` expõe:
-  - `/relatorios`
-  - `/relatorios-faturamento`
-  - `/relatorios-valores-receber`
+- Pacientes: `src/pages/api/pacientes/*`
+- Sessões: `src/pages/api/sessoes/*`
+- Relatórios (leitura): `src/pages/api/reports/index.ts`
+- Auth: `src/pages/api/auth/*`
 
-## Testes e validação local
+## Regra crítica de pagamento
 
-- Unit tests: `npm run test:unit`
-- Qualidade: `npm run check` e `npm run fix`
-- Sempre atualizar testes ao alterar:
-  - contratos de serviço
-  - estrutura de tabela/layout em páginas
-  - filtros e paginação
+Nunca confirmar pagamento fora de escopo.
+Sempre validar no backend:
 
-## Checklist para mudanças novas
+- owner (token)
+- mês (`monthKey`)
+- sessão pendente (`pago=false`)
+- paciente (`patientId` ou `patientName`)
 
-1. Alterou página do dashboard? atualizar `tests/unit/pages-core.test.ts`.
-2. Alterou rotas de navegação? atualizar `tests/unit/navigation.test.ts`.
-3. Alterou serviço/API? criar/ajustar teste unitário correspondente.
-4. Rodar `check`, `fix`, `test:unit` antes de concluir.
+## Valores a receber
 
-## Atualização Sessões + Pacientes (Fevereiro 2026)
+- Modal exibe preview antes de confirmar.
+- Confirmação é item a item (`pay-single`).
+- Endpoints:
+  - `POST /api/sessoes/pending-preview`
+  - `POST /api/sessoes/pay-single`
 
-- Sessões (`src/pages/sessoes.astro`):
-  - Correção do filtro por nome: ao limpar o input, a lista recarrega a página atual (`loadSessions(currentPage)`) para restaurar todos os registros.
-  - Coluna principal agora prioriza paciente e contexto da sessão no formato:
-    - Nome do paciente
-    - `DiaSemana - dd/mm às HHhmm`
-    - `Valor Sessão: R$ ...`
-    - `Pagamento: Pago|Pendente`
+## Checklist obrigatório
 
-- Pacientes (`src/pages/pacientes.astro`):
-  - Nome da linha virou toggle de detalhes (`patient-toggle`) com expansão inline (`patient-details-*`).
-  - Detalhes exibidos: endereço, telefone, email, nascimento, início, valor sessão e status.
-
-- Testes atualizados:
-  - `tests/unit/pages-core.test.ts` cobre reset do filtro em sessões e toggle de detalhes em pacientes.
-
-## Atualização de Navegação Mobile + Tema Lilás (Fevereiro 2026)
-
-- Navegação de retorno ao dashboard foi padronizada para botão mobile-first com alvo de toque maior:
-  - `src/pages/pacientes.astro`
-  - `src/pages/sessoes.astro`
-  - `src/pages/relatorios-faturamento.astro`
-  - `src/pages/relatorios-valores-receber.astro`
-
-- Novo tema global `lilac` implementado no projeto:
-  - `src/components/common/ApplyColorMode.astro` reconhece/aplica `lilac`
-  - `src/components/common/BasicScripts.astro` agora cicla tema em: `light -> dark -> lilac -> light`
-  - `src/components/CustomStyles.astro` define tokens e aparência lilás
-  - `src/assets/styles/tailwind.css` ajusta header sticky no modo lilás
-
-- `src/components/common/ToggleTheme.astro` atualizado para refletir alternância de três temas.
-
-- Testes adicionados/ajustados:
-  - `tests/unit/theme-mode.test.ts`
-  - `tests/unit/pages-core.test.ts` (botão de retorno acessível e validações relacionadas)
-
-## Atualização Tema Lilás Escuro + Estabilidade de Sessão (Fevereiro 2026)
-
-- Tema `lilac` foi ajustado para visual escuro (base dark) com acentos roxo/lilás:
-  - Fundo escuro e tipografia clara
-  - Botões primários e destaques em tons lilás
-  - Header sticky lilás escuro
-
-- Correção de sessão ao voltar para dashboard:
-  - `src/components/auth/UserMenu.astro` agora chama `/api/auth/user` com `Authorization: Bearer <token>` quando disponível e `credentials: include`.
-  - Removido redirect agressivo para `/login` quando a leitura de usuário falha pontualmente no menu.
-  - Resultado: navegação por "Voltar ao Dashboard" não deve mais derrubar sessão por falha transitória de hidratação/auth do menu.
-
-- Testes adicionados/ajustados:
-  - `tests/unit/user-menu.test.ts`
-  - `tests/unit/theme-mode.test.ts`
-
-## Atualização Dashboard + Hardening Auth (Março 2026)
-
-- Dashboard/UserMenu (`src/components/auth/UserMenu.astro`):
-  - Correção do nome exibido: fallback expandido para `name`, `username`, `nome` e `email`.
-  - Quando `/api/auth/user` retorna payload parcial, o menu agora faz merge com o fallback de `localStorage` (`pb_auth`) para evitar regressão para `Usuário`.
-
-- Segurança de autenticação:
-  - `src/pages/api/auth/user.ts`:
-    - removida validação JWT apenas por decode local.
-    - validação/token refresh agora via PocketBase (`authRefresh`) antes de retornar usuário.
-    - cookie `pb_auth` é renovado somente após validação no backend.
-    - falhas retornam `401 Unauthorized` + limpeza de cookie para estado inválido.
-  - `src/pages/api/auth/refresh.ts`:
-    - refresh agora obrigatório via `authRefresh` no PocketBase.
-    - removido comportamento inseguro de aceitar token apenas por expiração local.
-  - `src/pages/api/auth/login.ts`:
-    - sanitização básica de entrada (JSON inválido, normalização de email, limites de tamanho).
-    - erro de login padronizado para `Invalid credentials` (evita vazamento de detalhe interno).
-    - respostas com `Cache-Control: no-store`.
-
-- Testes adicionados/ajustados:
-  - `tests/unit/auth-routes.test.ts`:
-    - cobre `/api/auth/login`, `/api/auth/user`, `/api/auth/refresh` com mocks do PocketBase.
-  - `tests/unit/user-menu.test.ts`:
-    - cobre fallback de nome (`nome/email`) e merge de usuário remoto/local.
+1. Atualizar testes quando alterar serviço/API/página.
+2. Rodar:
+   - `npm run check`
+   - `npm run fix`
+   - `npm run test:unit`
+3. Não finalizar com testes quebrados.

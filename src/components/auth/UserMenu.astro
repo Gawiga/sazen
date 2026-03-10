@@ -4,15 +4,11 @@ interface Props {
 }
 
 const { user = null } = Astro.props;
+
 function resolveDisplayName(source: Record<string, unknown> | null): string {
   if (!source) return "Usuário";
 
-  const candidates = [
-    source.name,
-    source.username,
-    source.nome,
-    source.email,
-  ];
+  const candidates = [source.name, source.username, source.nome, source.email];
 
   for (const value of candidates) {
     if (typeof value === "string" && value.trim().length > 0) {
@@ -22,22 +18,19 @@ function resolveDisplayName(source: Record<string, unknown> | null): string {
 
   return "Usuário";
 }
-const displayName =
-  resolveDisplayName((user as Record<string, unknown> | null) ?? null);
+
+const displayName = resolveDisplayName((user as Record<string, unknown>) ?? null);
 const email = typeof user?.email === "string" ? user.email : "";
 ---
 
-<div
-  data-user-menu
-  class:list={[
-    "flex items-center gap-2 sm:gap-3",
-    !user && "hidden",
-  ]}>
-  <div class="hidden sm:block">
-    <p data-user-email class="text-xs text-gray-500 dark:text-gray-400">{email}</p>
+<div data-user-menu class="flex min-h-11 items-center gap-2 sm:gap-3">
+  <div class="hidden min-w-[11rem] sm:block">
+    <p data-user-email class="truncate text-xs text-gray-500 dark:text-gray-400">{email}</p>
   </div>
   <div class="text-right">
-    <p data-user-greeting class="text-sm font-medium text-gray-900 dark:text-white">
+    <p
+      data-user-greeting
+      class="text-sm font-medium text-gray-900 opacity-100 transition-opacity duration-200 dark:text-white">
       Olá {displayName}
     </p>
   </div>
@@ -49,9 +42,15 @@ const email = typeof user?.email === "string" ? user.email : "";
 </div>
 
 <script>
+  type UserData = Record<string, unknown> | null;
+  type UserMenuWindow = Window & {
+    __userMenuFetchPromise?: Promise<UserData>;
+  };
+
   function getTokenFromLocalStorage() {
     const rawAuth = localStorage.getItem("pb_auth");
     if (!rawAuth) return null;
+
     try {
       const parsed = JSON.parse(rawAuth);
       return typeof parsed?.token === "string" ? parsed.token : null;
@@ -63,12 +62,51 @@ const email = typeof user?.email === "string" ? user.email : "";
   function getUserFromLocalStorage() {
     const rawAuth = localStorage.getItem("pb_auth");
     if (!rawAuth) return null;
+
     try {
       const parsed = JSON.parse(rawAuth);
       return parsed?.model || parsed?.record || null;
     } catch {
       return null;
     }
+  }
+
+  function resolveName(user: UserData) {
+    if (!user || typeof user !== "object") return "Usuário";
+
+    const candidates = [user.name, user.username, user.nome, user.email];
+    for (const value of candidates) {
+      if (typeof value === "string" && value.trim().length > 0) {
+        return value.trim();
+      }
+    }
+
+    return "Usuário";
+  }
+
+  function updateMenuContent(menu: Element, user: UserData, withFade = false) {
+    const userEmail = menu.querySelector("[data-user-email]");
+    const userGreeting = menu.querySelector("[data-user-greeting]");
+
+    if (userEmail) {
+      userEmail.textContent = typeof user?.email === "string" ? user.email : "";
+    }
+
+    if (!userGreeting) return;
+
+    const nextGreeting = `Olá ${resolveName(user)}`;
+    if (userGreeting.textContent === nextGreeting) return;
+
+    if (!withFade) {
+      userGreeting.textContent = nextGreeting;
+      return;
+    }
+
+    userGreeting.classList.add("opacity-0");
+    requestAnimationFrame(() => {
+      userGreeting.textContent = nextGreeting;
+      userGreeting.classList.remove("opacity-0");
+    });
   }
 
   async function fetchCurrentUser() {
@@ -88,11 +126,21 @@ const email = typeof user?.email === "string" ? user.email : "";
       if (!response.ok) return null;
       const data = await response.json();
       const payload = data?.user?.payload || data?.user?.record || data?.user || null;
-      if (!payload || typeof payload !== "object") return null;
-      return payload;
+      return payload && typeof payload === "object" ? payload : null;
     } catch {
       return null;
     }
+  }
+
+  async function fetchCurrentUserCached() {
+    const userMenuWindow = window as UserMenuWindow;
+    if (!userMenuWindow.__userMenuFetchPromise) {
+      userMenuWindow.__userMenuFetchPromise = fetchCurrentUser().finally(() => {
+        userMenuWindow.__userMenuFetchPromise = undefined;
+      });
+    }
+
+    return userMenuWindow.__userMenuFetchPromise;
   }
 
   async function handleLogout() {
@@ -102,10 +150,10 @@ const email = typeof user?.email === "string" ? user.email : "";
         method: "POST",
       });
 
-      if (response.ok) {
-        localStorage.removeItem("pb_auth");
-        window.location.href = "/";
-      }
+      if (!response.ok) return;
+
+      localStorage.removeItem("pb_auth");
+      window.location.href = "/";
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
@@ -113,50 +161,49 @@ const email = typeof user?.email === "string" ? user.email : "";
     }
   }
 
-  async function initUserMenus() {
-    const userMenus = document.querySelectorAll("[data-user-menu]");
-    if (!userMenus.length) return;
+  function bindLogout(menu: Element) {
+    const logoutBtn = menu.querySelector(
+      "[data-logout-btn]",
+    ) as HTMLButtonElement | null;
+    if (!logoutBtn || logoutBtn.dataset.bound === "true") return;
+    logoutBtn.dataset.bound = "true";
+    logoutBtn.addEventListener("click", handleLogout);
+  }
 
-    const fetchedUser = await fetchCurrentUser();
+  async function initUserMenus() {
+    const menus = Array.from(
+      document.querySelectorAll("[data-user-menu]"),
+    ) as HTMLElement[];
+    if (!menus.length) return;
+
     const fallbackUser = getUserFromLocalStorage();
-    const user =
+    menus.forEach((menu) => {
+      bindLogout(menu);
+      if (menu.dataset.userFallbackApplied !== "true") {
+        updateMenuContent(menu, fallbackUser, false);
+        menu.dataset.userFallbackApplied = "true";
+      }
+    });
+
+    const shouldFetchRemote = menus.some(
+      (menu) => menu.dataset.userRemoteLoaded !== "true",
+    );
+    if (!shouldFetchRemote) return;
+
+    const fetchedUser = await fetchCurrentUserCached();
+    const mergedUser =
       fetchedUser && fallbackUser
         ? { ...fallbackUser, ...fetchedUser }
         : fetchedUser || fallbackUser;
 
-    if (!user) {
-      return;
-    }
+    if (!mergedUser) return;
 
-    userMenus.forEach((menu) => {
-      const userEmail = menu.querySelector("[data-user-email]");
-      const userGreeting = menu.querySelector("[data-user-greeting]");
-      const logoutBtn = menu.querySelector("[data-logout-btn]");
-
-      if (userEmail) {
-        userEmail.textContent = typeof user.email === "string" ? user.email : "";
-      }
-      if (userGreeting) {
-        const name =
-          (typeof user.name === "string" && user.name) ||
-          (typeof user.username === "string" && user.username) ||
-          (typeof user.nome === "string" && user.nome) ||
-          (typeof user.email === "string" && user.email) ||
-          "Usuário";
-        userGreeting.textContent = `Olá ${name}`;
-      }
-      if (logoutBtn) {
-        logoutBtn.addEventListener("click", handleLogout);
-      }
-
-      menu.classList.remove("hidden");
+    menus.forEach((menu) => {
+      updateMenuContent(menu, mergedUser, true);
+      menu.dataset.userRemoteLoaded = "true";
     });
   }
 
   document.addEventListener("astro:page-load", initUserMenus);
-  if (document.readyState === "complete") {
-    initUserMenus();
-  } else {
-    document.addEventListener("DOMContentLoaded", initUserMenus);
-  }
+  initUserMenus();
 </script>

@@ -22,6 +22,12 @@ export class UIService {
   private static isRefreshing = false;
   private static refreshPromise: Promise<boolean> | null = null;
 
+  private static redirectToLogin(): void {
+    if (typeof window === "undefined") return;
+    if (window.location.pathname === "/login") return;
+    window.location.href = "/login";
+  }
+
   private static getTokenFromLocalStorage(): string | null {
     if (typeof window === "undefined") return null;
 
@@ -76,9 +82,7 @@ export class UIService {
       if (!response.ok) {
         // Se falhar, redireciona para login
         this.clearAuth();
-        if (typeof window !== "undefined") {
-          window.location.href = "/login";
-        }
+        this.redirectToLogin();
         return false;
       }
 
@@ -87,10 +91,13 @@ export class UIService {
         localStorage.setItem("pb_auth", JSON.stringify({ token: data.token }));
         return true;
       }
+      this.clearAuth();
+      this.redirectToLogin();
       return false;
     } catch (error) {
       console.error("Erro ao renovar token:", error);
       this.clearAuth();
+      this.redirectToLogin();
       return false;
     }
   }
@@ -142,7 +149,7 @@ export class UIService {
     headers.set("Content-Type", "application/json");
     if (token) headers.set("Authorization", `Bearer ${token}`);
 
-    return fetch(url, { ...options, headers });
+    return fetch(url, { credentials: "include", ...options, headers });
   }
 
   static async fetchWithAuthAndLoading(
@@ -186,6 +193,13 @@ export class UIService {
         // Retry a requisição com novo token
         return this.get(url, { ...options, skipRetry: true });
       }
+      this.clearAuth();
+      this.redirectToLogin();
+    }
+
+    if (res.status === 401 && options?.skipRetry) {
+      this.clearAuth();
+      this.redirectToLogin();
     }
 
     if (!res.ok) {
@@ -213,6 +227,13 @@ export class UIService {
         // Retry a requisição com novo token
         return this.post(url, body, { ...options, skipRetry: true });
       }
+      this.clearAuth();
+      this.redirectToLogin();
+    }
+
+    if (res.status === 401 && options?.skipRetry) {
+      this.clearAuth();
+      this.redirectToLogin();
     }
 
     if (!res.ok) {
@@ -240,6 +261,13 @@ export class UIService {
         // Retry a requisição com novo token
         return this.put(url, body, { ...options, skipRetry: true });
       }
+      this.clearAuth();
+      this.redirectToLogin();
+    }
+
+    if (res.status === 401 && options?.skipRetry) {
+      this.clearAuth();
+      this.redirectToLogin();
     }
 
     if (!res.ok) {
@@ -265,6 +293,13 @@ export class UIService {
         // Retry a requisição com novo token
         return this.delete(url, { ...options, skipRetry: true });
       }
+      this.clearAuth();
+      this.redirectToLogin();
+    }
+
+    if (res.status === 401 && options?.skipRetry) {
+      this.clearAuth();
+      this.redirectToLogin();
     }
 
     if (!res.ok) {

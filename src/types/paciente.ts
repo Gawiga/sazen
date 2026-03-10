@@ -10,3 +10,10 @@ export interface Paciente {
   ativo: boolean;
   owner?: string; // ID do usuário do PocketBase
 }
+
+export interface PacienteOption {
+  id: string;
+  nome: string;
+  email?: string;
+  valor_sessao?: number;
+}

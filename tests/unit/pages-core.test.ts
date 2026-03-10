@@ -90,16 +90,28 @@ describe("Core pages content", () => {
     expect(sessoes).toContain("loadSessions(currentPage)");
     expect(sessoes).toContain("row-actions-menu");
     expect(sessoes).toContain("status-toggle");
+    expect(sessoes).toContain("payment-status-paid");
+    expect(sessoes).toContain("payment-status-pending");
+    expect(sessoes).toContain("status-toggle-paid");
+    expect(sessoes).toContain("status-toggle-pending");
     expect(sessoes).not.toContain('<th class="p-3">Data</th>');
   });
 
-  it("relatorios valores a receber should expose month column", () => {
+  it("relatorios valores a receber should expose month column and bulk payment modal flow", () => {
     const relatoriosValoresReceber = readPage(
       "relatorios-valores-receber.astro",
     );
 
     expect(relatoriosValoresReceber).toContain('<th class="p-2">Mês</th>');
     expect(relatoriosValoresReceber).toContain("getMonthLabel");
+    expect(relatoriosValoresReceber).toContain(
+      "SessaoService.getPendingSessionsPreview",
+    );
+    expect(relatoriosValoresReceber).toContain(
+      "SessaoService.paySingleSession",
+    );
+    expect(relatoriosValoresReceber).toContain('id="bulk-payment-modal"');
+    expect(relatoriosValoresReceber).toContain("data-receber-row");
     expect(relatoriosValoresReceber).toContain('colspan="3"');
   });
 

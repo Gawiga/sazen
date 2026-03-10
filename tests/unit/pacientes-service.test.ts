@@ -67,6 +67,18 @@ describe("pacientesService", () => {
     expect(getListMock).not.toHaveBeenCalled();
   });
 
+  it("retorna 401 quando PocketBase responde token inválido", async () => {
+    getTokenFromRequestMock.mockReturnValue("jwt_token");
+    getListMock.mockRejectedValue({ status: 401, message: "Unauthorized" });
+
+    const response = await listPacientes(
+      new Request("https://example.com/api/pacientes"),
+      {},
+    );
+
+    expect(response.status).toBe(401);
+  });
+
   it("lista pacientes autenticados com paginação padrão de 20", async () => {
     getTokenFromRequestMock.mockReturnValue("jwt_token");
     getListMock.mockResolvedValue({
