@@ -178,8 +178,8 @@ const metadata = {
       getPaginationView,
       getPerPageValue,
     } from "~/services/paginationService";
-    import {SessionService} from "~/services/sessionService";
-    import {scrollToElement} from "~/services/uiService";
+    import { SessaoService } from "~/services/sessaoService";
+    import { scrollToElement } from "~/services/uiService";
     import {
       formatCurrency,
       parseCurrency,
@@ -188,7 +188,8 @@ const metadata = {
       getFormElement,
       toggleElement,
     } from "~/utils/formatting";
-    import type {Sessao, PacienteOption} from "~/types/api";
+    import type { PacienteOption } from "~/types/paciente";
+    import type { Sessao } from "~/types/sessao";
 
     const formContainerId = "form-container";
 
@@ -207,7 +208,7 @@ const metadata = {
       const body = byId("sessions-body");
       if (!patientsLoaded) return;
       try {
-        const data = await SessionService.getSessions(page, perPage);
+        const data = await SessaoService.getSessions(page, perPage);
 
         currentPage = data.page;
         totalPages = data.totalPages;
@@ -299,9 +300,9 @@ const metadata = {
 
       try {
         if (id) {
-          await SessionService.updateSession(id, payload);
+          await SessaoService.updateSession(id, payload);
         } else {
-          await SessionService.createSession(payload);
+          await SessaoService.createSession(payload);
         }
         toggleForm(false);
         loadSessions(currentPage);
@@ -316,7 +317,7 @@ const metadata = {
     }
 
     async function loadPatientsForSelect() {
-      const items = await SessionService.getAllPatients();
+      const items = await SessaoService.getAllPatients();
       patientDetails = new Map(items.map((p) => [p.id, p]));
       patientsLoaded = true;
       sortPatientsForSelect();
@@ -367,7 +368,14 @@ const metadata = {
             <div class="text-xs text-gray-500">Valor Sessão: ${formatCurrency(
               Number(session.valor) || 0,
             )}</div>
-            <div class="text-xs text-gray-500">Pagamento: ${session.pago ? "Pago" : "Pendente"}</div>
+            <div class="text-xs text-gray-500">
+              Pagamento:
+              <span class="payment-status font-medium ${
+                session.pago
+                  ? "payment-status-paid text-emerald-700 dark:text-emerald-400"
+                  : "payment-status-pending text-rose-700 dark:text-rose-400"
+              }">${session.pago ? "Pago" : "Pendente"}</span>
+            </div>
           </td>
           <td class="p-2 text-right">
             <details class="row-actions-menu relative inline-block text-left">
@@ -389,8 +397,8 @@ const metadata = {
                   title="Clique para alternar o status entre Pago e Pendente"
                   class="status-toggle block w-full rounded px-3 py-2 text-left text-sm transition hover:bg-gray-100 dark:hover:bg-gray-700 ${
                     session.pago
-                      ? "text-green-700 dark:text-green-400"
-                      : "text-yellow-700 dark:text-yellow-400"
+                      ? "status-toggle-pending text-rose-700 dark:text-rose-400"
+                      : "status-toggle-paid text-emerald-700 dark:text-emerald-400"
                   }">
                   ${session.pago ? "Marcar como pendente" : "Marcar como pago"}
                 </button>
@@ -436,7 +444,7 @@ const metadata = {
 
           try {
             // Toggle the payment status
-            await SessionService.togglePaymentStatus(id, session.pago);
+            await SessaoService.togglePaymentStatus(id, session.pago);
             loadSessions(currentPage);
             (btn.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open");
           } catch (err) {
@@ -474,7 +482,7 @@ const metadata = {
           if (!id || !confirm("Deseja realmente excluir esta sessão?")) return;
 
           try {
-            await SessionService.deleteSession(id);
+            await SessaoService.deleteSession(id);
             loadSessions(currentPage);
             (btn.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open");
           } catch (err) {
@@ -605,4 +613,16 @@ const metadata = {
       document.addEventListener("DOMContentLoaded", init);
     }
   </script>
+
+  <style is:inline>
+    .lilac .payment-status-paid,
+    .lilac .status-toggle-paid {
+      color: rgb(167 243 208);
+    }
+
+    .lilac .payment-status-pending,
+    .lilac .status-toggle-pending {
+      color: rgb(251 146 160);
+    }
+  </style>
 </PageLayout>

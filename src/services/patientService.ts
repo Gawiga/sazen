@@ -1,6 +1,7 @@
 // Serviço específico para operações com pacientes
 import { UIService } from "./uiService";
-import type { Paciente, PaginatedResponse } from "~/types/api";
+import type { Paciente } from "~/types/paciente";
+import type { PaginatedResponse } from "~/types/shared";
 
 export class PatientService {
   static async getPatients(

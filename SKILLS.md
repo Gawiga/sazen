@@ -1,56 +1,24 @@
-# Skills Operacionais do Projeto
+# SKILLS
 
-## Origem
-
-Skills instaladas via Smithery para apoiar este repositório:
+## Skills ativas
 
 - `whamp-pocketbase`
 - `tech-leads-club-perf-astro`
 
-Local de instalação:
-
-- `.agents/skills/whamp-pocketbase/`
-- `.agents/skills/tech-leads-club-perf-astro/`
-
-## Como usar no projeto
-
-### PocketBase (`whamp-pocketbase`)
-
-Aplicar para:
-
-- Regras de segurança e filtros server-side.
-- Padrões de autenticação, relação entre coleções e paginação.
-- Operações de records, realtime e deploy/produção.
-
-Diretriz prática para este código:
-
-- Priorizar validação no backend (`src/pages/api/**` e `src/services/*Service.ts`).
-- Não depender de estado global de auth no SSR.
-- Manter paginação e filtros explícitos por query (`page`, `perPage`, `sort`).
-
-### Astro Performance (`tech-leads-club-perf-astro`)
-
-Aplicar para:
-
-- Auditoria de LCP, fontes, scripts de terceiros e compressão.
-- Otimizações em layout/head sem regressão de UX.
-
-Diretriz prática para este código:
-
-- Preservar legibilidade e segurança antes de micro-otimizações.
-- Medir com Lighthouse antes/depois de alterações estruturais.
-
-## Observações de manutenção
-
-- `npm run check` deve ignorar formatação dos artefatos de skills externas.
-- `.prettierignore` já inclui `.agents` para evitar ruído em CI/local.
-
-## Aplicação das Skills nesta mudança (Fevereiro 2026)
+## Quando usar
 
 - `whamp-pocketbase`:
-  - Reforçada diretriz de consistência de identidade no frontend: listagens dependentes de relação (`sessões` -> `pacientes`) não devem renderizar antes dos dados relacionais.
-  - Mantida decisão de autenticação por PocketBase nativo no backend Astro (`src/pages/api/auth/*`).
-
+  - autenticação
+  - regras de acesso por owner
+  - queries/filtros de segurança
+  - operações de pagamento
 - `tech-leads-club-perf-astro`:
-  - Mudança de comportamento feita sem adicionar scripts extras nem regressão de render inicial.
-  - Preservado padrão de UX leve (tooltip em label e dica textual) sem custo estrutural.
+  - render estável
+  - evitar layout shift
+  - scripts sem chamadas duplicadas em navegação client-side
+
+## Diretriz prática
+
+- Segurança e consistência de dados têm prioridade sobre UX cosmética.
+- Em operação financeira, bloquear atualização em caso de ambiguidade.
+- Sempre cobrir mudanças críticas com teste unitário.

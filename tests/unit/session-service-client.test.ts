@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { SessionService } from "~/services/sessionService";
+import { SessaoService } from "~/services/sessaoService";
 import { UIService } from "~/services/uiService";
 
 vi.mock("~/services/uiService", () => ({
@@ -11,7 +11,7 @@ vi.mock("~/services/uiService", () => ({
   },
 }));
 
-describe("SessionService (client)", () => {
+describe("SessaoService (client)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -36,7 +36,7 @@ describe("SessionService (client)", () => {
         items: [{ id: "3", nome: "Ana" }],
       });
 
-    const result = await SessionService.getAllPatients();
+    const result = await SessaoService.getAllPatients();
 
     expect(UIService.get).toHaveBeenNthCalledWith(
       1,
@@ -65,8 +65,8 @@ describe("SessionService (client)", () => {
     });
     vi.mocked(UIService.put).mockResolvedValueOnce({ id: "s1", pago: true });
 
-    await SessionService.getSessions(1, 20);
-    await SessionService.togglePaymentStatus("s1", false);
+    await SessaoService.getSessions(1, 20);
+    await SessaoService.togglePaymentStatus("s1", false);
 
     expect(UIService.get).toHaveBeenCalledWith(
       "/api/sessoes?page=1&perPage=20&sort=-data",
@@ -74,5 +74,79 @@ describe("SessionService (client)", () => {
     expect(UIService.put).toHaveBeenCalledWith("/api/sessoes/s1", {
       pago: true,
     });
+  });
+
+  it("payAllPendingByMonth should call bulk payment endpoint", async () => {
+    vi.mocked(UIService.post).mockResolvedValueOnce({
+      success: true,
+      updatedCount: 5,
+    });
+
+    const response = await SessaoService.payAllPendingByMonth({
+      monthKey: "2026-02",
+      ownerId: "owner_1",
+      patientId: "pac_1",
+      patientName: "Maria",
+    });
+
+    expect(UIService.post).toHaveBeenCalledWith("/api/sessoes/pay-all", {
+      monthKey: "2026-02",
+      ownerId: "owner_1",
+      patientId: "pac_1",
+      patientName: "Maria",
+    });
+    expect(response.updatedCount).toBe(5);
+  });
+
+  it("getPendingSessionsPreview should call preview endpoint with month/owner/patient scope", async () => {
+    vi.mocked(UIService.post).mockResolvedValueOnce({
+      success: true,
+      items: [
+        { id: "s1", id_paciente: "pac_1", data: "2026-02-10", valor: 200 },
+      ],
+    });
+
+    const response = await SessaoService.getPendingSessionsPreview({
+      monthKey: "2026-02",
+      ownerId: "owner_1",
+      patientId: "pac_1",
+    });
+
+    expect(UIService.post).toHaveBeenCalledWith(
+      "/api/sessoes/pending-preview",
+      {
+        monthKey: "2026-02",
+        ownerId: "owner_1",
+        patientId: "pac_1",
+      },
+    );
+    expect(response.success).toBe(true);
+    expect(response.items).toHaveLength(1);
+  });
+
+  it("paySingleSession should call pay-single endpoint with loading disabled", async () => {
+    vi.mocked(UIService.post).mockResolvedValueOnce({
+      success: true,
+      updated: true,
+    });
+
+    const response = await SessaoService.paySingleSession({
+      sessionId: "s1",
+      monthKey: "2026-02",
+      ownerId: "owner_1",
+      patientId: "pac_1",
+    });
+
+    expect(UIService.post).toHaveBeenCalledWith(
+      "/api/sessoes/pay-single",
+      {
+        sessionId: "s1",
+        monthKey: "2026-02",
+        ownerId: "owner_1",
+        patientId: "pac_1",
+      },
+      { showLoading: false },
+    );
+    expect(response.updated).toBe(true);
   });
 });

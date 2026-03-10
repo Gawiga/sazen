@@ -13,6 +13,27 @@ type CookiesLike = {
   get?: (name: string) => { value: string } | undefined | null;
 };
 
+function getErrorStatus(error: unknown): number | null {
+  if (!error || typeof error !== "object") return null;
+
+  const statusDirect = (error as { status?: unknown }).status;
+  if (typeof statusDirect === "number") return statusDirect;
+
+  const response = (error as { response?: { status?: unknown } }).response;
+  if (response && typeof response.status === "number") return response.status;
+
+  return null;
+}
+
+function unauthorizedResponse(): Response {
+  return new Response(
+    JSON.stringify({ success: false, error: "Unauthorized" }),
+    {
+      status: 401,
+    },
+  );
+}
+
 function getPb(token?: string) {
   const pb = new PocketBase(POCKETBASE_URL);
 
@@ -102,6 +123,7 @@ export async function listPacientes(
       { status: 200 },
     );
   } catch (err) {
+    if (getErrorStatus(err) === 401) return unauthorizedResponse();
     console.error("pacientes GET error", err);
     return new Response(
       JSON.stringify({ success: false, error: String(err) }),
@@ -136,6 +158,7 @@ export async function createPaciente(
       status: 201,
     });
   } catch (err) {
+    if (getErrorStatus(err) === 401) return unauthorizedResponse();
     console.error("pacientes POST error", err);
     return new Response(
       JSON.stringify({ success: false, error: String(err) }),
@@ -166,6 +189,7 @@ export async function getPacienteById(
       status: 200,
     });
   } catch (err) {
+    if (getErrorStatus(err) === 401) return unauthorizedResponse();
     console.error("paciente GET error", err);
     return new Response(
       JSON.stringify({ success: false, error: String(err) }),
@@ -198,6 +222,7 @@ export async function updatePaciente(
       status: 200,
     });
   } catch (err) {
+    if (getErrorStatus(err) === 401) return unauthorizedResponse();
     console.error("paciente PUT error", err);
     return new Response(
       JSON.stringify({ success: false, error: String(err) }),
@@ -226,6 +251,7 @@ export async function deletePaciente(
     await pb.collection("paciente").delete(id);
     return new Response(JSON.stringify({ success: true }), { status: 200 });
   } catch (err) {
+    if (getErrorStatus(err) === 401) return unauthorizedResponse();
     console.error("paciente DELETE error", err);
     return new Response(
       JSON.stringify({ success: false, error: String(err) }),

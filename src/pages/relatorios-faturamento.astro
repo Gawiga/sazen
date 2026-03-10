@@ -72,13 +72,9 @@ const metadata = {
   </section>
 
   <script>
-    import { UIService } from "~/services/uiService";
+    import { ReportService } from "~/services/reportService";
     import { getPaginationView, getPerPageValue } from "~/services/paginationService";
-
-    type ReportItem = {
-      mes_ano?: string;
-      total?: number | string;
-    };
+    import type { ReportFaturamentoItem as ReportItem } from "~/types/relatorio";
 
     const byId = (id: string): HTMLElement | null => document.getElementById(id);
 
@@ -93,20 +89,15 @@ const metadata = {
 
     async function loadData(page = 1) {
       const body = byId("faturamento-body");
+      if (!body) return;
       try {
-        const data = await UIService.get<{
-          page: number;
-          perPage: number;
-          totalPages: number;
-          totalItems: number;
-          items: ReportItem[];
-        }>(`/api/reports?collection=faturamento_mensal&page=${page}&perPage=${perPage}`);
+        const reportData = await ReportService.getFaturamento(page, perPage);
 
-        currentPage = data.page;
-        totalPages = data.totalPages;
-        totalItems = data.totalItems;
+        currentPage = reportData.page;
+        totalPages = reportData.totalPages;
+        totalItems = reportData.totalItems;
 
-        render(data.items);
+        render(reportData.items);
         updatePaginationControls();
         updateCount();
       } catch (err) {
@@ -142,6 +133,10 @@ const metadata = {
 
     function attachPerPageListeners() {
       document.querySelectorAll(".per-page-btn").forEach((btn) => {
+        if (!(btn instanceof HTMLButtonElement)) return;
+        if (btn.dataset.bound === "true") return;
+        btn.dataset.bound = "true";
+
         btn.addEventListener("click", () => {
           perPage = getPerPageValue(btn.getAttribute("data-per-page"), 20);
           currentPage = 1;
@@ -152,15 +147,23 @@ const metadata = {
     }
 
     function attachPaginationListeners() {
-      byId("prev-page-btn")?.addEventListener("click", () => {
-        if (currentPage <= 1) return;
-        loadData(currentPage - 1);
-      });
+      const prevBtn = byId("prev-page-btn");
+      if (prevBtn && prevBtn.dataset.bound !== "true") {
+        prevBtn.dataset.bound = "true";
+        prevBtn.addEventListener("click", () => {
+          if (currentPage <= 1) return;
+          loadData(currentPage - 1);
+        });
+      }
 
-      byId("next-page-btn")?.addEventListener("click", () => {
-        if (currentPage >= totalPages) return;
-        loadData(currentPage + 1);
-      });
+      const nextBtn = byId("next-page-btn");
+      if (nextBtn && nextBtn.dataset.bound !== "true") {
+        nextBtn.dataset.bound = "true";
+        nextBtn.addEventListener("click", () => {
+          if (currentPage >= totalPages) return;
+          loadData(currentPage + 1);
+        });
+      }
     }
 
     function updatePerPageButtons() {
@@ -189,12 +192,21 @@ const metadata = {
     }
 
     function attachBannerListeners() {
-      byId("close-faturamento-banner")?.addEventListener("click", () => {
+      const closeBtn = byId("close-faturamento-banner");
+      if (!closeBtn || closeBtn.dataset.bound === "true") return;
+      closeBtn.dataset.bound = "true";
+
+      closeBtn.addEventListener("click", () => {
         byId("faturamento-info-banner")?.classList.add("hidden");
       });
     }
 
     async function init() {
+      const body = byId("faturamento-body");
+      if (!body) return;
+      if (body.dataset.initialized === "true") return;
+      body.dataset.initialized = "true";
+
       const pbAuth = localStorage.getItem("pb_auth");
       if (!pbAuth) {
         window.location.href = "/login";
@@ -210,10 +222,6 @@ const metadata = {
     }
 
     document.addEventListener("astro:page-load", init);
-    if (document.readyState === "complete") {
-      init();
-    } else {
-      document.addEventListener("DOMContentLoaded", init);
-    }
+    init();
   </script>
 </PageLayout>

@@ -227,7 +227,7 @@ const metadata = {
       getPaginationView,
       getPerPageValue,
     } from "~/services/paginationService";
-    import { PatientService } from "~/services/patientService";
+    import { PacienteService } from "~/services/pacienteService";
     import { scrollToElement } from "~/services/uiService";
     import {
       formatCurrency,
@@ -237,7 +237,7 @@ const metadata = {
       getFormElement,
       toggleElement,
     } from "~/utils/formatting";
-    import type { Paciente } from "~/types/api";
+    import type { Paciente } from "~/types/paciente";
 
     const formContainerId = "form-container";
 
@@ -252,7 +252,7 @@ const metadata = {
     async function loadPatients(page = 1) {
       const body = byId("patients-body");
       try {
-        const data = await PatientService.getPatients(page, perPage, statusFilter);
+        const data = await PacienteService.getPatients(page, perPage, statusFilter);
 
         currentPage = data.page;
         totalPages = data.totalPages;
@@ -325,9 +325,9 @@ const metadata = {
 
         try {
           if (id) {
-            await PatientService.updatePatient(id, payload);
+            await PacienteService.updatePatient(id, payload);
           } else {
-            await PatientService.createPatient(payload);
+            await PacienteService.createPatient(payload);
           }
           toggleForm(false);
           loadPatients(currentPage);
@@ -455,7 +455,7 @@ const metadata = {
           if (!confirm("Deseja realmente excluir este paciente?")) return;
 
           try {
-            await PatientService.deletePatient(id || "");
+            await PacienteService.deletePatient(id || "");
             loadPatients(currentPage);
             (btn.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open");
           } catch (err) {

@@ -1,186 +1,43 @@
 # MAINTENANCE
 
-## Estrutura mínima a manter
+## Estrutura estável
 
-- Páginas principais: `login`, `dashboard`, `pacientes`, `sessoes`, `relatorios*`
-- APIs internas em `src/pages/api/**`
-- Lógica server-side em `src/services/*Service.ts`
-- Lógica client-side em `src/services/uiService.ts`, `patientService.ts`, `sessionService.ts`
+- Páginas: `dashboard`, `pacientes`, `sessoes`, `relatorios-*`
+- APIs em `src/pages/api/**`
+- Serviços por domínio em `src/services/**`
 
-## Convenções técnicas
+## Operações sensíveis
 
-- Requisições autenticadas: usar `UIService`.
-- Paginação padrão: `20`, opções `50/100`.
-- Filtros devem ser previsíveis e explícitos.
-- Evitar `any`; priorizar `src/types/api.ts`.
+### Pagamento
 
-## Estado funcional atual
+- Preview antes de confirmar.
+- Confirmação sessão a sessão.
+- Validação server-side obrigatória de owner + paciente + mês + pendente.
 
-### Pacientes
+### Auth
 
-- Filtro de status: `ativo` (padrão), `inativo`, `todos`.
-- Tabela: `Nome` + `Ações`.
-- Ações por linha via menu compacto.
+- Em `401` sem recuperação: limpar sessão local e redirecionar para `/login`.
 
-### Sessões
+## Evitar regressões de navegação
 
-- Ordem de carregamento: pacientes -> sessões.
-- Filtro frontend por nome do paciente (`session-name-filter`).
-- Tabela: `Data` + `Ações`.
-- Formato de data: `dd/mmm às HHhmm`.
-- Ações no menu: toggle pagamento, editar, excluir.
+Com `ClientRouter`, scripts podem receber múltiplos `astro:page-load`.
 
-### Relatórios
+- Inicialização deve ser idempotente por DOM atual.
+- Não fazer fetch se elementos da página não existirem.
+- Evitar bind duplicado de listeners.
 
-- Hub: `src/pages/relatorios.astro`.
-- Faturamento: `src/pages/relatorios-faturamento.astro`.
-- Valores a receber: `src/pages/relatorios-valores-receber.astro`.
-- Valores a receber contém filtro por nome e coluna `Mês`.
+## Testes mínimos
 
-## Arquivos críticos para regressão
-
-- `src/pages/pacientes.astro`
-- `src/pages/sessoes.astro`
-- `src/pages/relatorios-valores-receber.astro`
-- `src/navigation.ts`
-- `src/services/pacientesService.ts`
-- `src/services/sessionService.ts`
-
-## Testes essenciais
-
-- `tests/unit/pages-core.test.ts`
-- `tests/unit/navigation.test.ts`
+- `tests/unit/sessoes-service.test.ts`
+- `tests/unit/session-service-client.test.ts`
 - `tests/unit/pacientes-service.test.ts`
 - `tests/unit/patient-service-client.test.ts`
-- `tests/unit/session-service-client.test.ts`
+- `tests/unit/pages-core.test.ts`
 
-## Rotina de entrega
+## Entrega
 
-1. Implementar mudança.
-2. Atualizar/Adicionar testes unitários.
-3. Rodar:
-   - `npm run check`
-   - `npm run fix`
-   - `npm run test:unit`
-4. Registrar no `AGENTS.md` apenas o que muda regra/fluxo.
+Rodar sempre:
 
-## Atualização de UX e bugfix (Fevereiro 2026)
-
-### Sessões
-
-- Bug corrigido: ao apagar o filtro por nome, a lista volta a mostrar todas as sessões da página atual.
-- Estrutura da coluna principal mudou para leitura rápida:
-  - Nome do paciente
-  - Data resumida com dia da semana
-  - Valor da sessão
-  - Status de pagamento
-
-### Pacientes
-
-- Linha com expansão de detalhes ao clicar no nome (toggle inline).
-- Mantido menu de ações independente na coluna `Ações`.
-
-### Regressão a monitorar
-
-- Reset de filtro em sessões após ações de editar/excluir/toggle pagamento.
-- Expansão de detalhes em pacientes sem interferir no menu de ações.
-
-## Atualização de tema e acessibilidade mobile (Fevereiro 2026)
-
-### Botão de retorno
-
-- Em páginas do dashboard, o antigo link textual `← Voltar ao Dashboard` foi substituído por botão acessível com:
-  - `min-h-11` (área de toque adequada)
-  - `aria-label="Voltar ao Dashboard"`
-
-### Tema `lilac`
-
-- Tema adicional disponível via `localStorage.theme = "lilac"`.
-- Fluxo de alternância no botão de tema:
-  - `light -> dark -> lilac -> light`
-- Arquivos chave:
-  - `src/components/common/ApplyColorMode.astro`
-  - `src/components/common/BasicScripts.astro`
-  - `src/components/CustomStyles.astro`
-  - `src/assets/styles/tailwind.css`
-
-### Testes
-
-- `tests/unit/theme-mode.test.ts` valida suporte ao tema lilás no script e estilos.
-- `tests/unit/pages-core.test.ts` valida padrão do botão de voltar ao dashboard nas páginas principais.
-
-## Atualização de manutenção: tema lilás e bug de sessão (Fevereiro 2026)
-
-### Tema lilás
-
-- `lilac` agora é um tema escuro alternativo, não um tema claro.
-- Manter coerência:
-  - base escura (`--aw-color-bg-page` escuro)
-  - contraste de texto alto
-  - destaques em roxo/lilás
-
-Arquivos relevantes:
-
-- `src/components/CustomStyles.astro`
-- `src/assets/styles/tailwind.css`
-
-### Sessão ao navegar para dashboard
-
-- Causa principal tratada no menu de usuário: busca de usuário sem header auth + redirect imediato em falha.
-- Ajuste implementado:
-  - envio de Authorization + credentials include
-  - sem redirect automático para `/login` dentro do UserMenu quando não há payload de usuário
-
-Arquivo relevante:
-
-- `src/components/auth/UserMenu.astro`
-
-### Testes de regressão
-
-- `tests/unit/user-menu.test.ts`
-- `tests/unit/theme-mode.test.ts`
-
-## Atualização de manutenção: dashboard e segurança de auth (Março 2026)
-
-### Nome no dashboard (UserMenu)
-
-- A renderização do nome não deve depender apenas de `name/username`.
-- Ordem atual de fallback:
-  - `name`
-  - `username`
-  - `nome`
-  - `email`
-  - `Usuário` (último recurso)
-- Se `/api/auth/user` voltar payload parcial, combinar dados remotos com `pb_auth` do `localStorage` para preservar identidade visual estável.
-
-Arquivo relevante:
-
-- `src/components/auth/UserMenu.astro`
-
-### Segurança no login e sessão
-
-- Não aceitar token apenas com decode local de JWT para endpoints críticos.
-- `user` e `refresh` devem validar token no PocketBase via `authRefresh`.
-- Em falha de validação:
-  - retornar `401`
-  - limpar cookie `pb_auth`
-- Login:
-  - validar JSON de entrada
-  - normalizar email
-  - limitar tamanho de campos
-  - resposta de erro genérica (`Invalid credentials`)
-  - usar `Cache-Control: no-store`
-
-Arquivos relevantes:
-
-- `src/pages/api/auth/login.ts`
-- `src/pages/api/auth/user.ts`
-- `src/pages/api/auth/refresh.ts`
-
-### Testes adicionados
-
-- `tests/unit/auth-routes.test.ts`:
-  - valida normalização/entrada de login
-  - valida `authRefresh` obrigatório em `user` e `refresh`
-- `tests/unit/user-menu.test.ts`:
-  - valida fallback de nome (`nome/email`) e merge remoto/local
+- `npm run check`
+- `npm run fix`
+- `npm run test:unit`
